@@ -1,0 +1,5 @@
+Subtotal			Valor sem descontos
+Total				Valor com descontos
+Competencia			Período de referência (mês)
+Direito				Valor a receber
+Obrigação			Valor a pagar
