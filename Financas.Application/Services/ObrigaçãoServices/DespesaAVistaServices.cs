@@ -1,16 +1,14 @@
 ﻿using Financas.Application.Services.ObrigaçãoServices.Interfaces;
+using Financas.Business.Shared.ServiceBase;
+using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Obrigação;
 using Financeiro.Business.Aggregates.Validações;
-using Financeiro.Business.Interfaces;
-using Financeiro.Business.Localization;
-using Financeiro.Business.Models.CompetenciaModels;
 using Financeiro.Business.Models.ObrigaçãoModels;
-using Financeiro.Business.ResultPattern;
-using FluentValidation.Results;
+using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.ObrigaçãoServices
 {
-	public class DespesaAVistaServices : IDespesaAVistaServices
+	public class DespesaAVistaServices : ServiceBase, IDespesaAVistaServices
 	{
 		private readonly IDespesaAVistaRepository _repository;
 
@@ -24,8 +22,9 @@ namespace Financas.Application.Services.ObrigaçãoServices
 			// TODO: Verificar se já existe essa entidade.
 			var despesa = new DespesaAVista(request.Descricao, request.SubTotal, request.DataVencimento, request.Descontos, request.Observacao, request.CompetenciaId);
 
-			if (!await DespesaAVistaIsValid(despesa))
-				return Result<bool>.Failure(new Error(Errors.InvalidEntity));
+			var validation = await ValidateEntityAsync<DespesaAVista, DespesaAVistaValidator>(despesa);
+			if (!validation.Success)
+				return Result<bool>.Failure(validation.Error);
 
 			await _repository.AddAsync(despesa);
 			return Result<bool>.Success(true);
@@ -38,8 +37,10 @@ namespace Financas.Application.Services.ObrigaçãoServices
 			var novaEntidade = new DespesaAVista(request.Descricao, request.SubTotal, request.DataVencimento, request.Descontos, request.Observacao, request.CompetenciaId);
 			// TODO: Verificar se já existe a nova entidade ou homônima.
 
-			if (!await DespesaAVistaIsValid(novaEntidade))
-				return Result<bool>.Failure(new Error(Errors.InvalidEntity));
+			var validation = await ValidateEntityAsync<DespesaAVista, DespesaAVistaValidator>(novaEntidade);
+			
+			if (!validation.Success)
+				return Result<bool>.Failure(validation.Error);
 
 			despesaResult.Atualizar(request.Descricao, request.SubTotal, request.DataVencimento, request.Descontos, request.Observacao, request.CompetenciaId);
 
@@ -72,17 +73,6 @@ namespace Financas.Application.Services.ObrigaçãoServices
 		}
 
 		#region Métodos internos
-
-		private async Task<bool> DespesaAVistaIsValid(DespesaAVista entidade)
-		{
-			DespesaAVistaValidador validator = new();
-			ValidationResult result = await validator.ValidateAsync(entidade);
-
-			if (!result.IsValid)
-				return false;
-
-			return true;
-		}
 
 		private async Task<DespesaAVista> ObterDespesaAVistaPorId(Guid id)
 		{

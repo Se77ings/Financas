@@ -1,5 +1,5 @@
 ﻿using Financeiro.Business.Models.CompetenciaModels;
-using Financeiro.Business.ResultPattern;
+using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.CompetenciaServices
 {

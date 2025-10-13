@@ -9,7 +9,7 @@ namespace Financeiro.Infra.Mappings
 		public void Configure(EntityTypeBuilder<DespesaCartao> builder)
 		{
 			builder.ToTable("DespesaCartao");
-			builder.HasMany<DespesaCartao.Despesa>("Despesas").WithOne(x => x.DespesaCartao).HasForeignKey(x => x.DespesaCartaoId).OnDelete(DeleteBehavior.Restrict);
+			builder.HasMany(x=> x.Despesas).WithOne(x => x.DespesaCartao).HasForeignKey(x => x.DespesaCartaoId).OnDelete(DeleteBehavior.Restrict);
 		}
 	}
 }

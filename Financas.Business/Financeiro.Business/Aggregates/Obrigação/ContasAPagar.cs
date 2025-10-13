@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Financeiro.Business.Aggregates.Obrigação
+﻿namespace Financeiro.Business.Aggregates.Obrigação
 {
 	public abstract class ContasAPagar : Entidade
 	{
@@ -26,8 +24,9 @@ namespace Financeiro.Business.Aggregates.Obrigação
 			DataVencimento = dataVencimento;
 			Descontos = descontos.HasValue ? descontos.Value : 0;
 			Observacao = observacao;
-			Total = SubTotal - Descontos;
 			CompetenciaId = competenciaId;
+
+			CalculateTotal();
 		}
 		public void Atualizar(string descricao, decimal subtotal, DateTime dataVencimento, decimal? descontos, string observacao, Guid competenciaId)
 		{
@@ -38,6 +37,20 @@ namespace Financeiro.Business.Aggregates.Obrigação
 			Observacao = observacao;
 			Total = SubTotal - Descontos;
 			CompetenciaId = competenciaId;
+
+			CalculateTotal();
+		}
+
+		internal void SetValues(decimal subTotal, decimal discounts)
+		{
+			this.SubTotal = subTotal;
+			this.Descontos = discounts;
+			CalculateTotal();
+		}
+
+		private void CalculateTotal()
+		{
+			this.Total = this.SubTotal - this.Descontos;
 		}
 	}
 }

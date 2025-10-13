@@ -1,6 +1,6 @@
 ﻿using Financeiro.Business.Aggregates.Obrigação;
 
-namespace Financeiro.Business.Interfaces
+namespace Financeiro.Business.Aggregates.Interfaces
 {
 	public interface IDespesaAVistaRepository : IRepository<DespesaAVista>
 	{

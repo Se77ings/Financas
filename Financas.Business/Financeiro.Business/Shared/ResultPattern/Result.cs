@@ -1,4 +1,4 @@
-﻿namespace Financeiro.Business.ResultPattern
+﻿namespace Financeiro.Business.Shared.ResultPattern
 {
 	public class Result<T>
 	{

@@ -14,15 +14,14 @@ namespace Financeiro.Infra.Context
 		/// <summary>
 		/// Contas A Pagar
 		/// </summary>
-		public DbSet<DespesaAVista> DespesasAVista { get; set; }
+		public DbSet<ContasAPagar> ContasAPagar { get; set; }
+
 		/// <summary>
-		/// Contas A Pagar
+		/// Mês/Ano referente aos registros lançados
 		/// </summary>
-		public DbSet<DespesaCartao> DespesasCartao { get; set; }
-		/// <summary>
-		/// Mês referente aos registros lançados
-		/// </summary>
+		/// 
 		public DbSet<Competencia> Competencias { get; set; }
+		public DbSet<DespesaCartao.Despesa> DespesasCartaoItem { get; set; }
 
 		public FinanceiroDBContext(DbContextOptions<FinanceiroDBContext> options) : base(options)
 		{
@@ -35,7 +34,6 @@ namespace Financeiro.Infra.Context
 				property.SetColumnType("varchar(100)");
 
 			modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinanceiroDBContext).Assembly);
-			modelBuilder.Ignore<ContasAPagar>();
 
 			foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys())) relationship.DeleteBehavior = DeleteBehavior.ClientSetNull;
 

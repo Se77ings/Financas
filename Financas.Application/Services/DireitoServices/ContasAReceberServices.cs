@@ -1,14 +1,14 @@
-﻿using Financeiro.Business.Aggregates.Direito;
+﻿using Financas.Business.Shared.ServiceBase;
+using Financeiro.Business.Aggregates.Direito;
+using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Validações;
-using Financeiro.Business.Interfaces;
-using Financeiro.Business.Localization;
 using Financeiro.Business.Models.DireitoModels;
-using Financeiro.Business.ResultPattern;
-using FluentValidation.Results;
+using Financeiro.Business.Shared.Localization;
+using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.DireitoServices
-{ // quando voltar, pegar a sugestão do Gemini, de TV, TE p/ o validador
-	public class ContasAReceberServices : IContasAReceberServices
+{
+	public class ContasAReceberServices : ServiceBase, IContasAReceberServices
 	{
 		private readonly IContasAReceberRepository _repository;
 		public ContasAReceberServices(IContasAReceberRepository repository)
@@ -21,7 +21,8 @@ namespace Financas.Application.Services.DireitoServices
 			//TODO: Verificar se já existe essa entidade.
 			var contaAReceber = new ContasAReceber(request.Descricao, request.SubTotal, request.Data, request.Descontos, request.CompetenciaId);
 
-			var validation = await ContasAReceberIsValid(contaAReceber);
+			var validation = await ValidateEntityAsync<ContasAReceber, ContasAReceberValidator>(contaAReceber);
+
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
@@ -37,7 +38,7 @@ namespace Financas.Application.Services.DireitoServices
 			var novaEntidade = new ContasAReceber(request.Descricao, request.SubTotal, request.Data, request.Descontos, request.CompetenciaId);
 			//TODO: Verificar se já existe a nova entidade ou homônima.
 
-			var validation = await ContasAReceberIsValid(novaEntidade);
+			var validation = await ValidateEntityAsync<ContasAReceber, ContasAReceberValidator>(novaEntidade);
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
@@ -79,19 +80,6 @@ namespace Financas.Application.Services.DireitoServices
 		}
 
 		#region Métodos internos
-		public async Task<(bool Success, Error Error)> ContasAReceberIsValid(ContasAReceber entidade)
-		{
-			ContasAReceberValidador validator = new();
-			ValidationResult result = await validator.ValidateAsync(entidade);
-
-			if (!result.IsValid)
-			{
-				Error error = new(result.ToString("\n"));
-				return (false, error);
-
-			}
-			return (true, new Error());
-		}
 
 		public async Task<ContasAReceber> ObterContaAReceberPorId(Guid id)
 		{

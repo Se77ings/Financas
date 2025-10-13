@@ -1,13 +1,15 @@
-﻿using Financeiro.Business.Aggregates;
+﻿using Financas.Business.Shared.ServiceBase;
+using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Direito;
-using Financeiro.Business.Interfaces;
+using Financeiro.Business.Aggregates.Interfaces;
+using Financeiro.Business.Aggregates.Validações;
 using Financeiro.Business.Models.CompetenciaModels;
-using Financeiro.Business.ResultPattern;
-using static Financeiro.Business.Localization.ErrorMessages;
+using Financeiro.Business.Shared.ResultPattern;
+using static Financeiro.Business.Shared.Localization.ErrorMessages;
 
 namespace Financas.Application.Services.CompetenciaServices
 {
-	public class CompetenciaServices : ICompetenciaServices
+	public class CompetenciaServices : ServiceBase, ICompetenciaServices
 	{
 		private readonly ICompetenciaRepository _repository;
 		public CompetenciaServices(ICompetenciaRepository repository)
@@ -20,6 +22,11 @@ namespace Financas.Application.Services.CompetenciaServices
 			var competencia = new Competencia(request.Mes, request.Ano);
 
 			// TODO: Verificar se já existe essa entidade.
+
+			var validation = await ValidateEntityAsync<Competencia, CompetenciaValidator>(competencia);
+
+			if (!validation.Success)
+				return Result<bool>.Failure(validation.Error);
 
 			await _repository.AddAsync(competencia);
 
@@ -35,6 +42,10 @@ namespace Financas.Application.Services.CompetenciaServices
 			if (competencia == null)
 				return Result<bool>.Failure(new Error(RecordNotFoundFormat(nameof(Competencia))));
 
+			var validation = await ValidateEntityAsync<Competencia, CompetenciaValidator>(competencia);
+
+			if (!validation.Success)
+				return Result<bool>.Failure(validation.Error);
 
 			competencia.Atualizar(request.Mes, request.Ano);
 

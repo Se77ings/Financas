@@ -79,7 +79,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("ContasAReceber");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -99,10 +99,11 @@ namespace Financeiro.Infra.Migrations
 
                     b.Property<string>("Descricao")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("Observacao")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<decimal>("SubTotal")
                         .HasColumnType("decimal(18,2)");
@@ -113,91 +114,38 @@ namespace Financeiro.Infra.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompetenciaId");
+
+                    b.ToTable("ContasAPagar");
+
+                    b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+                {
+                    b.HasBaseType("Financeiro.Business.Aggregates.Obrigação.ContasAPagar");
 
                     b.ToTable("DespesaAVista", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CompetenciaId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DataVencimento")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("Descontos")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Observacao")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("SubTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompetenciaId");
+                    b.HasBaseType("Financeiro.Business.Aggregates.Obrigação.ContasAPagar");
 
                     b.ToTable("DespesaCartao", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CompetenciaId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DataVencimento")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("Descontos")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.HasBaseType("Financeiro.Business.Aggregates.Obrigação.ContasAPagar");
 
                     b.Property<Guid>("DespesaCartaoId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Observacao")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ParcelaAtual")
                         .HasColumnType("int");
 
                     b.Property<int>("QtdParcelas")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("SubTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompetenciaId");
 
                     b.HasIndex("DespesaCartaoId");
 
@@ -214,45 +162,54 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Competencia");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
-                        .WithMany()
+                        .WithMany("ContasAPagar")
                         .HasForeignKey("CompetenciaId")
                         .IsRequired();
 
                     b.Navigation("Competencia");
+                });
+
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+                {
+                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", null)
+                        .WithOne()
+                        .HasForeignKey("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
-                        .WithMany()
-                        .HasForeignKey("CompetenciaId")
+                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", null)
+                        .WithOne()
+                        .HasForeignKey("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Competencia");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
-                        .WithMany()
-                        .HasForeignKey("CompetenciaId")
-                        .IsRequired();
-
                     b.HasOne("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", "DespesaCartao")
                         .WithMany("Despesas")
                         .HasForeignKey("DespesaCartaoId")
                         .IsRequired();
 
-                    b.Navigation("Competencia");
+                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", null)
+                        .WithOne()
+                        .HasForeignKey("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("DespesaCartao");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Competencia", b =>
                 {
+                    b.Navigation("ContasAPagar");
+
                     b.Navigation("ContasAReceber");
                 });
 

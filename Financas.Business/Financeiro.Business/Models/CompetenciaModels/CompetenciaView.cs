@@ -11,7 +11,7 @@ namespace Financeiro.Business.Models.CompetenciaModels
 		public string Mes { get; set; }
 		public int Ano { get; set; }
 
-		public List<ContasAReceberView> ContasAReceberViews { get; set; } = new();
+		public List<ContasAReceberView> ContasAReceber { get; set; } = new();
 		public List<DespesaAVistaView> DespesasAVista { get; set; } = new();
 		public List<DespesaCartaoView> DespesasCartao { get; set; } = new();
 
@@ -23,7 +23,7 @@ namespace Financeiro.Business.Models.CompetenciaModels
 			{
 				Mes = competencia.Mes,
 				Ano = competencia.Ano,
-				ContasAReceberViews = competencia.ContasAReceber.Select(c => (ContasAReceberView)c).ToList(),
+				ContasAReceber = competencia.ContasAReceber.Select(c => (ContasAReceberView)c).ToList(),
 				DespesasAVista = competencia.ContasAPagar.OfType<DespesaAVista>().Select(d => (DespesaAVistaView)d).ToList(),
 				DespesasCartao = competencia.ContasAPagar.OfType<DespesaCartao>().Select(d => (DespesaCartaoView)d).ToList()
 			};

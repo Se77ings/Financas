@@ -124,6 +124,6 @@
     <value>Entidade Inválida!</value>
   </data>
   <data name="RecordNotFound" xml:space="preserve">
-    <value>'{0}' não encontrado.</value>
+    <value>'{0}' não encontrado(a).</value>
   </data>
 </root>

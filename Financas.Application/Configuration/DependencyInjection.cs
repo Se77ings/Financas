@@ -2,7 +2,7 @@
 using Financas.Application.Services.DireitoServices;
 using Financas.Application.Services.ObrigaçãoServices;
 using Financas.Application.Services.ObrigaçãoServices.Interfaces;
-using Financeiro.Business.Interfaces;
+using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Infra.Repository;
 using Microsoft.Extensions.DependencyInjection;
 

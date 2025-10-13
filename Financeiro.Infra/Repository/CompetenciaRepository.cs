@@ -1,5 +1,6 @@
 ﻿using Financeiro.Business.Aggregates;
-using Financeiro.Business.Interfaces;
+using Financeiro.Business.Aggregates.Interfaces;
+using Financeiro.Business.Aggregates.Obrigação;
 using Financeiro.Infra.Context;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
@@ -34,7 +35,10 @@ namespace Financeiro.Infra.Repository
 
 		public async Task<Competencia> GetByIdAsync(Guid id)
 		{
-			return await _context.Competencias.FindAsync(id);
+			return await _context.Competencias
+				.Include(x => x.ContasAReceber)
+				.Include(x=> x.ContasAPagar)
+				.FirstOrDefaultAsync(x => x.Id == id);
 		}
 
 		public async Task<List<Competencia>> GetListAsync()
