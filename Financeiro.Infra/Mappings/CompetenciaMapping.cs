@@ -13,8 +13,8 @@ namespace Financeiro.Infra.Mappings
 			builder.HasKey(x => x.Id);
 			builder.Property(x => x.Mes).IsRequired().HasMaxLength(10);
 			builder.Property(x => x.Ano).IsRequired();
-			builder.HasMany<ContasAReceber>("ContasAReceber").WithOne(x=> x.Competencia).HasForeignKey(x => x.CompetenciaId).OnDelete(DeleteBehavior.Restrict);
-			builder.HasMany<ContasAPagar>("ContasAPagar").WithOne(x => x.Competencia).HasForeignKey(x => x.CompetenciaId).OnDelete(DeleteBehavior.Restrict);
+			builder.HasMany(x=> x.ContasAReceber).WithOne(x=> x.Competencia).HasForeignKey(x => x.CompetenciaId).OnDelete(DeleteBehavior.Restrict);
+			builder.HasMany(x=>x.ContasAPagar).WithOne(x => x.Competencia).HasForeignKey(x => x.CompetenciaId).OnDelete(DeleteBehavior.Restrict);
 		}
 	}
 }

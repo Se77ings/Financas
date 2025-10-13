@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Financeiro.Business.Localization {
+namespace Financeiro.Business.Shared.Localization {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Financeiro.Business.Localization {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Financeiro.Business.Localization.Errors", typeof(Errors).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Financeiro.Business.Shared.Localization.Errors", typeof(Errors).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -79,7 +79,7 @@ namespace Financeiro.Business.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} não encontrado..
+        ///   Looks up a localized string similar to &apos;{0}&apos; não encontrado(a)..
         /// </summary>
         public static string RecordNotFound {
             get {

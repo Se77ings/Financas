@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace Financeiro.Business.Aggregates.Validações
 {
-	public class DespesaAVistaValidador : AbstractValidator<DespesaAVista>
+	public class DespesaAVistaValidator : AbstractValidator<DespesaAVista>
 	{
-		public DespesaAVistaValidador()
+		public DespesaAVistaValidator()
 		{
 			RuleFor(x=> x.Descricao).MaximumLength(100).WithMessage("A descrição deve ter no máximo 100 caracteres.");
 			RuleFor(x => x.Descontos).LessThanOrEqualTo(x => x.SubTotal).WithMessage("Os descontos não podem ser maiores que o subtotal.");

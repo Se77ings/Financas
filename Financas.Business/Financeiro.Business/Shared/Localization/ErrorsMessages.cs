@@ -1,4 +1,4 @@
-﻿namespace Financeiro.Business.Localization
+﻿namespace Financeiro.Business.Shared.Localization
 {
 	public static class ErrorMessages
 	{

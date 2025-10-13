@@ -74,19 +74,15 @@ namespace Financas.API.Controllers
 			return Ok(data);
 		}
 
-
-		// Endpoints para itens de despesa do cartão
-		// Usando um endpoint aninhado: /api/DespesaCartao/{id}/items
 		[HttpPost("{id}/items")]
 		public async Task<IActionResult> AddItemAsync([FromRoute] Guid id, [FromBody] DespesaCartaoItemRequest request)
 		{
-			// O método de serviço retorna apenas bool, então assumimos sucesso ou falha na operação.
-			// Se você quiser tratar erros mais específicos, a service precisaria retornar um Result<bool> aqui também.
-			var success = await _services.AddItemAsync(id, request);
+			var result = await _services.AddItemAsync(id, request);
 
-			if (!success)
+			if (!result.IsSuccess)
 			{
-				return BadRequest("Falha ao adicionar item à despesa do cartão."); // Mensagem genérica, aprimorar com ResultPattern
+				return BadRequest(result.Error.Message);
+
 			}
 			return Ok();
 		}
@@ -94,11 +90,11 @@ namespace Financas.API.Controllers
 		[HttpPut("{id}/items/{itemId}")]
 		public async Task<IActionResult> UpdateItemAsync([FromRoute] Guid id, [FromRoute] Guid itemId, [FromBody] DespesaCartaoItemRequest request)
 		{
-			var success = await _services.UpdateItemAsync(id, itemId, request);
+			var result = await _services.UpdateItemAsync(id, itemId, request);
 
-			if (!success)
+			if (!result.IsSuccess)
 			{
-				return BadRequest("Falha ao atualizar item da despesa do cartão.");
+				return BadRequest(result.Error.Message);
 			}
 			return Ok();
 		}
@@ -106,11 +102,11 @@ namespace Financas.API.Controllers
 		[HttpDelete("{id}/items/{itemId}")]
 		public async Task<IActionResult> RemoveItemAsync([FromRoute] Guid id, [FromRoute] Guid itemId)
 		{
-			var success = await _services.RemoveItemAsync(id, itemId);
+			var result = await _services.RemoveItemAsync(id, itemId);
 
-			if (!success)
+			if (!result.IsSuccess)
 			{
-				return BadRequest("Falha ao remover item da despesa do cartão.");
+				return BadRequest(result.Error.Message);
 			}
 			return Ok();
 		}

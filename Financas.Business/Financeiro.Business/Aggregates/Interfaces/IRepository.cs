@@ -1,6 +1,6 @@
 ﻿using Financeiro.Business.Aggregates;
 
-namespace Financeiro.Business.Interfaces
+namespace Financeiro.Business.Aggregates.Interfaces
 {
 	public interface IRepository<TEntity> : IDisposable where TEntity : Entidade
 	{

@@ -1,5 +1,5 @@
 ﻿using Financeiro.Business.Models.DireitoModels;
-using Financeiro.Business.ResultPattern;
+using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.DireitoServices
 {

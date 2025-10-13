@@ -20,15 +20,13 @@ Vou salvar um print desse teste. E anotar próximos passos:
 	- [x] Criação de Interfaces
 	- [x] Implementar Services
 	- [x] Resolver Dependências
-	- [*] Criar entidade de Result para retornar succes e Messages/Errors (Necessita Teste)
+	- [x] Criar entidade de Result para retornar succes e Messages/Errors (Necessita Teste)
 - [x] Criar Controllers
-- [ ] Não tão urgente: implementar bool recorrente em Contas A Pagar.
 - [x] Todos endpoints funcionais
-		- [ ] Com exceção dos itens de DespesaCartao
+		- [x] Com exceção dos itens de DespesaCartao (criei um dbContext para as despesas, e problema resolvido.)
+
 - [ ] Traduzir o código para inglês.
-- [-] Devolver o erro específico que houve durante a validação (atualmente só retorna "Entidade Inválida") Errors.InvalidEntity
-	- Ao voltar, continuar a partir do ContasAReceberServices
-- [ ] Criar resources para padronizar as validações
+- [x] Devolver o erro específico que houve durante a validação (atualmente só retorna "Entidade Inválida") Errors.InvalidEntity
  
 
 - [ ] Front-end's (Blazor, App, Windows Forms...) problema pro Gabriel do Futuro
@@ -37,6 +35,8 @@ Vou salvar um print desse teste. E anotar próximos passos:
 
 Improvaments:
 - [ ] Mover as Models para a camada de Aplicação.
+- [ ] Não tão urgente: implementar bool recorrente em Contas A Pagar.
+- [ ] Implementar algo, para possibilitar a criação de titulos sem vincular a nenhuma Competencia, que ai ja pode gerar todos os títulos, e somente quando a competencia for criada, ela será vinculada.
 
 
 
