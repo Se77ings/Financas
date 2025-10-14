@@ -49,6 +49,17 @@ namespace Financeiro.Infra.Repository
 		{
 			_context?.Dispose();
 		}
+
+		public async Task<bool> ExistsAsync(string descricao, DateTime date)
+		{
+			return await _context.ContasAReceber.AnyAsync(x => x.Descricao == descricao && x.Data == date);
+		}
+
+		public async Task<bool> ExistsOtherAsync(Guid id, string descricao, DateTime date)
+		{
+			return await _context.ContasAReceber.AnyAsync(x => x.Descricao == descricao && x.Data == date && id != id);
+
+		}
 	}
 
 }

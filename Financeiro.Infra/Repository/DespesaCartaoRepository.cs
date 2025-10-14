@@ -2,6 +2,7 @@
 using Financeiro.Business.Aggregates.Obrigação;
 using Financeiro.Infra.Context;
 using Microsoft.EntityFrameworkCore;
+using System.Xml.Linq;
 
 namespace Financeiro.Infra.Repository
 {
@@ -54,6 +55,26 @@ namespace Financeiro.Infra.Repository
 		public void Dispose()
 		{
 			_context?.Dispose();
+		}
+
+		public async Task<bool> ExistsAsync(string descricao, DateTime date)
+		{
+			return await _context.ContasAPagar.AnyAsync(x => x.Descricao == descricao && x.DataVencimento == date);
+		}
+
+		public async Task<bool> ExistsOtherAsync(Guid id, string descricao, DateTime date)
+		{
+			return await _context.ContasAPagar.AnyAsync(x => x.Descricao == descricao && x.DataVencimento == date && x.Id == id);       
+		}
+
+		public async Task<bool> ExistsItemAsync(string descricao, DateTime date)
+		{
+			return await _context.DespesasCartaoItem.AnyAsync(x => x.Descricao == descricao && x.DataVencimento == date);
+				}
+
+		public async Task<bool> ExistsOtherItemAsync(Guid id, string descricao, DateTime date)
+		{
+			return await _context.DespesasCartaoItem.AnyAsync(x => x.Descricao == descricao && x.DataVencimento == date && x.Id == id);
 		}
 	}
 }

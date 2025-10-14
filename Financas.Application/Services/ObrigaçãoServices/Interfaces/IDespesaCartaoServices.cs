@@ -11,7 +11,7 @@ namespace Financas.Application.Services.ObrigaçãoServices.Interfaces
 		Task<Result<bool>> UpdateAsync(Guid id, DespesaCartaoRequest request);
 		Task<Result<bool>> DeleteAsync(Guid id);
 
-=		Task<Result<bool>> AddItemAsync(Guid id, DespesaCartaoItemRequest request);
+		Task<Result<bool>> AddItemAsync(Guid id, DespesaCartaoItemRequest request);
 		Task<Result<bool>> UpdateItemAsync(Guid id, Guid itemId, DespesaCartaoItemRequest request);
 		Task<Result<bool>> RemoveItemAsync(Guid id, Guid itemId);
 	}

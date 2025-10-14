@@ -4,7 +4,7 @@ using Financeiro.Business.Shared.ResultPattern;
 namespace Financas.Application.Services.DireitoServices
 {
 	public interface IContasAReceberServices
-	{// TODO: Pensar em classe de Result
+	{
 		public Task<(Result<bool> result, List<ContasAReceberSummary> lista)> GetListAsync();
 
 		public Task<(Result<bool> result, ContasAReceberView view)> GetByIdAsync(Guid id);
