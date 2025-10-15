@@ -47,7 +47,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("Competencias");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Direito.ContasAReceber", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.ContasAReceber", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,7 +82,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("ContasAReceber");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.ContasAPagar", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -123,23 +123,23 @@ namespace Financeiro.Infra.Migrations
                     b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaAVista", b =>
                 {
-                    b.HasBaseType("Financeiro.Business.Aggregates.Obrigação.ContasAPagar");
+                    b.HasBaseType("Financeiro.Business.Aggregates.Payable.ContasAPagar");
 
                     b.ToTable("DespesaAVista", (string)null);
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao", b =>
                 {
-                    b.HasBaseType("Financeiro.Business.Aggregates.Obrigação.ContasAPagar");
+                    b.HasBaseType("Financeiro.Business.Aggregates.Payable.ContasAPagar");
 
                     b.ToTable("DespesaCartao", (string)null);
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao+Despesa", b =>
                 {
-                    b.HasBaseType("Financeiro.Business.Aggregates.Obrigação.ContasAPagar");
+                    b.HasBaseType("Financeiro.Business.Aggregates.Payable.ContasAPagar");
 
                     b.Property<Guid>("DespesaCartaoId")
                         .HasColumnType("uniqueidentifier");
@@ -155,7 +155,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("DespesaCartao_Cartao", (string)null);
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Direito.ContasAReceber", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.ContasAReceber", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
                         .WithMany("ContasAReceber")
@@ -165,7 +165,7 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Competencia");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.ContasAPagar", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
                         .WithMany("ContasAPagar")
@@ -175,34 +175,34 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Competencia");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaAVista", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", null)
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.ContasAPagar", null)
                         .WithOne()
-                        .HasForeignKey("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", "Id")
+                        .HasForeignKey("Financeiro.Business.Aggregates.Payable.DespesaAVista", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", null)
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.ContasAPagar", null)
                         .WithOne()
-                        .HasForeignKey("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", "Id")
+                        .HasForeignKey("Financeiro.Business.Aggregates.Payable.DespesaCartao", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao+Despesa", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", "DespesaCartao")
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.DespesaCartao", "DespesaCartao")
                         .WithMany("Despesas")
                         .HasForeignKey("DespesaCartaoId")
                         .IsRequired();
 
-                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.ContasAPagar", null)
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.ContasAPagar", null)
                         .WithOne()
-                        .HasForeignKey("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", "Id")
+                        .HasForeignKey("Financeiro.Business.Aggregates.Payable.DespesaCartao+Despesa", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -216,7 +216,7 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("ContasAReceber");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao", b =>
                 {
                     b.Navigation("Despesas");
                 });

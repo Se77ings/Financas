@@ -25,8 +25,8 @@ Vou salvar um print desse teste. E anotar próximos passos:
 - [x] Todos endpoints funcionais
 		- [x] Com exceção dos itens de DespesaCartao (criei um dbContext para as despesas, e problema resolvido.)
 
-- [ ] Traduzir o código para inglês.
-	- [ ] Quando fizer isso, terá que gerar uma migration, ja aproveita, para mudar as datas de DateTime para DateOnly
+- [x] Traduzir o código para inglês.
+	- [x] Quando fizer isso, terá que gerar uma migration, ja aproveita, para mudar as datas de DateTime para DateOnly
 - [x] Devolver o erro específico que houve durante a validação (atualmente só retorna "Entidade Inválida") Errors.InvalidEntity
  
 
