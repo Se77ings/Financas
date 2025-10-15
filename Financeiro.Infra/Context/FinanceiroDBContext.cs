@@ -1,6 +1,6 @@
 ﻿using Financeiro.Business.Aggregates;
-using Financeiro.Business.Aggregates.Direito;
-using Financeiro.Business.Aggregates.Obrigação;
+using Financeiro.Business.Aggregates.Receivable;
+using Financeiro.Business.Aggregates.Payable;
 using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Infra.Context
@@ -10,18 +10,18 @@ namespace Financeiro.Infra.Context
 		/// <summary>
 		/// Contas a Receber
 		/// </summary>
-		public DbSet<ContasAReceber> ContasAReceber { get; set; }
+		public DbSet<Receivable> Receivable { get; set; }
 		/// <summary>
 		/// Contas A Pagar
 		/// </summary>
-		public DbSet<ContasAPagar> ContasAPagar { get; set; }
+		public DbSet<Payable> Payable { get; set; }
 
 		/// <summary>
 		/// Mês/Ano referente aos registros lançados
 		/// </summary>
 		/// 
-		public DbSet<Competencia> Competencias { get; set; }
-		public DbSet<DespesaCartao.Despesa> DespesasCartaoItem { get; set; }
+		public DbSet<EffectiveDate> EffectiveDate { get; set; }
+		public DbSet<CardExpense.Expense> CardExpenseItem { get; set; }
 
 		public FinanceiroDBContext(DbContextOptions<FinanceiroDBContext> options) : base(options)
 		{

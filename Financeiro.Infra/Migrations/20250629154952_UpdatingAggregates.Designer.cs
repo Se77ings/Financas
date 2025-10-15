@@ -47,7 +47,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("Competencias");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Direito.ContasAReceber", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.ContasAReceber", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,7 +82,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("ContasAReceber");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaAVista", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,7 +120,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("DespesaAVista", (string)null);
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -158,7 +158,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("DespesaCartao", (string)null);
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao+Despesa", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -207,7 +207,7 @@ namespace Financeiro.Infra.Migrations
                     b.ToTable("DespesaCartao_Cartao", (string)null);
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Direito.ContasAReceber", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.ContasAReceber", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
                         .WithMany("ContasAReceber")
@@ -217,7 +217,7 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Competencia");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaAVista", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaAVista", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
                         .WithMany()
@@ -227,7 +227,7 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Competencia");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
                         .WithMany()
@@ -237,14 +237,14 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Competencia");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao+Despesa", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao+Despesa", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Competencia", "Competencia")
                         .WithMany()
                         .HasForeignKey("CompetenciaId")
                         .IsRequired();
 
-                    b.HasOne("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", "DespesaCartao")
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.DespesaCartao", "DespesaCartao")
                         .WithMany("Despesas")
                         .HasForeignKey("DespesaCartaoId")
                         .IsRequired();
@@ -259,7 +259,7 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("ContasAReceber");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Obrigação.DespesaCartao", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.DespesaCartao", b =>
                 {
                     b.Navigation("Despesas");
                 });

@@ -3,3 +3,13 @@ Total				Valor com descontos
 Competencia			Período de referência (mês)
 Direito				Valor a receber
 Obrigação			Valor a pagar
+
+
+Localizações:
+Direito							Receivavble
+Obrigação						Payable
+Competência						Effective Date
+Contas a Pagar					Payable
+Contas a Receber				Receivable
+Despesa à vista			        Immediate Expense
+Despesa cartão			        Card Expense

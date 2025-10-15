@@ -25,13 +25,14 @@ Vou salvar um print desse teste. E anotar próximos passos:
 - [x] Todos endpoints funcionais
 		- [x] Com exceção dos itens de DespesaCartao (criei um dbContext para as despesas, e problema resolvido.)
 
-- [ ] Traduzir o código para inglês.
+- [x] Traduzir o código para inglês.
+	- [x] Quando fizer isso, terá que gerar uma migration, ja aproveita, para mudar as datas de DateTime para DateOnly
 - [x] Devolver o erro específico que houve durante a validação (atualmente só retorna "Entidade Inválida") Errors.InvalidEntity
  
 
 - [ ] Front-end's (Blazor, App, Windows Forms...) problema pro Gabriel do Futuro
 - [ ] Como eu me conheço, fazer o front como puder (angular + electron) e depois vejo se vale a pena deixar de usar a controller, ou seguir a sugestão do Gemini (ao executar o electron, ja starta internamente a API)
-
+- [ ] Resolver TODO's
 
 Improvaments:
 - [ ] Mover as Models para a camada de Aplicação.
