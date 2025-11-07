@@ -9,21 +9,23 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Financas.Application.Configuration
 {
-	public static class DependencyInjection
-	{
-		public static void RegisterServices(this IServiceCollection services)
-		{
-			services.AddScoped<IEffectiveDateRepository, EffectiveDateRepository>();
-			services.AddScoped<IEffectiveDateServices, EffectiveDateServices>();
+    public static class DependencyInjection
+    {
+        public static IServiceCollection RegisterServices(this IServiceCollection services)
+        {
+            services.AddScoped<IEffectiveDateRepository, EffectiveDateRepository>();
+            services.AddScoped<IEffectiveDateServices, EffectiveDateServices>();
 
-			services.AddScoped<IReceivableRepository, ReceivableRepository>();
-			services.AddScoped<ReceivableServices, RececivableServices>();
+            services.AddScoped<IReceivableRepository, ReceivableRepository>();
+            services.AddScoped<ReceivableServices, RececivableServices>();
 
-			services.AddScoped<IPayableRepository, PayableRepository>();
-			services.AddScoped<IImmediateExpenseServices, ImmediateExpenseServices>();
+            services.AddScoped<IPayableRepository, PayableRepository>();
+            services.AddScoped<IImmediateExpenseServices, ImmediateExpenseServices>();
 
-			services.AddScoped<ICardExpenseRepository, CardExpenseRepository>();
-			services.AddScoped<ICardExpenseServices, CardExpenseServices>();
-		}
-	}
+            services.AddScoped<ICardExpenseRepository, CardExpenseRepository>();
+            services.AddScoped<ICardExpenseServices, CardExpenseServices>();
+
+            return services;
+        }
+    }
 }
