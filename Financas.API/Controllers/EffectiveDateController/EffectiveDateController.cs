@@ -1,5 +1,5 @@
 ﻿using Financas.Application.Services.CompetenciaServices;
-using Financeiro.Business.Models.EffectiveDateModels;
+using Financeiro.Application.Models.EffectiveDateModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Financas.API.Controllers.EffectiveDateController

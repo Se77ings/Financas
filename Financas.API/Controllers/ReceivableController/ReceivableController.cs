@@ -1,5 +1,5 @@
 ﻿using Financas.Application.Services.DireitoServices;
-using Financeiro.Business.Models.ReceivableModels;
+using Financeiro.Application.Models.ReceivableModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Financas.API.Controllers

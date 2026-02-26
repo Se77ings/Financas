@@ -1,5 +1,5 @@
 ﻿using Financas.Application.Services.PayableServices.Interfaces;
-using Financeiro.Business.Models.PayableModels;
+using Financeiro.Application.Models.PayableModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Financas.API.Controllers
