@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Financas.Presentation.Modules.Payable.View.CardExpenseFormPage"
+             Title="Fatura Cartão">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="15">
+            
+            <Label Text="Descrição" FontAttributes="Bold" />
+            <Entry Text="{Binding Description}" Placeholder="Ex: Fatura Nubank" />
+
+            <Label Text="Data de Vencimento" FontAttributes="Bold" />
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="-" 
+                        Command="{Binding SubtractDayCommand}"
+                        BackgroundColor="#9E9E9E"
+                        TextColor="White"
+                        WidthRequest="40"
+                        HeightRequest="40" />
+                <DatePicker Date="{Binding DueDate}" HorizontalOptions="FillAndExpand" VerticalOptions="Center" />
+                <Button Text="+" 
+                        Command="{Binding AddDayCommand}"
+                        BackgroundColor="#9E9E9E"
+                        TextColor="White"
+                        WidthRequest="40"
+                        HeightRequest="40" />
+            </HorizontalStackLayout>
+
+            <Label Text="Observação" FontAttributes="Bold" />
+            <Editor Text="{Binding Observation}" Placeholder="Observações..." HeightRequest="60" />
+
+            <Button Text="Salvar Fatura"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="#FF9800"
+                    TextColor="White" />
+
+            <Button Text="Salvar e Continuar"
+                    Command="{Binding SaveAndContinueCommand}"
+                    BackgroundColor="#2196F3"
+                    TextColor="White" />
+
+            <Button Text="Excluir Fatura"
+                    Command="{Binding DeleteCommand}"
+                    IsVisible="{Binding IsEditMode}"
+                    BackgroundColor="#F44336"
+                    TextColor="White" />
+
+            <Button Text="+ Adicionar Item"
+                    Command="{Binding AddItemCommand}"
+                    IsVisible="{Binding IsEditMode}"
+                    BackgroundColor="#4CAF50"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+
+            <Label Text="Itens da Fatura" FontSize="18" FontAttributes="Bold" Margin="0,10,0,0" />
+            
+            <CollectionView ItemsSource="{Binding Items}">
+                <CollectionView.EmptyView>
+                    <Label Text="Nenhum item adicionado" TextColor="Gray" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Excluir"
+                                              BackgroundColor="#F44336"
+                                              Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteItemCommand}"
+                                              CommandParameter="{Binding Id}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            
+                            <Grid Padding="10" ColumnDefinitions="*,Auto" BackgroundColor="#F5F5F5" Margin="0,2">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditItemCommand}"
+                                                        CommandParameter="{Binding Id}" />
+                                </Grid.GestureRecognizers>
+                                <StackLayout Grid.Column="0">
+                                    <Label Text="{Binding Description}" FontAttributes="Bold" TextColor="Black" />
+                                    <Label Text="{Binding DueDate, StringFormat='{0:dd/MM/yyyy}'}" FontSize="12" TextColor="Gray" />
+                                </StackLayout>
+                                <Label Grid.Column="1" 
+                                       Text="{Binding Total, StringFormat='R$ {0:N2}'}" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#FF9800" 
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                             IsVisible="{Binding IsBusy}" 
+                             Color="Blue"
+                             Margin="0,20,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

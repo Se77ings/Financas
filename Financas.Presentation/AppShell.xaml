@@ -3,12 +3,12 @@
     x:Class="Financas.Presentation.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:Financas.Presentation"
-    Title="Financas.Presentation">
+    xmlns:effective="clr-namespace:Financas.Presentation.Modules.EffectiveDate.View"
+    Title="Sistema Financeiro">
 
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Competências"
+        ContentTemplate="{DataTemplate effective:EffectiveDatePage}"
+        Route="EffectiveDatePage" />
 
 </Shell>

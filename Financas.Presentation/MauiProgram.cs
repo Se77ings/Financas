@@ -1,7 +1,5 @@
-﻿using Financas.Application.Configuration;
+﻿using Financas.Presentation.Configuration;
 using Financeiro.Infra.Context;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Financas.Presentation
@@ -22,22 +20,13 @@ namespace Financas.Presentation
             builder.Logging.AddDebug();
 #endif
 
-            string dbPath = Path.Combine(FileSystem.AppDataDirectory, "database.db");
-
-            builder.Services.AddDbContext<FinanceiroDBContext>(options =>
-            {
-                options.UseSqlite($"Data Source={dbPath}");
-            });
-            builder.Services.RegisterServices();
+            builder.Services.RegisterPresentationServices();
 
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<FinanceiroDBContext>();
-                //SQLitePCL.raw.SetProvider();
-                var foo = dbContext.Database.GetMigrations();
-                
             }
 
             return app;

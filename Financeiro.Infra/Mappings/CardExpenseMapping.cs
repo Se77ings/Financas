@@ -9,7 +9,7 @@ namespace Financeiro.Infra.Mappings
 		public void Configure(EntityTypeBuilder<CardExpense> builder)
 		{
 			builder.ToTable("CardExpenseMapping");
-			builder.HasMany(x=> x.Expenses).WithOne(x => x.CardExpense).HasForeignKey(x => x.CardExpenseId).OnDelete(DeleteBehavior.Restrict);
+			builder.HasMany(x=> x.Expenses).WithOne(x => x.CardExpense).HasForeignKey(x => x.CardExpenseId).OnDelete(DeleteBehavior.Cascade);
 		}
 	}
 }

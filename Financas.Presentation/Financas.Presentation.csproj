@@ -60,6 +60,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
 	</ItemGroup>
@@ -67,6 +68,22 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Financas.Application\Financas.Application.csproj" />
 	  <ProjectReference Include="..\Financeiro.Infra\Financeiro.Infra.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Modules\Payable\ViewModels\" />
+	  <Folder Include="Modules\Payable\View\" />
+	  <Folder Include="Modules\Receivable\View\ViewModels\" />
+	  <Folder Include="Services\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiXaml Update="Modules\EffectiveDate\View\EffectiveDateDetailsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Modules\EffectiveDate\View\EffectiveDatePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	</ItemGroup>
 
 </Project>
