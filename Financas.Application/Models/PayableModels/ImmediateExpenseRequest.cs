@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Financeiro.Business.Models.PayableModels
+namespace Financeiro.Application.Models.PayableModels
 {
 	public class ImmediateExpenseRequest
 	{

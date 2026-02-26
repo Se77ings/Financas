@@ -1,4 +1,4 @@
-﻿namespace Financeiro.Business.Models.ReceivableModels
+﻿namespace Financeiro.Application.Models.ReceivableModels
 {
 	public class ReceivableSummary
 	{

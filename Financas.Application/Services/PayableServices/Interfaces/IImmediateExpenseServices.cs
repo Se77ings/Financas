@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Models.PayableModels;
+﻿using Financeiro.Application.Models.PayableModels;
 using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.PayableServices.Interfaces

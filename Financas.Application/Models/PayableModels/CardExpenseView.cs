@@ -1,6 +1,6 @@
 ﻿using Financeiro.Business.Aggregates.Payable;
 
-namespace Financeiro.Business.Models.PayableModels
+namespace Financeiro.Application.Models.PayableModels
 {
 	public class CardExpenseView
 	{

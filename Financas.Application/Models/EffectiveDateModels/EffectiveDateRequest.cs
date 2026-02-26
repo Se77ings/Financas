@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Financeiro.Business.Models.EffectiveDateModels
+namespace Financeiro.Application.Models.EffectiveDateModels
 {
 	public class EffectiveDateRequest
 	{

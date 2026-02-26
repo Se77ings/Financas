@@ -1,6 +1,6 @@
 ﻿using Financeiro.Business.Aggregates.Payable;
 
-namespace Financeiro.Business.Models.PayableModels
+namespace Financeiro.Application.Models.PayableModels
 {
 	public class ImmediateExpenseView
 	{
@@ -11,6 +11,7 @@ namespace Financeiro.Business.Models.PayableModels
 		public decimal SubTotal { get; set; }
 		public decimal Discounts { get; set; }
 		public string? Observation { get; set; }
+		public Guid EffectiveDateId { get; set; }
 
 		public static implicit operator ImmediateExpenseView(ImmediateExpense expense)
 		{
@@ -23,6 +24,7 @@ namespace Financeiro.Business.Models.PayableModels
 				SubTotal = expense.SubTotal,
 				Discounts = expense.Discount,
 				Observation = expense.Observation,
+				EffectiveDateId = expense.EffectiveDateId,
 			};
 		}
 	}

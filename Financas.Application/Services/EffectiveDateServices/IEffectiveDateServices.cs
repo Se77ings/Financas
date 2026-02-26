@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Models.EffectiveDateModels;
+﻿using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.CompetenciaServices

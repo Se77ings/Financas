@@ -2,7 +2,7 @@
 using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Validações;
-using Financeiro.Business.Models.EffectiveDateModels;
+using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Business.Shared.ResultPattern;
 using static Financeiro.Business.Shared.Localization.ErrorMessages;
 

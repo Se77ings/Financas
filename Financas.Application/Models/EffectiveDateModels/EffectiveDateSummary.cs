@@ -1,4 +1,4 @@
-﻿namespace Financeiro.Business.Models.EffectiveDateModels
+﻿namespace Financeiro.Application.Models.EffectiveDateModels
 {
 	public class EffectiveDateSummary
 	{

@@ -1,9 +1,9 @@
-﻿using Financeiro.Business.Aggregates;
+﻿using Financeiro.Application.Models.PayableModels;
+using Financeiro.Application.Models.ReceivableModels;
+using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Payable;
-using Financeiro.Business.Models.ReceivableModels;
-using Financeiro.Business.Models.PayableModels;
 
-namespace Financeiro.Business.Models.EffectiveDateModels
+namespace Financeiro.Application.Models.EffectiveDateModels
 {
 	public class EffectiveDateView
 	{
