@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Models.ReceivableModels;
+﻿using Financeiro.Application.Models.ReceivableModels;
 using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.DireitoServices

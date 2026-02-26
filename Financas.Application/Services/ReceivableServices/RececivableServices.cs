@@ -1,8 +1,8 @@
 ﻿using Financas.Business.Shared.ServiceBase;
-using Financeiro.Business.Aggregates.Receivable;
+using Financeiro.Application.Models.ReceivableModels;
 using Financeiro.Business.Aggregates.Interfaces;
+using Financeiro.Business.Aggregates.Receivable;
 using Financeiro.Business.Aggregates.Validações;
-using Financeiro.Business.Models.ReceivableModels;
 using Financeiro.Business.Shared.Localization;
 using Financeiro.Business.Shared.ResultPattern;
 
