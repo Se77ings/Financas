@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Financas.Presentation.Modules.EffectiveDate.View.EffectiveDateDetailsPage"
+             Title="{Binding View.Month, StringFormat='{0}/{1}', ConverterParameter={Binding View.Year}}">
+
+    <!-- Columns: main 60%, left margin 2%, details 35%, right margin 3% (total = 100*) -->
+    <Grid ColumnDefinitions="60*,2*,35*,3*" Padding="10" BackgroundColor="#F5F5F5">
+
+        <!-- Lista Principal -->
+        <Border Grid.Column="0" BackgroundColor="White" Stroke="#E0E0E0" StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+
+            <Grid RowDefinitions="Auto,*,Auto" >
+                <Grid Grid.Row="0" Padding="15" ColumnDefinitions="*,Auto,Auto,Auto,Auto" BackgroundColor="#FAFAFA">
+                    <Label Grid.Column="0" Text="Extrato" FontSize="20" FontAttributes="Bold" VerticalOptions="Center" TextColor="Black" />
+
+                    <!-- Filtro: Todos / À Receber / À Pagar / Cartão -->
+                    <Picker x:Name="FilterPicker" Grid.Column="1"
+                            Title="Filtro"
+                            SelectedIndex="{Binding SelectedFilterIndex, Mode=TwoWay}"
+                            WidthRequest="140">
+                        <Picker.Items>
+                            <x:String>Todos</x:String>
+                            <x:String>À Receber</x:String>
+                            <x:String>À Pagar</x:String>
+                            <x:String>Cartão</x:String>
+                        </Picker.Items>
+                    </Picker>
+
+                    <Button Grid.Column="2"
+                            Text="+ Receber"
+                            Command="{Binding AddReceivableCommand}"
+                            BackgroundColor="#4CAF50"
+                            TextColor="White"
+                            Padding="10,5"
+                            Margin="0,0,5,0" />
+
+                    <Button Grid.Column="3"
+                            Text="+ À Vista"
+                            Command="{Binding AddImmediateExpenseCommand}"
+                            BackgroundColor="#F44336"
+                            TextColor="White"
+                            Padding="10,5"
+                            Margin="0,0,5,0" />
+
+                    <Button Grid.Column="4"
+                            Text="+ Cartão"
+                            Command="{Binding AddCardExpenseCommand}"
+                            BackgroundColor="#FF9800"
+                            TextColor="White"
+                            Padding="10,5" />
+                </Grid>
+
+                <CollectionView Grid.Row="1" ItemsSource="{Binding Transactions}" SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <Label Text="Nenhuma transação" TextColor="Gray" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Layout do item: removida coluna SubTotal; linhas compactas e larguras mínimas nas colunas numéricas -->
+                            <Grid Padding="6" HeightRequest="36"
+                                  ColumnDefinitions="Auto,3*,90,120,120,40,4"
+                                  BackgroundColor="White">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectTransactionCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+
+                                <Label Grid.Column="0"
+                                       Text="{Binding TypeIcon}"
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="{Binding TypeColor}"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,10,0" />
+
+                                <Label Grid.Column="1"
+                                       Text="{Binding Description}"
+                                       FontAttributes="Bold"
+                                       TextColor="Black"
+                                       VerticalOptions="Center" />
+
+                                <Label Grid.Column="2"
+                                       Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}"
+                                       FontSize="14"
+                                       TextColor="Gray"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="NoWrap"
+                                       HorizontalTextAlignment="Start" />
+
+                                <!-- Discounts -->
+                                <Label Grid.Column="3"
+                                       Text="{Binding Discounts, StringFormat='- R$ {0:N2}'}"
+                                       FontSize="11"
+                                       TextColor="#F44336"
+                                       HorizontalTextAlignment="End"
+                                       LineBreakMode="NoWrap"
+                                       MinimumWidthRequest="120" />
+
+                                <!-- Total -->
+                                <Label Grid.Column="4"
+                                       Text="{Binding Total, StringFormat='R$ {0:N2}'}"
+                                       FontAttributes="Bold"
+                                       TextColor="Black"
+                                       HorizontalTextAlignment="End"
+                                       LineBreakMode="NoWrap"
+                                       MinimumWidthRequest="120" />
+
+                                <Label Grid.Column="5"
+                                       Text="✏️"
+                                       FontSize="16"
+                                       HorizontalOptions="End"
+                                       VerticalOptions="Center">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditTransactionCommand}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+
+                                <BoxView Grid.Column="6"
+                                         WidthRequest="4"
+                                         BackgroundColor="{Binding TypeColor}"
+                                         IsVisible="{Binding IsCardExpense}"
+                                         HorizontalOptions="End" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Grid Grid.Row="2" Padding="15" RowDefinitions="Auto,Auto,1,Auto" BackgroundColor="#FAFAFA">
+                
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="À Receber:" FontSize="14" TextColor="Black" />
+                        <Label Grid.Column="1" Text="{Binding TotalReceivable, StringFormat='R$ {0:N2}'}" FontSize="14" FontAttributes="Bold" TextColor="Black" />
+                    </Grid>
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="À pagar:" FontSize="14" TextColor="#F44336" />
+                        <Label Grid.Column="1" Text="{Binding TotalPayable, StringFormat='R$ {0:N2}'}" FontSize="14" TextColor="#F44336" />
+                    </Grid>
+                    <BoxView Grid.Row="2" HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,5" />
+                    <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Saldo:" FontSize="16" FontAttributes="Bold" TextColor="Black" />
+                        <Label Grid.Column="1" Text="{Binding TotalNet, StringFormat='R$ {0:N2}'}" FontSize="16" FontAttributes="Bold" TextColor="#2196F3" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Detalhes Cartão -->
+        <Border Grid.Column="2" BackgroundColor="White" Stroke="#E0E0E0" StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <Grid RowDefinitions="Auto,*,Auto">
+                <Grid Grid.Row="0" Padding="15" BackgroundColor="#FFF3E0">
+                    <Label Text="Itens do Cartão" FontSize="18" FontAttributes="Bold" TextColor="#FF9800" />
+                </Grid>
+                <CollectionView Grid.Row="1" ItemsSource="{Binding SelectedTransaction.CardItems}">
+                    <CollectionView.EmptyView>
+                        <Label Text="Selecione um cartão para visualizar os Detalhes" TextColor="Gray" HorizontalOptions="Center" VerticalOptions="Center" Padding="20" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="15,2" ColumnDefinitions="2*,Auto,*" BackgroundColor="White">
+                                <Label Grid.Column="0" Text="{Binding Description}" FontAttributes="Bold" TextColor="Black" VerticalOptions="Center" />
+
+                                <Label Grid.Column="1" Text="{Binding DueDate, StringFormat='{0:dd/MM/yyyy}'}" FontSize="14" TextColor="Gray" VerticalOptions="Center" Margin="10,0" />
+
+                                <Label  Grid.Column="2"  Text="{Binding Total, StringFormat='R$ {0:N2}'}" HorizontalOptions="End" FontAttributes="Bold" TextColor="#FF9800" HorizontalTextAlignment="End" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Grid Grid.Row="2" Padding="15" BackgroundColor="#FFF3E0" IsVisible="{Binding HasSelectedTransaction}">
+                    <Label Text="{Binding SelectedTransaction.Total, StringFormat='Total: R$ {0:N2}'}" FontSize="16" FontAttributes="Bold" TextColor="#FF9800" HorizontalOptions="End" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <ActivityIndicator Grid.Column="0" Grid.ColumnSpan="4" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#2196F3" />
+    </Grid>
+</ContentPage>
