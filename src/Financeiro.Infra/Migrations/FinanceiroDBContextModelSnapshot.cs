@@ -31,10 +31,8 @@ namespace Financeiro.Infra.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Month")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(100)");
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
 
                     b.Property<int>("Year")
                         .HasColumnType("int");

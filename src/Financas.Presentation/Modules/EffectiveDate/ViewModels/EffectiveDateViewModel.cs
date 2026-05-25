@@ -1,7 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Financas.Application.Services.CompetenciaServices; 
-using Financeiro.Application.Models.EffectiveDateModels; 
+using Financeiro.Application.Models.EffectiveDateModels;
+using Financeiro.Business.Shared;
 using System.Collections.ObjectModel;
 
 namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
@@ -41,7 +42,7 @@ namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
             var now = DateTime.Now;
             _requestData = new EffectiveDateRequest
             {
-                Month = now.ToString("MMM"),
+                Month = CalendarMonthHelper.FromDateTime(now),
                 Year = now.Year
             };
         }
@@ -86,7 +87,7 @@ namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
             {
                 // antes de carregar, garantir que exista a competência do mês atual
                 var now = DateTime.Now;
-                var request = new EffectiveDateRequest { Month = now.ToString("MMM"), Year = now.Year };
+                var request = new EffectiveDateRequest { Month = CalendarMonthHelper.FromDateTime(now), Year = now.Year };
                 try
                 {
                     await _effectiveDateServices.EnsureExistsAsync(request);
@@ -104,34 +105,9 @@ namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
                     Items.Clear();
                     ItemsGrouped.Clear();
 
-                    // ordenar lista por Year desc, Month desc (convertendo Month para número)
-                    Func<string, int> monthToNumber = m =>
-                    {
-                        if (string.IsNullOrWhiteSpace(m)) return 0;
-                        var mm = m.Trim().ToLowerInvariant();
-                        return mm switch
-                        {
-                            "jan" => 1,
-                            "fev" => 2,
-                            "mar" => 3,
-                            "abr" => 4,
-                            "mai" => 5,
-                            "jun" => 6,
-                            "jul" => 7,
-                            "ago" => 8,
-                            "set" => 9,
-                            "out" => 10,
-                            "nov" => 11,
-                            "dez" => 12,
-                            _ =>
-                                // tentar parse com cultura atual
-                                (DateTime.TryParseExact(m, "MMM", System.Globalization.CultureInfo.CurrentCulture, System.Globalization.DateTimeStyles.None, out var d) ? d.Month : 0)
-                        };
-                    };
-
                     var ordered = lista
                         .OrderByDescending(x => x.Year)
-                        .ThenByDescending(x => monthToNumber(x.Month))
+                        .ThenByDescending(x => (int)x.Month)
                         .ToList();
 
                     foreach (var item in ordered)
@@ -144,7 +120,7 @@ namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
                     foreach (var g in groups)
                     {
                         var group = new YearGroup { Year = g.Key };
-                        foreach (var m in g.OrderByDescending(x => monthToNumber(x.Month)))
+                        foreach (var m in g.OrderByDescending(x => (int)x.Month))
                             group.Months.Add(m);
 
                         ItemsGrouped.Add(group);

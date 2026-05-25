@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Financeiro.Business.Shared;
 
 namespace Financeiro.Business.Aggregates.Validações
 {
@@ -7,7 +8,7 @@ namespace Financeiro.Business.Aggregates.Validações
 		public EffectiveDateValidator()
 		{
 			RuleFor(x => x.Year).GreaterThan(2000).WithMessage("O ano deve ser maior que 2000.");
-			RuleFor(x => x.Month).MaximumLength(9).WithMessage("O mês deve ser escrito por extenso, e pode ter no máximo 9 caracteres");
+			RuleFor(x => x.Month).IsInEnum().WithMessage("O mês informado é inválido.");
 		}
 	}
 }

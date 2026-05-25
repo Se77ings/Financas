@@ -60,7 +60,7 @@
                                                                         CommandParameter="{Binding Id}" />
                                                 </Grid.GestureRecognizers>
                                                 <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
-                                                    <Label Text="{Binding Month}" FontSize="14" TextColor="Black" FontAttributes="Bold" HorizontalOptions="Center" />
+                                                    <Label Text="{Binding MonthAbbreviation}" FontSize="14" TextColor="Black" FontAttributes="Bold" HorizontalOptions="Center" />
                                                     <Label Text="{Binding Year}" FontSize="12" TextColor="Gray" HorizontalOptions="Center" />
                                                     <Label Text="{Binding Balance, StringFormat='R$ {0:N2}'}" FontSize="12" TextColor="Black" HorizontalOptions="Center" />
                                                 </StackLayout>

@@ -6,10 +6,10 @@ Obrigação			Valor a pagar
 
 
 Localizações:
-Direito							Receivavble
-Obrigação						Payable
-Competência						Effective Date
+Direito						Receivavble
+Obrigação					Payable
+Competência					Effective Date
 Contas a Pagar					Payable
 Contas a Receber				Receivable
-Despesa à vista			        Immediate Expense
-Despesa cartão			        Card Expense
+Despesa à vista			        	Immediate Expense
+Despesa cartão			        	Card Expense

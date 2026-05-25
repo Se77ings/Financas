@@ -17,11 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Financas.Business\Financeiro.Business\Financeiro.Business.csproj" />
+	  <ProjectReference Include="..\Financas.Business\Financeiro.Business.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ETL\Mappers\" />
+    <ProjectReference Include="..\Financas.Business\Financeiro.Business.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Financas.Presentation.Modules.EffectiveDate.View.EffectiveDateDetailsPage"
-             Title="{Binding View.Month, StringFormat='{0}/{1}', ConverterParameter={Binding View.Year}}">
+             Title="{Binding View.MonthAbbreviation, StringFormat='{0}/{1}', ConverterParameter={Binding View.Year}}">
 
     <!-- Columns: main 60%, left margin 2%, details 35%, right margin 3% (total = 100*) -->
     <Grid ColumnDefinitions="60*,2*,35*,3*" Padding="10" BackgroundColor="#F5F5F5">

@@ -40,7 +40,7 @@ namespace Financeiro.Infra.Repository
 
 		public async Task<List<CardExpense>> GetListAsync()
 		{
-			return await _context.Payable.OfType<CardExpense>().ToListAsync();
+			return await _context.Payable.OfType<CardExpense>().Include(x=> x.Expenses).ToListAsync();
 		}
 		public async Task<int> SaveChangesAsync()
 		{
@@ -53,16 +53,15 @@ namespace Financeiro.Infra.Repository
 		}
 
 		public async Task RecalculateCardExpenseAsync(Guid cardExpenseId)
-		{
+		{ // TODO: Avaliar como posso substituir este método por uma forma mais convencional.
 			var cardExpense = await GetByIdAsync(cardExpenseId);
 			if (cardExpense != null && cardExpense.Expenses.Any())
 			{
 				var subTotal = cardExpense.Expenses.Sum(e => e.SubTotal);
 				var discounts = cardExpense.Expenses.Sum(e => e.Discount);
-				
 
-				await _context.Database.ExecuteSqlRawAsync(
-					$"UPDATE Payable SET SubTotal = '{subTotal}', Discount = '{discounts}', Total = '{subTotal - discounts}' WHERE Id = '{cardExpenseId}'");
+				await _context.Database.ExecuteSqlInterpolatedAsync(
+				    $"UPDATE Payable SET SubTotal = {subTotal}, Discount = {discounts}, Total = {subTotal - discounts} WHERE Id = {cardExpenseId}");
 			}
 		}
 

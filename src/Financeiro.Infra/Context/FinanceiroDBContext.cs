@@ -26,21 +26,22 @@ namespace Financeiro.Infra.Context
 
         public FinanceiroDBContext(DbContextOptions<FinanceiroDBContext> options) : base(options)
         {
-            //ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-            //ChangeTracker.AutoDetectChangesEnabled = false;
-            SQLitePCL.Batteries_V2.Init();
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+            ChangeTracker.AutoDetectChangesEnabled = false;
 
-            this.Database.EnsureCreated();
+            //SQLitePCL.Batteries_V2.Init();
+
+            //this.Database.EnsureCreated();
         }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            string dbPath = Path.Combine(FileSystem.CurrentDirectory, "database.db");
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    string dbPath = Path.Combine(FileSystem.CurrentDirectory, "database.db");
 
-            optionsBuilder.UseSqlite($"Filename={dbPath}");
-            //optionsBuilder.UseSqlServer("Server=Gabriel;Database=Financas;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true");
+        //    optionsBuilder.UseSqlite($"Filename={dbPath}");
+        //    //optionsBuilder.UseSqlServer("Server=Gabriel;Database=Financas;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true");
 
-            base.OnConfiguring(optionsBuilder);
-        }
+        //    base.OnConfiguring(optionsBuilder);
+        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

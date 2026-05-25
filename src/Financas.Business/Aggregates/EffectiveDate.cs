@@ -1,10 +1,10 @@
-﻿using System.Text;
+﻿using Financeiro.Business.Shared;
 
 namespace Financeiro.Business.Aggregates
 {
 	public class EffectiveDate : Entity
 	{
-		public string Month { get; private set; }
+		public CalendarMonth Month { get; private set; }
 		public int Year { get; private set; }
 		private List<Receivable.Receivable> _receivable = new();
 		private List<Payable.Payable> _payable = new();
@@ -13,13 +13,14 @@ namespace Financeiro.Business.Aggregates
 		public IEnumerable<Payable.Payable> Payable => _payable;
 
 		protected EffectiveDate() { }
-		public EffectiveDate(string month, int year)
+
+		public EffectiveDate(CalendarMonth month, int year)
 		{
 			Month = month;
 			Year = year;
 		}
 
-		public void Update(string month, int year)
+		public void Update(CalendarMonth month, int year)
 		{
 			Month = month;
 			Year = year;
@@ -47,47 +48,5 @@ namespace Financeiro.Business.Aggregates
 		{
 			throw new NotImplementedException();
 		}
-
-		//public override string ToString()
-		//{
-		//	var sb = new StringBuilder();
-
-		//	sb.AppendLine("===================");
-		//	sb.AppendLine($"Competência: {Month} de {Year}");
-		//	sb.AppendLine("===================");
-		//	sb.AppendLine("Contas a Receber:");
-
-		//	if (_receivable.Any())
-		//	{
-		//		foreach (var receber in _receivable)
-		//		{
-		//			sb.AppendLine($" - {receber.Description}: R$ {receber.Total:F2} (Vencimento: {receber.Date.ToShortDateString()})");
-		//		}
-		//	}
-		//	else
-		//	{
-		//		sb.AppendLine(" Nenhuma conta a receber.");
-		//	}
-
-		//	sb.AppendLine("===================");
-		//	sb.AppendLine("Contas a Pagar:");
-
-		//	if (_payable.Any())
-		//	{
-		//		foreach (var pagar in _payable)
-		//		{
-		//			sb.AppendLine($" - {pagar.Description}: R$ {pagar.Total:F2} (Vencimento: {pagar.DueDate.ToShortDateString()})");
-		//		}
-		//	}
-		//	else
-		//	{
-		//		sb.AppendLine(" Nenhuma conta a pagar.");
-		//	}
-
-		//	sb.AppendLine("===================");
-		//	sb.AppendLine("Saldo: " + CalculateTotal());
-		//	return sb.ToString();
-		//}
-
 	}
 }

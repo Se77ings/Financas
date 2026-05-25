@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Financas.Business\Financeiro.Business\Financeiro.Business.csproj" />
+    <ProjectReference Include="..\Financas.Business\Financeiro.Business.csproj" />
     <ProjectReference Include="..\Financeiro.Infra\Financeiro.Infra.csproj" />
   </ItemGroup>
 
