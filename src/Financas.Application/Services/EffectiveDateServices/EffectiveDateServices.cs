@@ -1,8 +1,9 @@
-﻿using Financas.Business.Shared.ServiceBase;
+using Financas.Business.Shared.ServiceBase;
 using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Validações;
 using Financeiro.Application.Models.EffectiveDateModels;
+using Financeiro.Business.Shared;
 using Financeiro.Business.Shared.ResultPattern;
 using static Financeiro.Business.Shared.Localization.ErrorMessages;
 
@@ -11,9 +12,11 @@ namespace Financas.Application.Services.CompetenciaServices
 	public class EffectiveDateServices : ServiceBase, IEffectiveDateServices
 	{
 		private readonly IEffectiveDateRepository _repository;
-		public EffectiveDateServices(IEffectiveDateRepository repository)
+		private readonly IEffectiveDateGeneratorService _generatorService;
+		public EffectiveDateServices(IEffectiveDateRepository repository, IEffectiveDateGeneratorService generatorService)
 		{
 			_repository = repository;
+			_generatorService = generatorService;
 		}
 
 		public async Task<Result<bool>> AddAsync(EffectiveDateRequest request)
@@ -35,21 +38,61 @@ namespace Financas.Application.Services.CompetenciaServices
 
 			await _repository.AddAsync(effectiveDate);
 
+			// Run generation engine to create card invoices and subscriptions automatically
+			var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate.Id, request.Month, request.Year);
+			if (!generationResult.IsSuccess)
+				return Result<bool>.Failure(generationResult.Error);
+
 			return Result<bool>.Success(true);
 		}
 
 		public async Task<Result<bool>> EnsureExistsAsync(EffectiveDateRequest request)
 		{
-			// se já existe, retornar sucesso com Value = false (não criado)
 			if (await _repository.ExistsAsync(request.Month, request.Year))
 				return Result<bool>.Success(false);
 
-			// tentar criar; use AddAsync para validar
-			var addResult = await AddAsync(request);
-			if (!addResult.IsSuccess)
-				return addResult;
+			var createResult = await GetOrCreateIdAsync(request.Month, request.Year);
+			if (!createResult.IsSuccess)
+				return Result<bool>.Failure(createResult.Error!);
 
 			return Result<bool>.Success(true);
+		}
+
+		public async Task<Result<Guid>> GetOrCreateIdAsync(CalendarMonth month, int year)
+		{
+			var existing = await _repository.GetByMonthYearAsync(month, year);
+			if (existing != null)
+				return Result<Guid>.Success(existing.Id);
+
+			var effectiveDate = new EffectiveDate(month, year);
+
+			var validation = await ValidateEntityAsync<EffectiveDate, EffectiveDateValidator>(effectiveDate);
+			if (!validation.Success)
+				return Result<Guid>.Failure(validation.Error);
+
+			await _repository.AddAsync(effectiveDate);
+
+			// Run generation engine to create card invoices and subscriptions automatically
+			var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate.Id, month, year);
+			if (!generationResult.IsSuccess)
+				return Result<Guid>.Failure(generationResult.Error);
+
+			return Result<Guid>.Success(effectiveDate.Id);
+		}
+
+		public async Task<Result<Guid>> ResolveForOperationAsync(DateOnly operationDate, Guid? explicitEffectiveDateId = null)
+		{
+			if (explicitEffectiveDateId is Guid id && id != Guid.Empty)
+			{
+				var effectiveDate = await GetEffectiveDate(id);
+				if (effectiveDate == null)
+					return Result<Guid>.Failure(new Error(RecordNotFoundFormat(nameof(EffectiveDate))));
+
+				return Result<Guid>.Success(id);
+			}
+
+			var month = CalendarMonthHelper.FromDateTime(operationDate.ToDateTime(TimeOnly.MinValue));
+			return await GetOrCreateIdAsync(month, operationDate.Year);
 		}
 
 		public async Task<Result<bool>> UpdateAsync(Guid id, EffectiveDateRequest request)
@@ -117,6 +160,15 @@ namespace Financas.Application.Services.CompetenciaServices
 			}).ToList();
 
 			return (Result<bool>.Success(true), summaries);
+		}
+
+		public async Task<Result<bool>> SyncMissingCardInvoicesAsync(Guid id)
+		{
+			var effectiveDate = await GetEffectiveDate(id);
+			if (effectiveDate == null)
+				return Result<bool>.Failure(new Error("Competência não encontrada."));
+
+			return await _generatorService.SyncMissingCardInvoicesAsync(id);
 		}
 
 		#region Métodos internos

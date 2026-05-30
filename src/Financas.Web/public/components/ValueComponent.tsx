@@ -12,6 +12,7 @@ type ValueComponentProps = {
     readOnly?: boolean;
     required?: boolean;
     className?: string;
+    tabIndex?: number;
 };
 
 export function ValueComponent({
@@ -20,6 +21,7 @@ export function ValueComponent({
     readOnly = false,
     required = false,
     className,
+    tabIndex,
 }: ValueComponentProps) {
     const [cents, setCents] = useState(() => valueToCents(value));
 
@@ -74,6 +76,7 @@ export function ValueComponent({
                 className={`${className ?? INPUT_CLASS}${readOnly ? ' opacity-70 cursor-default' : ''}`}
                 placeholder="0,00"
                 aria-label="Valor em reais"
+                tabIndex={tabIndex}
             />
         </div>
     );

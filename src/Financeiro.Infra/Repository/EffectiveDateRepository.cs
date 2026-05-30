@@ -59,6 +59,12 @@ namespace Financeiro.Infra.Repository
 			_context?.Dispose();
 		}
 
+		public async Task<EffectiveDate?> GetByMonthYearAsync(CalendarMonth month, int year)
+		{
+			return await _context.EffectiveDate
+				.FirstOrDefaultAsync(x => x.Month == month && x.Year == year);
+		}
+
 		public async Task<bool> ExistsAsync(CalendarMonth month, int year)
 		{
 			return await _context.EffectiveDate.AnyAsync(x => x.Month == month && x.Year == year);

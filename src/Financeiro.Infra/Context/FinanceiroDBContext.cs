@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Aggregates;
+using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Receivable;
 using Financeiro.Business.Aggregates.Payable;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +23,8 @@ namespace Financeiro.Infra.Context
         /// 
         public DbSet<EffectiveDate> EffectiveDate { get; set; }
         public DbSet<CardExpense.Expense> CardExpenseItem { get; set; }
+        public DbSet<CreditCard> CreditCard { get; set; }
+        public DbSet<Subscription> Subscription { get; set; }
 
         public FinanceiroDBContext(DbContextOptions<FinanceiroDBContext> options) : base(options)
         {

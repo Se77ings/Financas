@@ -39,7 +39,39 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EffectiveDate", (string)null);
+                    b.ToTable("EffectiveDate");
+                });
+
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CreditCard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ClosingDay")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DueDay")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Limit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CreditCards", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Payable", b =>
@@ -78,9 +110,49 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasIndex("EffectiveDateId");
 
-                    b.ToTable("Payable", (string)null);
+                    b.ToTable("Payable");
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Subscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreditCardId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("FrequencyType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreditCardId");
+
+                    b.ToTable("Subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.Receivable", b =>
@@ -115,14 +187,19 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasIndex("EffectiveDateId");
 
-                    b.ToTable("Receivable", (string)null);
+                    b.ToTable("Receivable");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense", b =>
                 {
                     b.HasBaseType("Financeiro.Business.Aggregates.Payable.Payable");
 
-                    b.ToTable("CardExpenseMapping", (string)null);
+                    b.Property<Guid>("CreditCardId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasIndex("CreditCardId");
+
+                    b.ToTable("CardExpense", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense+Expense", b =>
@@ -160,6 +237,15 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("EffectiveDate");
                 });
 
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Subscription", b =>
+                {
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.CreditCard", "CreditCard")
+                        .WithMany()
+                        .HasForeignKey("CreditCardId");
+
+                    b.Navigation("CreditCard");
+                });
+
             modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.Receivable", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.EffectiveDate", "EffectiveDate")
@@ -172,11 +258,18 @@ namespace Financeiro.Infra.Migrations
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense", b =>
                 {
+                    b.HasOne("Financeiro.Business.Aggregates.Payable.CreditCard", "CreditCard")
+                        .WithMany("CardExpenses")
+                        .HasForeignKey("CreditCardId")
+                        .IsRequired();
+
                     b.HasOne("Financeiro.Business.Aggregates.Payable.Payable", null)
                         .WithOne()
                         .HasForeignKey("Financeiro.Business.Aggregates.Payable.CardExpense", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreditCard");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense+Expense", b =>
@@ -209,6 +302,11 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("Payable");
 
                     b.Navigation("Receivable");
+                });
+
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CreditCard", b =>
+                {
+                    b.Navigation("CardExpenses");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense", b =>

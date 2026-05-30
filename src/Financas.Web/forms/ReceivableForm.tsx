@@ -38,10 +38,10 @@ export default function ReceivableForm({
 
     const isNew = !initialData;
 
-    const getEmptyForm = () => ({
+    const getEmptyForm = (currentDate: string) => ({
         description: '',
         subtotal: 0,
-        date: new Date().toISOString().split('T')[0],
+        date: currentDate,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +61,7 @@ export default function ReceivableForm({
             });
 
             if (saveMode === 'continue' && isNew) {
-                setFormData(getEmptyForm());
+                setFormData(getEmptyForm(formData.date));
             } else {
                 onClose();
             }
@@ -102,7 +102,7 @@ export default function ReceivableForm({
                             Descrição
                         </label>
                         <input
-                            tabIndex={0}
+                            tabIndex={1}
                             type="text"
                             name="description"
                             value={formData.description}
@@ -121,6 +121,7 @@ export default function ReceivableForm({
                             value={formData.subtotal}
                             onChange={(subtotal) => setFormData(prev => ({ ...prev, subtotal }))}
                             required
+                            tabIndex={2}
                         />
                     </div>
 
@@ -128,15 +129,21 @@ export default function ReceivableForm({
                         <label className="block text-xs font-semibold text-gray-400 mb-2">
                             Data
                         </label>
-                        <DateComponent date={formData.date} onChange={(newDate) => setFormData(prev => ({ ...prev, date: newDate }))} />
+                        <DateComponent
+                            date={formData.date}
+                            onChange={(newDate) => setFormData(prev => ({ ...prev, date: newDate }))}
+                            tabIndex={4}
+                            plustabindex={5}
+                            minustabindex={3}
+                        />
                     </div>
 
                     <div className="flex gap-2 pt-4">
                         <button
-                            tabIndex={0}
+                            tabIndex={6}
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium"
+                            className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium cursor-pointer"
                         >
                             Cancelar
                         </button>
@@ -147,13 +154,14 @@ export default function ReceivableForm({
                                 onClick={requestSubmit}
                                 isSubmitting={isSubmitting}
                                 disabled={isLoading}
+                                tabIndex={7}
                             />
                         ) : (
                             <button
-                                tabIndex={0}
+                                tabIndex={7}
                                 type="submit"
                                 disabled={isSubmitting || isLoading}
-                                className="flex-1 px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:bg-green-900/50 disabled:cursor-not-allowed text-white transition text-sm font-medium"
+                                className="flex-1 px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:bg-green-900/50 disabled:cursor-not-allowed text-white transition text-sm font-medium cursor-pointer"
                             >
                                 {isSubmitting ? 'Salvando...' : 'Salvar'}
                             </button>

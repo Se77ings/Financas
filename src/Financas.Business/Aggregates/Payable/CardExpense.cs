@@ -1,15 +1,26 @@
-﻿namespace Financeiro.Business.Aggregates.Payable
+namespace Financeiro.Business.Aggregates.Payable
 {
 	public class CardExpense : Payable
 	{
 		private List<Expense> _expenses = new();
 		public ICollection<Expense> Expenses => _expenses;
 
+		public Guid CreditCardId { get; private set; }
+		public CreditCard CreditCard { get; private set; }
+
 		#region Construtores
 		protected CardExpense() { }
-		public CardExpense(string descricao, decimal subtotal, DateOnly dataVencimento, decimal? descontos, string observacao, Guid competencia) : base(descricao, subtotal, dataVencimento, descontos, observacao, competencia)
-		{ }
+		public CardExpense(string descricao, decimal subtotal, DateOnly dataVencimento, decimal? descontos, string observacao, Guid competencia, Guid creditCardId) : base(descricao, subtotal, dataVencimento, descontos, observacao, competencia)
+		{
+			CreditCardId = creditCardId;
+		}
 		#endregion
+
+		public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid creditCardId)
+		{
+			base.Update(description, subtotal, dueDate, discounts, observation, effectiveDateId);
+			CreditCardId = creditCardId;
+		}
 
 		public void AddExpense(Expense expense)
 		{

@@ -44,9 +44,9 @@ export default function CardExpenseForm({
 
     const isNew = !initialData;
 
-    const getEmptyForm = () => ({
+    const getEmptyForm = (currentDate: string) => ({
         description: '',
-        dueDate: new Date().toISOString().split('T')[0],
+        dueDate: currentDate,
         subTotal: 0,
         discounts: 0,
         observation: '',
@@ -72,12 +72,12 @@ export default function CardExpenseForm({
             });
 
             if (saveMode === 'continue' && isNew) {
-                setFormData(getEmptyForm());
+                setFormData(getEmptyForm(formData.dueDate));
             } else {
                 onClose();
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao salvar cartão');
+            setError(err instanceof Error ? err.message : 'Erro ao salvar faturas');
         } finally {
             setIsSubmitting(false);
         }
@@ -112,6 +112,7 @@ export default function CardExpenseForm({
                             Nome do Cartão
                         </label>
                         <input
+                            tabIndex={0}
                             type="text"
                             name="description"
                             value={formData.description}
@@ -131,6 +132,7 @@ export default function CardExpenseForm({
                                 value={formData.subTotal}
                                 onChange={(subTotal) => setFormData(prev => ({ ...prev, subTotal }))}
                                 required
+                                tabIndex={2}
                             />
                         </div>
                         <div>
@@ -140,6 +142,7 @@ export default function CardExpenseForm({
                             <ValueComponent
                                 value={formData.discounts}
                                 onChange={(discounts) => setFormData(prev => ({ ...prev, discounts }))}
+                                tabIndex={1}
                             />
                         </div>
                     </div>
@@ -158,6 +161,10 @@ export default function CardExpenseForm({
                         <DateComponent
                             date={formData.dueDate}
                             onChange={(newDate) => setFormData(prev => ({ ...prev, dueDate: newDate }))}
+                            plustabindex={0}
+                            minustabindex={9}
+                            tabIndex={1}
+                            
                         />
                     </div>
 
@@ -172,6 +179,7 @@ export default function CardExpenseForm({
                             rows={3}
                             className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition resize-none"
                             placeholder="Opcional"
+                            tabIndex={7}
                         />
                     </div>
 
@@ -179,7 +187,8 @@ export default function CardExpenseForm({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium"
+                            className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium cursor-pointer"
+                            tabIndex={8}
                         >
                             Cancelar
                         </button>
@@ -191,12 +200,14 @@ export default function CardExpenseForm({
                                 isSubmitting={isSubmitting}
                                 disabled={isLoading}
                                 className="bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50"
+                                tabIndex={9}
                             />
                         ) : (
                             <button
                                 type="submit"
                                 disabled={isSubmitting || isLoading}
-                                className="flex-1 px-4 py-2 rounded bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50 disabled:cursor-not-allowed text-white transition text-sm font-medium"
+                                className="flex-1 px-4 py-2 rounded bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50 disabled:cursor-not-allowed text-white transition text-sm font-medium cursor-pointer"
+                                tabIndex={0}
                             >
                                 {isSubmitting ? 'Salvando...' : 'Salvar'}
                             </button>

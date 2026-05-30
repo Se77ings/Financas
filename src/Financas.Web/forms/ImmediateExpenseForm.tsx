@@ -44,9 +44,9 @@ export default function ImmediateExpenseForm({
 
     const isNew = !initialData;
 
-    const getEmptyForm = () => ({
+    const getEmptyForm = (currentDate: string) => ({
         description: '',
-        dueDate: new Date().toISOString().split('T')[0],
+        dueDate: currentDate,
         subTotal: 0,
         discounts: 0,
         observation: '',
@@ -72,7 +72,7 @@ export default function ImmediateExpenseForm({
             });
 
             if (saveMode === 'continue' && isNew) {
-                setFormData(getEmptyForm());
+                setFormData(getEmptyForm(formData.dueDate));
             } else {
                 onClose();
             }
@@ -119,6 +119,7 @@ export default function ImmediateExpenseForm({
                             required
                             className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
                             placeholder="Ex: Internet"
+                            tabIndex={1}
                         />
                     </div>
 
@@ -131,6 +132,7 @@ export default function ImmediateExpenseForm({
                                 value={formData.subTotal}
                                 onChange={(subTotal) => setFormData(prev => ({ ...prev, subTotal }))}
                                 required
+                                tabIndex={2}
                             />
                         </div>
                         <div>
@@ -140,6 +142,7 @@ export default function ImmediateExpenseForm({
                             <ValueComponent
                                 value={formData.discounts}
                                 onChange={(discounts) => setFormData(prev => ({ ...prev, discounts }))}
+                                tabIndex={3}
                             />
                         </div>
                     </div>
@@ -158,6 +161,9 @@ export default function ImmediateExpenseForm({
                         <DateComponent
                             date={formData.dueDate}
                             onChange={(newDate) => setFormData(prev => ({ ...prev, dueDate: newDate }))}
+                            tabIndex={5}
+                            plustabindex={6}
+                            minustabindex={4}
                         />
                     </div>
 
@@ -172,6 +178,7 @@ export default function ImmediateExpenseForm({
                             rows={3}
                             className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition resize-none"
                             placeholder="Opcional"
+                            tabIndex={7}
                         />
                     </div>
 
@@ -179,7 +186,8 @@ export default function ImmediateExpenseForm({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium"
+                            className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium cursor-pointer"
+                            tabIndex={8}
                         >
                             Cancelar
                         </button>
@@ -191,12 +199,14 @@ export default function ImmediateExpenseForm({
                                 isSubmitting={isSubmitting}
                                 disabled={isLoading}
                                 className="bg-[#59161C] hover:bg-[#7a1e26] disabled:bg-[#59161C]/50"
+                                tabIndex={9}
                             />
                         ) : (
                             <button
                                 type="submit"
                                 disabled={isSubmitting || isLoading}
-                                className="flex-1 px-4 py-2 rounded bg-[#59161C] hover:bg-[#7a1e26] disabled:bg-[#59161C]/50 disabled:cursor-not-allowed text-white transition text-sm font-medium"
+                                className="flex-1 px-4 py-2 rounded bg-[#59161C] hover:bg-[#7a1e26] disabled:bg-[#59161C]/50 disabled:cursor-not-allowed text-white transition text-sm font-medium cursor-pointer"
+                                tabIndex={9}
                             >
                                 {isSubmitting ? 'Salvando...' : 'Salvar'}
                             </button>

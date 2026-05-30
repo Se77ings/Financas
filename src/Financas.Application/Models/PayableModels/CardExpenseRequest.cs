@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Financeiro.Application.Models.PayableModels
 {
@@ -6,29 +7,51 @@ namespace Financeiro.Application.Models.PayableModels
 	{
 		[Required]
 		public string Description { get; set; }
+
 		[Required]
 		public DateOnly DueDate { get; set; }
+
 		[Required]
 		public decimal SubTotal { get; set; }
+
 		[Required]
 		public decimal Discounts { get; set; } = 0;
+
 		public string? Observation { get; set; }
-		[Required]
-		public Guid EffectiveDate { get; set; }
+
+		public Guid CreditCardId { get; set; }
+
+		/// <summary>
+		/// Opcional. Se omitido, a competência é resolvida automaticamente pelo mês/ano de <see cref="DueDate"/>.
+		/// </summary>
+		public Guid? EffectiveDateId { get; set; }
+
+		[JsonPropertyName("effectiveDate")]
+		public Guid? EffectiveDate
+		{
+			get => EffectiveDateId;
+			set => EffectiveDateId = value;
+		}
 	}
 
 	public class CardExpenseItemRequest
 	{
 		[Required]
 		public string Description { get; set; }
+
 		[Required]
 		public DateOnly DueDate { get; set; }
+
 		[Required]
 		public decimal SubTotal { get; set; }
+
 		[Required]
 		public decimal Discounts { get; set; } = 0;
+
 		public string? Observation { get; set; }
+
 		public int CurrentInstallment { get; set; } = 1;
+
 		public int QuantityInstallments { get; set; } = 1;
 	}
 }

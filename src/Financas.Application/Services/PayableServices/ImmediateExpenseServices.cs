@@ -1,4 +1,5 @@
-﻿using Financas.Application.Services.PayableServices.Interfaces;
+﻿using Financas.Application.Services.CompetenciaServices;
+using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Business.Shared.ServiceBase;
 using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Payable;
@@ -11,16 +12,24 @@ namespace Financas.Application.Services.PayableServices
 	public class ImmediateExpenseServices : ServiceBase, IImmediateExpenseServices
 	{
 		private readonly IPayableRepository _repository;
+		private readonly IEffectiveDateServices _effectiveDateServices;
 
-		public ImmediateExpenseServices(IPayableRepository repository)
+		public ImmediateExpenseServices(IPayableRepository repository, IEffectiveDateServices effectiveDateServices)
 		{
 			_repository = repository;
+			_effectiveDateServices = effectiveDateServices;
 		}
 
 		public async Task<Result<bool>> AddAsync(ImmediateExpenseRequest request)
 		{
+			var effectiveDateResult = await _effectiveDateServices.ResolveForOperationAsync(request.DueDate, request.EffectiveDateId);
+			if (!effectiveDateResult.IsSuccess)
+				return Result<bool>.Failure(effectiveDateResult.Error!);
+
+			var effectiveDateId = effectiveDateResult.Value!;
+
 			// TODO: Verificar se já existe essa entidade.
-			var despesa = new ImmediateExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.EffectiveDateId);
+			var despesa = new ImmediateExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId);
 
 			var validation = await ValidateEntityAsync<ImmediateExpense, ImmediateExpenseValidator>(despesa);
 			if (!validation.Success)
@@ -32,9 +41,15 @@ namespace Financas.Application.Services.PayableServices
 
 		public async Task<Result<bool>> UpdateAsync(Guid id, ImmediateExpenseRequest request)
 		{
+			var effectiveDateResult = await _effectiveDateServices.ResolveForOperationAsync(request.DueDate, request.EffectiveDateId);
+			if (!effectiveDateResult.IsSuccess)
+				return Result<bool>.Failure(effectiveDateResult.Error!);
+
+			var effectiveDateId = effectiveDateResult.Value!;
+
 			var expenseResult = await GetImmediateExpenseById(id);
 
-			var novaEntidade = new ImmediateExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.EffectiveDateId);
+			var novaEntidade = new ImmediateExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId);
 			// TODO: Verificar se já existe a nova entidade ou homônima.
 
 			var validation = await ValidateEntityAsync<ImmediateExpense, ImmediateExpenseValidator>(novaEntidade);
@@ -42,7 +57,7 @@ namespace Financas.Application.Services.PayableServices
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
-			expenseResult.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.EffectiveDateId);
+			expenseResult.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId);
 
 			await _repository.UpdateAsync(expenseResult);
 

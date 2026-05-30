@@ -1,4 +1,4 @@
-﻿using Financas.Application.Services.CompetenciaServices;
+using Financas.Application.Services.CompetenciaServices;
 using Financeiro.Application.Models.EffectiveDateModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -81,6 +81,18 @@ namespace Financas.API.Controllers.EffectiveDateController
 
 			return Ok();
 
+		}
+
+		[HttpPost("{id}/sync-cards")]
+		public async Task<IActionResult> SyncCardsAsync([FromRoute] Guid id)
+		{
+			// TODO: Este endpoint temporário de sincronização manual/sob demanda deve ser substituído por um fluxo baseado em Eventos de Domínio no futuro.
+			var result = await _services.SyncMissingCardInvoicesAsync(id);
+
+			if (!result.IsSuccess)
+				return BadRequest(result.Error.Message);
+
+			return Ok();
 		}
 
 	}

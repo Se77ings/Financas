@@ -11,6 +11,7 @@ type SaveButtonProps = {
     isSubmitting?: boolean;
     disabled?: boolean;
     className?: string;
+    tabIndex?: number;
 };
 
 const LABELS: Record<SaveMode, string> = {
@@ -33,6 +34,7 @@ export function SaveButton({
     isSubmitting = false,
     disabled = false,
     className = 'bg-green-700 hover:bg-green-600 disabled:bg-green-900/50',
+    tabIndex,
 }: SaveButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,7 @@ export function SaveButton({
                 onClick={onClick}
                 disabled={disabled || isSubmitting}
                 className={`flex-1 min-w-0 px-4 py-2 rounded-l text-white transition text-sm font-medium disabled:cursor-not-allowed ${className}`}
+                tabIndex={tabIndex}
             >
                 {isSubmitting ? 'Salvando...' : LABELS[mode]}
             </button>
@@ -74,6 +77,7 @@ export function SaveButton({
                 aria-label="Outras opções de salvar"
                 aria-expanded={isOpen}
                 className={`px-2.5 py-2 rounded-r border-l border-white/20 text-white transition disabled:cursor-not-allowed ${className}`}
+                tabIndex={tabIndex}
             >
                 <ChevronDownIcon />
             </button>

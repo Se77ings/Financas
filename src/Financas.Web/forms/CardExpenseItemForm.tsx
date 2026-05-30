@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { CardExpenseItemRequest } from '@/services/cardExpenseServices';
+import { addSubscriptionAsync, FrequencyType } from '@/services/subscriptionServices';
 import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton, SaveMode } from '@/public/components/SaveButton';
@@ -7,6 +8,7 @@ import { toInputDate } from '@/utils/dateFormat';
 
 interface CardExpenseItemFormProps {
     cardExpenseId: string;
+    creditCardId?: string | null;
     initialData?: {
         id: string;
         description: string;
@@ -26,6 +28,7 @@ interface CardExpenseItemFormProps {
 
 export default function CardExpenseItemForm({
     cardExpenseId,
+    creditCardId,
     initialData,
     onSubmit,
     onClose,
@@ -45,11 +48,18 @@ export default function CardExpenseItemForm({
     const [saveMode, setSaveMode] = useState<SaveMode>('close');
     const formRef = useRef<HTMLFormElement>(null);
 
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [recurrenceData, setRecurrenceData] = useState({
+        frequencyType: '1',
+        startDate: formData.dueDate,
+        endDate: '',
+    });
+
     const isNew = !initialData;
 
-    const getEmptyForm = () => ({
+    const getEmptyForm = (currentDate: string) => ({
         description: '',
-        dueDate: new Date().toISOString().split('T')[0],
+        dueDate: currentDate,
         subTotal: 0,
         discounts: 0,
         observation: '',
@@ -73,10 +83,23 @@ export default function CardExpenseItemForm({
         setIsSubmitting(true);
 
         try {
-            await onSubmit(formData);
+            if (isRecurring && isNew) {
+                await addSubscriptionAsync({
+                    description: formData.description,
+                    value: formData.subTotal,
+                    frequencyType: parseInt(recurrenceData.frequencyType, 10) as FrequencyType,
+                    creditCardId: creditCardId || null,
+                    startDate: recurrenceData.startDate,
+                    endDate: recurrenceData.endDate || null,
+                    isActive: true
+                });
+            } else {
+                await onSubmit(formData);
+            }
 
             if (saveMode === 'continue' && isNew) {
-                setFormData(getEmptyForm());
+                setFormData(getEmptyForm(formData.dueDate));
+                setIsRecurring(false);
             } else {
                 onClose();
             }
@@ -123,18 +146,20 @@ export default function CardExpenseItemForm({
                             required
                             className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
                             placeholder="Ex: Netflix"
+                            tabIndex={1}
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className={`grid ${formData.discounts !== 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
                         <div>
                             <label className="block text-xs font-semibold text-gray-400 mb-2">
-                                Valor (R$)
+                                Subtotal (R$)
                             </label>
                             <ValueComponent
                                 value={formData.subTotal}
                                 onChange={(subTotal) => setFormData(prev => ({ ...prev, subTotal }))}
                                 required
+                                tabIndex={2}
                             />
                         </div>
                         <div>
@@ -142,10 +167,25 @@ export default function CardExpenseItemForm({
                                 Descontos (R$)
                             </label>
                             <ValueComponent
+                                tabIndex={-1}
                                 value={formData.discounts}
                                 onChange={(discounts) => setFormData(prev => ({ ...prev, discounts }))}
                             />
                         </div>
+                        {formData.discounts !== 0 && (
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-2">
+                                    Total (R$)
+                                </label>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    disabled
+                                    value={(formData.subTotal - formData.discounts).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    className="w-full px-3 py-2 bg-[#0f0e0c]/50 border border-white/5 rounded text-gray-400 font-mono text-sm focus:outline-none cursor-not-allowed"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -153,6 +193,9 @@ export default function CardExpenseItemForm({
                             Data de Vencimento
                         </label>
                         <DateComponent
+                            plustabindex={3}
+                            minustabindex={-1}
+                            tabIndex={-1}
                             date={formData.dueDate}
                             onChange={(newDate) => setFormData(prev => ({ ...prev, dueDate: newDate }))}
                         />
@@ -163,7 +206,7 @@ export default function CardExpenseItemForm({
                             <label className="block text-xs font-semibold text-gray-400 mb-2">
                                 Parcela Atual
                             </label>
-                            <input
+                            <input tabIndex={-1}
                                 type="number"
                                 name="currentInstallment"
                                 min="1"
@@ -179,6 +222,7 @@ export default function CardExpenseItemForm({
                                 Total de Parcelas
                             </label>
                             <input
+                                tabIndex={-1}
                                 type="number"
                                 name="quantityInstallments"
                                 min="1"
@@ -191,6 +235,61 @@ export default function CardExpenseItemForm({
                         </div>
                     </div>
 
+                    {isNew && creditCardId && (
+                        <div className="border-t border-white/5 pt-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-400">Tornar este item recorrente (Assinatura)?</span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={isRecurring}
+                                        onChange={(e) => setIsRecurring(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-9 h-5 bg-[#0f0e0c] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-500 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
+                                </label>
+                            </div>
+
+                            {isRecurring && (
+                                <div className="p-3 bg-[#0f0e0c]/40 border border-white/5 rounded space-y-3 transition-all duration-300">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-400 mb-1">Frequência</label>
+                                        <select
+                                            value={recurrenceData.frequencyType}
+                                            onChange={(e) => setRecurrenceData(prev => ({ ...prev, frequencyType: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white focus:outline-none focus:border-blue-500 text-xs"
+                                        >
+                                            <option value="1">Mensal</option>
+                                            <option value="2">Trimestral</option>
+                                            <option value="3">Semestral</option>
+                                            <option value="4">Anual</option>
+                                        </select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">Início</label>
+                                            <input
+                                                type="date"
+                                                value={recurrenceData.startDate}
+                                                onChange={(e) => setRecurrenceData(prev => ({ ...prev, startDate: e.target.value }))}
+                                                className="w-full px-2 py-1 bg-[#0f0e0c] border border-white/10 rounded text-white focus:outline-none focus:border-blue-500 text-xs"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">Fim (Opcional)</label>
+                                            <input
+                                                type="date"
+                                                value={recurrenceData.endDate}
+                                                onChange={(e) => setRecurrenceData(prev => ({ ...prev, endDate: e.target.value }))}
+                                                className="w-full px-2 py-1 bg-[#0f0e0c] border border-white/10 rounded text-white focus:outline-none focus:border-blue-500 text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 mb-2">
                             Observação
@@ -202,6 +301,7 @@ export default function CardExpenseItemForm({
                             rows={2}
                             className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition resize-none"
                             placeholder="Opcional"
+                            tabIndex={-1}
                         />
                     </div>
 
@@ -210,6 +310,7 @@ export default function CardExpenseItemForm({
                             type="button"
                             onClick={onClose}
                             className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium"
+                            tabIndex={-1}    
                         >
                             Cancelar
                         </button>
@@ -221,6 +322,7 @@ export default function CardExpenseItemForm({
                                 isSubmitting={isSubmitting}
                                 disabled={isLoading}
                                 className="bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50"
+                                tabIndex={4}
                             />
                         ) : (
                             <button

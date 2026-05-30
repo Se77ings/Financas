@@ -9,7 +9,7 @@ import ReceivableSummaryView from '@/models/Receivable/ReceivableSummary';
 import ImmediateExpenseSummary from '@/models/ImmediateExpense/ImmediateExpenseSummary';
 import CardExpenseSummary from '@/models/CardExpense/CardExpenseSummary';
 import CardExpenseItemSummary from '@/models/CardExpense/Item/CardExpenseItemSummary';
-import { getEffectiveDateByIdAsync } from '@/services/effectiveDateServices';
+import { getEffectiveDateByIdAsync, syncMissingCardInvoicesAsync } from '@/services/effectiveDateServices';
 import { getCardExpenseAsync, addCardExpenseAsync, updateCardExpenseAsync, deleteCardExpenseAsync, addCardExpenseItemAsync, updateCardExpenseItemAsync, deleteCardExpenseItemAsync, CardExpenseRequest, CardExpenseItemRequest } from '@/services/cardExpenseServices';
 import { addReceivableAsync, updateReceivableAsync, deleteReceivableAsync, ReceivableRequest } from '@/services/receivableServices';
 import { addImmediateExpenseAsync, updateImmediateExpenseAsync, deleteImmediateExpenseAsync, ImmediateExpenseRequest } from '@/services/immediateExpenseServices';
@@ -66,6 +66,21 @@ export default function EffectiveDateDetails() {
     const [editingCard, setEditingCard] = useState<any>(null);
     const [showCardItemForm, setShowCardItemForm] = useState(false);
     const [editingCardItem, setEditingCardItem] = useState<any>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSyncCards = async () => {
+        if (!id) return;
+        setIsSyncing(true);
+        try {
+            await syncMissingCardInvoicesAsync(id);
+            await reloadData();
+            alert("Cartões sincronizados com sucesso!");
+        } catch (error) {
+            alert(`Erro ao sincronizar cartões: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     const reloadData = async () => {
         if (id) {
@@ -286,6 +301,16 @@ export default function EffectiveDateDetails() {
                         className="flex items-center gap-2 px-4 py-1.5 rounded bg-[#59161C] hover:bg-[#7a1e26] transition text-[11px] font-bold shadow-lg"
                     >
                         <Icons.Plus /> GASTO
+                    </button>
+                    <button
+                        onClick={handleSyncCards}
+                        disabled={isSyncing}
+                        className="flex items-center gap-2 px-4 py-1.5 rounded bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50 disabled:cursor-not-allowed transition text-[11px] font-bold shadow-lg text-white cursor-pointer"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={isSyncing ? "animate-spin" : ""}>
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        {isSyncing ? 'SINCRONIZANDO...' : 'SINCRONIZAR CARTÕES'}
                     </button>
                 </div>
             </header>
@@ -633,6 +658,7 @@ export default function EffectiveDateDetails() {
                 <CardExpenseItemForm
                     key={editingCardItem?.id ?? 'new-card-item'}
                     cardExpenseId={selectedCardId}
+                    creditCardId={selectedCard?.creditCardId}
                     initialData={editingCardItem}
                     onSubmit={handleSaveCardItem}
                     onClose={() => {

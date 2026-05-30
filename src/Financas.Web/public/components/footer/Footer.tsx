@@ -1,6 +1,6 @@
 "use client";
 
-import { getEffectiveDateListAsync } from '@/services/effectiveDateServices';
+import { getEffectiveDateListAsync, addEffectiveDateAsync } from '@/services/effectiveDateServices';
 import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ export default function Footer() {
     const router = useRouter();
 
     const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         getEffectiveDateListAsync()
@@ -20,11 +21,46 @@ export default function Footer() {
             })
     }, [])
 
-    function getEffectiveDates(): void {
-        let effectiveDates: EffectiveDateSummary[] = [];
+    const handleCreateNextEffectiveDate = async () => {
+        if (isCreating) return;
+        setIsCreating(true);
 
-        setEffectiveDates(effectiveDates);
-    }
+        try {
+            let nextMonth = new Date().getMonth() + 1;
+            let nextYear = new Date().getFullYear();
+
+            if (effectiveDates.length > 0) {
+                let maxDate = effectiveDates[0];
+                for (let i = 1; i < effectiveDates.length; i++) {
+                    const item = effectiveDates[i];
+                    if (item.year > maxDate.year || (item.year === maxDate.year && item.month > maxDate.month)) {
+                        maxDate = item;
+                    }
+                }
+
+                nextMonth = maxDate.month + 1;
+                nextYear = maxDate.year;
+                if (nextMonth > 12) {
+                    nextMonth = 1;
+                    nextYear += 1;
+                }
+            }
+
+            await addEffectiveDateAsync({ month: nextMonth, year: nextYear });
+
+            const updatedDates = await getEffectiveDateListAsync();
+            setEffectiveDates(updatedDates);
+
+            const newCompetency = updatedDates.find(d => d.month === nextMonth && d.year === nextYear);
+            if (newCompetency) {
+                goToEffectiveDate(newCompetency.id);
+            }
+        } catch (error) {
+            alert(error instanceof Error ? error.message : "Erro ao criar próxima competência");
+        } finally {
+            setIsCreating(false);
+        }
+    };
 
     function goToEffectiveDate(id: string) {
         router.push(`/effective-date?id=${encodeURIComponent(id)}`);
@@ -53,14 +89,15 @@ export default function Footer() {
 
             <button
                 type="button"
-                onClick={() => router.push("/effective-date")}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10 cursor-pointer"
+                onClick={handleCreateNextEffectiveDate}
+                disabled={isCreating}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10 cursor-pointer disabled:opacity-50"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                     <path d="M12 5v14" />
                     <path d="M5 12h14" />
                 </svg>
-                Novo
+                {isCreating ? "Criando..." : "Novo"}
             </button>
         </footer>
     );

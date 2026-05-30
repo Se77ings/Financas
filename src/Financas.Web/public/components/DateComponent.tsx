@@ -1,43 +1,54 @@
-import { useState } from 'react';
 import { toInputDate } from '@/utils/dateFormat';
 
-export function DateComponent({ date, onChange }: { date: string, onChange: (value: string) => void }) {
-    const [currentValue, setCurrentValue] = useState(() => {
-        const normalized = toInputDate(date);
-        return normalized || new Date().toISOString().split('T')[0];
-    });
-
-
-    const updateValue = (newValue: string) => {
-        setCurrentValue(newValue);
-        onChange(newValue);
-    };
+export function DateComponent({
+    date,
+    onChange,
+    tabIndex,
+    plustabindex,
+    minustabindex
+}: {
+    date: string,
+    onChange: (value: string) => void,
+    tabIndex?: number,
+    plustabindex?: number,
+    minustabindex?: number
+}) {
+    // Derived state - fallback to today's date if empty
+    const valueToShow = toInputDate(date) || new Date().toISOString().split('T')[0];
 
     const incrementDate = () => {
-        const currentDate = new Date(currentValue);
-        currentDate.setDate(currentDate.getDate() + 1);
-        updateValue(currentDate.toISOString().split('T')[0]);
+        const [year, month, day] = valueToShow.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
+        dateObj.setDate(dateObj.getDate() + 1);
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        onChange(`${y}-${m}-${d}`);
     };
 
     const decrementDate = () => {
-        const currentDate = new Date(currentValue);
-        currentDate.setDate(currentDate.getDate() - 1);
-        updateValue(currentDate.toISOString().split('T')[0]);
+        const [year, month, day] = valueToShow.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
+        dateObj.setDate(dateObj.getDate() - 1);
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        onChange(`${y}-${m}-${d}`);
     };
 
     return (
         <div className='flex flex-row gap-1'>
-            <button tabIndex={1} className="flex justify-center items-center flex-row px-4 bg-[#211f1c] border border-white/5 rounded" style={{ width: 20 }} type='button' onClick={decrementDate}>-</button>
+            <button tabIndex={minustabindex} className="flex justify-center items-center flex-row px-4 bg-[#211f1c] border border-white/5 rounded cursor-pointer" style={{ width: 20 }} type='button' onClick={decrementDate}>-</button>
             <input
-                tabIndex={0}
+                tabIndex={tabIndex}
                 type="date"
                 name="date"
-                value={currentValue}
-                onChange={(e) => updateValue(e.target.value)}
+                value={valueToShow}
+                onChange={(e) => onChange(e.target.value)}
                 required
                 className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
             />
-            <button tabIndex={1} className="flex justify-center items-center flex-row px-4 bg-[#211f1c] border border-white/5 rounded" style={{ width: 20 }} type='button' onClick={incrementDate}>+</button>
+            <button tabIndex={plustabindex} className="flex justify-center items-center flex-row px-4 bg-[#211f1c] border border-white/5 rounded cursor-pointer" style={{ width: 20 }} type='button' onClick={incrementDate}>+</button>
         </div>
     );
 }

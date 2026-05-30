@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Aggregates.Payable;
+using Financeiro.Business.Aggregates.Payable;
 
 namespace Financeiro.Application.Models.PayableModels
 {
@@ -11,6 +11,7 @@ namespace Financeiro.Application.Models.PayableModels
 		public decimal SubTotal { get; set; }
 		public decimal Discounts { get; set; } = 0;
 		public string? Observation { get; set; }
+		public Guid CreditCardId { get; set; }
 
 		public List<CardExpenseItemView> Items { get; set; } = new List<CardExpenseItemView>();
 
@@ -26,6 +27,7 @@ namespace Financeiro.Application.Models.PayableModels
 				SubTotal = card.SubTotal,
 				Discounts = card.Discount,
 				Observation = card.Observation,
+				CreditCardId = card.CreditCardId,
 				Items = card.Expenses.OrderByDescending(d => d.DueDate).Select(d => (CardExpenseItemView)d).ToList()
 			};
 		}

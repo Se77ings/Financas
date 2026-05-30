@@ -9,10 +9,11 @@ export default class CardExpenseSummary {
     subtotal: number;
     discounts: number;
     observation: string;
+    creditCardId: string;
     items: CardExpenseItemSummary[];
     
 
-    constructor(id: string, description: string, total: number, dueDate: string, subtotal: number, discounts: number, observation:string, items: CardExpenseItemSummary[]) {
+    constructor(id: string, description: string, total: number, dueDate: string, subtotal: number, discounts: number, observation:string, creditCardId: string, items: CardExpenseItemSummary[]) {
         this.id = id;
         this.description = description;
         this.total = total;
@@ -20,6 +21,7 @@ export default class CardExpenseSummary {
         this.subtotal = subtotal;
         this.discounts = discounts;
         this.observation = observation;
+        this.creditCardId = creditCardId;
         this.items = items;
     }
 
@@ -32,6 +34,7 @@ export default class CardExpenseSummary {
             data.subtotal || data.subTotal,
             data.discounts,
             data.observation,
+            data.creditCardId || data.creditCardId,
             Deserializer.deserializeArray(data.items || [], CardExpenseItemSummary)
         );
     }

@@ -1,3 +1,4 @@
+using Financas.Application.Services.CompetenciaServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Business.Shared.ServiceBase;
 using Financeiro.Application.Models.PayableModels;
@@ -12,15 +13,24 @@ namespace Financas.Application.Services.ObrigaçãoServices
     public class CardExpenseServices : ServiceBase, ICardExpenseServices
     {
         private readonly ICardExpenseRepository _repository;
+        private readonly IEffectiveDateServices _effectiveDateServices;
 
-        public CardExpenseServices(ICardExpenseRepository repository)
+        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices)
         {
             _repository = repository;
+            _effectiveDateServices = effectiveDateServices;
         }
 
         public async Task<Result<bool>> AddAsync(CardExpenseRequest request)
         {
-            var entidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.EffectiveDate);
+            var explicitId = request.EffectiveDateId ?? request.EffectiveDate;
+            var effectiveDateResult = await _effectiveDateServices.ResolveForOperationAsync(request.DueDate, explicitId);
+            if (!effectiveDateResult.IsSuccess)
+                return Result<bool>.Failure(effectiveDateResult.Error!);
+
+            var effectiveDateId = effectiveDateResult.Value!;
+
+            var entidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId);
 
             var validation = await ValidateEntityAsync<CardExpense, CardExpenseValidator>(entidade);
 
@@ -33,16 +43,23 @@ namespace Financas.Application.Services.ObrigaçãoServices
 
         public async Task<Result<bool>> UpdateAsync(Guid id, CardExpenseRequest request)
         {
+            var explicitId = request.EffectiveDateId ?? request.EffectiveDate;
+            var effectiveDateResult = await _effectiveDateServices.ResolveForOperationAsync(request.DueDate, explicitId);
+            if (!effectiveDateResult.IsSuccess)
+                return Result<bool>.Failure(effectiveDateResult.Error!);
+
+            var effectiveDateId = effectiveDateResult.Value!;
+
             var result = await GetCardExpenseById(id);
 
-            var novaEntidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.EffectiveDate);
+            var novaEntidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId);
 
             var validation = await ValidateEntityAsync<CardExpense, CardExpenseValidator>(novaEntidade);
 
             if (!validation.Success)
                 return Result<bool>.Failure(validation.Error);
 
-            result.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.EffectiveDate);
+            result.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId);
 
             await _repository.UpdateAsync(result);
             return Result<bool>.Success(true);
