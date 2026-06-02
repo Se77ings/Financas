@@ -13,11 +13,11 @@ export function DateComponent({
     plustabindex?: number,
     minustabindex?: number
 }) {
-    // Derived state - fallback to today's date if empty
-    const valueToShow = toInputDate(date) || new Date().toISOString().split('T')[0];
+    const valueToShow = toInputDate(date);
+    const activeDate = valueToShow || new Date().toISOString().split('T')[0];
 
     const incrementDate = () => {
-        const [year, month, day] = valueToShow.split('-').map(Number);
+        const [year, month, day] = activeDate.split('-').map(Number);
         const dateObj = new Date(year, month - 1, day);
         dateObj.setDate(dateObj.getDate() + 1);
         const y = dateObj.getFullYear();
@@ -27,7 +27,7 @@ export function DateComponent({
     };
 
     const decrementDate = () => {
-        const [year, month, day] = valueToShow.split('-').map(Number);
+        const [year, month, day] = activeDate.split('-').map(Number);
         const dateObj = new Date(year, month - 1, day);
         dateObj.setDate(dateObj.getDate() - 1);
         const y = dateObj.getFullYear();
