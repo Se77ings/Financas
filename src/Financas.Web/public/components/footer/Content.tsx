@@ -1,20 +1,16 @@
 import { useState } from "react";
+import { ReactNode } from "react";
 
 export default function Content({
     children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
-    const [selected, setSelected] = useState(false);
-
+    isActive
+}: {
+    children: ReactNode;
+    isActive?: boolean;
+}) {
     return (
-        <div className={`flex flex-col bg-blue-500 px-3 justify-center border-r cursor-pointer ${selected ? 'bg-blue-600' : ''}`} onClick={() => handleClick()}>
-            <p className="text-center">{children}</p>
+        <div className={`flex h-full min-w-20 px-3 flex-row items-center border ${isActive ? 'border-solid border-blue-500 bg-blue-900/20 text-blue-400 font-bold' : 'border-dashed border-white/5 text-gray-400'} text-[10px] uppercase tracking-widest justify-center select-none font-mono transition-all`}>
+            {children}
         </div>
     )
-
-    function handleClick() {
-        setSelected(!selected)
-    }
-
 }

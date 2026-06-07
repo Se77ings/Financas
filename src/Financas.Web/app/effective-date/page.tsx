@@ -102,6 +102,9 @@ export default function EffectiveDateDetails() {
     };
 
     useEffect(() => {
+        setSelectedCardId(null);
+        setSelectedCardData(null);
+        setSelectedItemIds([]);
         reloadData();
     }, [id]);
 

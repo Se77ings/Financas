@@ -2,12 +2,14 @@
 
 import { getEffectiveDateListAsync, addEffectiveDateAsync } from '@/services/effectiveDateServices';
 import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Content from "./Content";
 
 export default function Footer() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const activeId = searchParams?.get("id");
 
     const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[]>([]);
     const [isCreating, setIsCreating] = useState(false);
@@ -74,17 +76,23 @@ export default function Footer() {
                 </svg>
                 Home
             </button>
-            <div className="flex flex-grow">
-                <div className="flex flex-row flex-grow-1">
+            <div className="flex flex-grow overflow-x-auto">
+                <div className="flex flex-row items-stretch">
                     {effectiveDates.map((effectiveDate) => {
-                        return <button key={effectiveDate.id} onClick={() => goToEffectiveDate(effectiveDate.id)} className="flex ">
-                            <Content key={effectiveDate.id}>
-                                {effectiveDate.display}
-                            </Content>
-                        </button>
+                        const isActive = effectiveDate.id === activeId;
+                        return (
+                            <button
+                                key={effectiveDate.id}
+                                onClick={() => goToEffectiveDate(effectiveDate.id)}
+                                className={`flex items-stretch transition-colors ${isActive ? 'bg-blue-900/10' : ''}`}
+                            >
+                                <Content isActive={isActive}>
+                                    {effectiveDate.display}
+                                </Content>
+                            </button>
+                        );
                     })}
                 </div>
-
             </div>
 
             <button
