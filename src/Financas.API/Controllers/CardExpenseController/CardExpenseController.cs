@@ -1,4 +1,4 @@
-﻿using Financas.Application.Services.PayableServices.Interfaces;
+using Financas.Application.Services.PayableServices.Interfaces;
 using Financeiro.Application.Models.PayableModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -103,6 +103,18 @@ namespace Financas.API.Controllers
 		public async Task<IActionResult> RemoveItemAsync([FromRoute] Guid id, [FromRoute] Guid itemId)
 		{
 			var result = await _services.RemoveItemAsync(id, itemId);
+
+			if (!result.IsSuccess)
+			{
+				return BadRequest(result.Error.Message);
+			}
+			return Ok();
+		}
+
+		[HttpPost("transfer-items")]
+		public async Task<IActionResult> TransferItemsAsync([FromBody] CardExpenseItemTransferRequest request)
+		{
+			var result = await _services.TransferItemsAsync(request);
 
 			if (!result.IsSuccess)
 			{

@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Aggregates.Interfaces;
+using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Infra.Context;
 using Microsoft.EntityFrameworkCore;
@@ -94,6 +94,29 @@ namespace Financeiro.Infra.Repository
 		public async Task<bool> ExistsOtherItemAsync(Guid id, string description, DateOnly date)
 		{
 			return await _context.CardExpenseItem.AnyAsync(x => x.Description == description && x.DueDate == date && x.Id == id);
+		}
+
+		public async Task<CardExpense?> GetByCardAndEffectiveDateAsync(Guid creditCardId, Guid effectiveDateId)
+		{
+			return await _context.Payable
+				.OfType<CardExpense>()
+				.Include(x => x.Expenses)
+				.FirstOrDefaultAsync(x => x.CreditCardId == creditCardId && x.EffectiveDateId == effectiveDateId);
+		}
+
+		public async Task<List<CardExpense>> GetCardExpensesByItemIdsAsync(List<Guid> itemIds)
+		{
+			return await _context.Payable
+				.OfType<CardExpense>()
+				.Include(x => x.Expenses)
+				.Where(c => c.Expenses.Any(e => itemIds.Contains(e.Id)))
+				.ToListAsync();
+		}
+
+		public async Task UpdateItemAsync(CardExpense.Expense item)
+		{
+			_context.CardExpenseItem.Update(item);
+			await SaveChangesAsync();
 		}
 	}
 }

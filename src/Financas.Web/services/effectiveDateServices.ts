@@ -35,3 +35,14 @@ export async function addEffectiveDateAsync(request: { month: number, year: numb
         throw new Error(error.message || 'Failed to add competency');
     }
 }
+
+export async function getEligibleEffectiveDatesForTransferAsync(): Promise<EffectiveDateSummary[]> {
+    const response = await getAsync(`api/effectiveDate/eligible-for-transfer`);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch eligible competencies: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return Deserializer.deserializeArray(data, EffectiveDateSummary);
+}

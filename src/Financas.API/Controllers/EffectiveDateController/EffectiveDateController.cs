@@ -95,5 +95,16 @@ namespace Financas.API.Controllers.EffectiveDateController
 			return Ok();
 		}
 
+		[HttpGet("eligible-for-transfer")]
+		public async Task<IActionResult> GetEligibleForTransferAsync()
+		{
+			var (result, lista) = await _services.GetEligibleForTransferAsync();
+
+			if (!result.IsSuccess)
+			{
+				return BadRequest(result.Error.Message);
+			}
+			return Ok(lista);
+		}
 	}
 }

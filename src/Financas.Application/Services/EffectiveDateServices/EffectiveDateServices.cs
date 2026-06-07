@@ -171,6 +171,12 @@ namespace Financas.Application.Services.CompetenciaServices
 			return await _generatorService.SyncMissingCardInvoicesAsync(id);
 		}
 
+		public async Task<(Result<bool> result, List<EffectiveDateSummary> lista)> GetEligibleForTransferAsync()
+		{
+			//TODO: Atualmente todas as competências cadastradas são elegíveis. (futuramente alterar, quando houver opção de "quitar" as competencias
+			return await GetListAsync();
+		}
+
 		#region Métodos internos
 		public async Task<EffectiveDate> GetEffectiveDate(Guid id)
 		{

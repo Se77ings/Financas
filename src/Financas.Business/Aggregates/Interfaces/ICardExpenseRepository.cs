@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Aggregates.Payable;
+using Financeiro.Business.Aggregates.Payable;
 
 namespace Financeiro.Business.Aggregates.Interfaces
 {
@@ -12,6 +12,8 @@ namespace Financeiro.Business.Aggregates.Interfaces
 
 		Task<bool> ExistsItemAsync(string description, DateOnly date);
 		Task<bool> ExistsOtherItemAsync(Guid id, string description, DateOnly date);
-
+		Task<CardExpense?> GetByCardAndEffectiveDateAsync(Guid creditCardId, Guid effectiveDateId);
+		Task<List<CardExpense>> GetCardExpensesByItemIdsAsync(List<Guid> itemIds);
+		Task UpdateItemAsync(CardExpense.Expense item);
 	}
 }

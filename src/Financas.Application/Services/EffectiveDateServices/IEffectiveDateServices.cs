@@ -30,5 +30,6 @@ namespace Financas.Application.Services.CompetenciaServices
 		Task<Result<bool>> UpdateAsync(Guid id, EffectiveDateRequest request);
 		Task<Result<bool>> DeleteAsync(Guid id);
 		Task<Result<bool>> SyncMissingCardInvoicesAsync(Guid id);
+		Task<(Result<bool> result, List<EffectiveDateSummary> lista)> GetEligibleForTransferAsync();
 	}
 }

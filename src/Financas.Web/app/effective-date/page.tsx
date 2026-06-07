@@ -9,8 +9,9 @@ import ReceivableSummaryView from '@/models/Receivable/ReceivableSummary';
 import ImmediateExpenseSummary from '@/models/ImmediateExpense/ImmediateExpenseSummary';
 import CardExpenseSummary from '@/models/CardExpense/CardExpenseSummary';
 import CardExpenseItemSummary from '@/models/CardExpense/Item/CardExpenseItemSummary';
-import { getEffectiveDateByIdAsync, syncMissingCardInvoicesAsync } from '@/services/effectiveDateServices';
-import { getCardExpenseAsync, addCardExpenseAsync, updateCardExpenseAsync, deleteCardExpenseAsync, addCardExpenseItemAsync, updateCardExpenseItemAsync, deleteCardExpenseItemAsync, CardExpenseRequest, CardExpenseItemRequest } from '@/services/cardExpenseServices';
+import { getEffectiveDateByIdAsync, syncMissingCardInvoicesAsync, getEligibleEffectiveDatesForTransferAsync } from '@/services/effectiveDateServices';
+import { getCardExpenseAsync, addCardExpenseAsync, updateCardExpenseAsync, deleteCardExpenseAsync, addCardExpenseItemAsync, updateCardExpenseItemAsync, deleteCardExpenseItemAsync, transferCardExpenseItemsAsync, CardExpenseRequest, CardExpenseItemRequest } from '@/services/cardExpenseServices';
+import EffectiveDateSummary from '@/models/EffectiveDate/EffectiveDateSummary';
 import { addReceivableAsync, updateReceivableAsync, deleteReceivableAsync, ReceivableRequest } from '@/services/receivableServices';
 import { addImmediateExpenseAsync, updateImmediateExpenseAsync, deleteImmediateExpenseAsync, ImmediateExpenseRequest } from '@/services/immediateExpenseServices';
 import ReceivableForm from '@/forms/ReceivableForm';
@@ -53,6 +54,13 @@ export default function EffectiveDateDetails() {
     const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
     const [selectedCardData, setSelectedCardData] = useState<CardExpenseSummary | null>(null);
     const [isLoadingCard, setIsLoadingCard] = useState(false);
+    
+    // Multi-selection & Transfer states
+    const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+    const [showTransferModal, setShowTransferModal] = useState(false);
+    const [eligibleCompetencies, setEligibleCompetencies] = useState<EffectiveDateSummary[]>([]);
+    const [selectedTargetCompetencyId, setSelectedTargetCompetencyId] = useState<string>("");
+    const [isTransferring, setIsTransferring] = useState(false);
     
     // Form states
     const [showReceivableForm, setShowReceivableForm] = useState(false);
@@ -144,10 +152,12 @@ export default function EffectiveDateDetails() {
         if (selectedCardId === cardId) {
             setSelectedCardId(null);
             setSelectedCardData(null);
+            setSelectedItemIds([]);
             return;
         }
         
         setSelectedCardId(cardId);
+        setSelectedItemIds([]);
         setIsLoadingCard(true);
         try {
             const cardData = await getCardExpenseAsync(cardId);
@@ -157,6 +167,41 @@ export default function EffectiveDateDetails() {
             setSelectedCardId(null);
         } finally {
             setIsLoadingCard(false);
+        }
+    };
+
+    const handleOpenTransferModal = async () => {
+        try {
+            const list = await getEligibleEffectiveDatesForTransferAsync();
+            // Filter out current competency
+            setEligibleCompetencies(list.filter(c => c.id !== id));
+            setShowTransferModal(true);
+        } catch (error) {
+            alert(`Erro ao buscar competências: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        }
+    };
+
+    const handleConfirmTransfer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedTargetCompetencyId || selectedItemIds.length === 0) return;
+        
+        setIsTransferring(true);
+        try {
+            await transferCardExpenseItemsAsync(selectedItemIds, selectedTargetCompetencyId);
+            
+            await reloadData();
+            if (selectedCardId) {
+                await reloadSelectedCard(selectedCardId);
+            }
+            
+            setSelectedItemIds([]);
+            setShowTransferModal(false);
+            setSelectedTargetCompetencyId("");
+            alert("Itens transferidos com sucesso!");
+        } catch (error) {
+            alert(`Erro ao transferir itens: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        } finally {
+            setIsTransferring(false);
         }
     };
 
@@ -271,6 +316,13 @@ export default function EffectiveDateDetails() {
             viewData.cardExpenses.reduce((acc, curr) => acc + curr.total, 0);
         return { received, spent, balance: received - spent };
     }, [viewData]);
+
+    const selectedTotal = useMemo(() => {
+        if (!selectedCard?.items) return 0;
+        return selectedCard.items
+            .filter(item => selectedItemIds.includes(item.id))
+            .reduce((sum, item) => sum + item.total, 0);
+    }, [selectedCard, selectedItemIds]);
 
     if (!id) return <div className="p-8 text-white">ID não informado.</div>;
     if (!viewData) return <div className="p-8 text-white">Carregando...</div>;
@@ -505,6 +557,16 @@ export default function EffectiveDateDetails() {
                                 <Icons.Card color="#93c5fd" /> Detalhes Fatura: {selectedCard?.description}
                             </h3>
                             <div className="flex items-center gap-2">
+                                {selectedItemIds.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleOpenTransferModal}
+                                        className="flex items-center justify-center p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition text-[11px]"
+                                        title="Transferência entre competências"
+                                    >
+                                        ⚙️
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -537,6 +599,20 @@ export default function EffectiveDateDetails() {
                                 <table className="w-full min-w-full text-left text-sm">
                                     <thead className="text-[10px] text-gray-500 uppercase border-b border-white/5 sticky top-0 ">
                                         <tr>
+                                            <th className="px-4 py-3 w-8">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedCard.items && selectedCard.items.length > 0 && selectedCard.items.every(item => selectedItemIds.includes(item.id))}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedItemIds(selectedCard.items?.map(item => item.id) || []);
+                                                        } else {
+                                                            setSelectedItemIds([]);
+                                                        }
+                                                    }}
+                                                    className="rounded border-white/10 bg-white/5 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </th>
                                             <th className="px-4 py-3">Item</th>
                                             <th className="px-4 py-3">Data</th>
                                             <th className="px-4 py-3 text-right">Valor</th>
@@ -547,6 +623,20 @@ export default function EffectiveDateDetails() {
                                         {selectedCard.items && selectedCard.items.length > 0 ? (
                                             selectedCard.items.map(item => (
                                                 <tr key={item.id} className="hover:bg-white/5 group">
+                                                    <td className="px-4 py-4 w-8">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedItemIds.includes(item.id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedItemIds(prev => [...prev, item.id]);
+                                                                } else {
+                                                                    setSelectedItemIds(prev => prev.filter(id => id !== item.id));
+                                                                }
+                                                            }}
+                                                            className="rounded border-white/10 bg-white/5 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                        />
+                                                    </td>
                                                     <td className="px-4 py-4 text-gray-200">
                                                         {item.displayDescription}
                                                         {item.quantityInstallments > 1 && (
@@ -585,7 +675,7 @@ export default function EffectiveDateDetails() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                                                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                                                     Nenhum item nesta fatura
                                                 </td>
                                             </tr>
@@ -597,7 +687,14 @@ export default function EffectiveDateDetails() {
 
                         {selectedCard && (
                             <div className="shrink-0 p-5 bg-blue-950/20 border-t border-white/10 flex justify-between items-center">
-                                <span className="text-xs uppercase font-bold text-blue-400">Total Fatura</span>
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="text-xs uppercase font-bold text-blue-400">Total Fatura</span>
+                                    {selectedItemIds.length > 0 && (
+                                        <span className="text-[10px] text-gray-400 font-medium">
+                                            Selecionados: {selectedItemIds.length} item(ns) (R$ {selectedTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                                        </span>
+                                    )}
+                                </div>
                                 <span className="text-xl font-bold font-mono">R$ {selectedCard.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
                         )}
@@ -667,6 +764,62 @@ export default function EffectiveDateDetails() {
                     }}
                     isLoading={isOperating}
                 />
+            )}
+
+            {showTransferModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-md bg-[#1a1917] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+                        <header className="px-5 py-4 border-b border-white/5 bg-[#141312] flex justify-between items-center">
+                            <h3 className="font-bold text-sm uppercase text-gray-200">Transferência de Competência</h3>
+                            <button onClick={() => setShowTransferModal(false)} className="text-gray-500 hover:text-white transition">
+                                <Icons.X />
+                            </button>
+                        </header>
+                        
+                        <form onSubmit={handleConfirmTransfer} className="p-5 flex flex-col gap-4">
+                            <div>
+                                <label className="block text-xs uppercase font-bold text-gray-400 mb-2">
+                                    Selecione a competência de destino
+                                </label>
+                                <select
+                                    value={selectedTargetCompetencyId}
+                                    onChange={(e) => setSelectedTargetCompetencyId(e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 rounded bg-black/40 border border-white/10 text-gray-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >
+                                    <option value="" disabled>Selecione...</option>
+                                    {eligibleCompetencies.map(comp => (
+                                        <option key={comp.id} value={comp.id}>
+                                            {comp.display}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div className="text-xs text-gray-500 leading-relaxed bg-white/5 p-3 rounded">
+                                <p className="font-semibold text-gray-400 mb-1">Atenção:</p>
+                                Os {selectedItemIds.length} item(ns) selecionado(s) serão movidos para a fatura do cartão <strong>{selectedCard?.description}</strong> na competência selecionada, mantendo seus valores e datas originais.
+                            </div>
+                            
+                            <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTransferModal(false)}
+                                    className="px-4 py-2 rounded border border-white/10 text-xs font-semibold hover:bg-white/5 transition text-gray-300"
+                                >
+                                    CANCELAR
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isTransferring || !selectedTargetCompetencyId}
+                                    className="px-4 py-2 rounded bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50 disabled:cursor-not-allowed transition text-xs font-semibold text-white shadow-lg flex items-center gap-1"
+                                >
+                                    {isTransferring ? 'TRANSFERINDO...' : 'CONFIRMAR'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

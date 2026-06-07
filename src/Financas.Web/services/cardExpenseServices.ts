@@ -98,3 +98,15 @@ export async function deleteCardExpenseItemAsync(cardExpenseId: string, itemId: 
         throw new Error(error.message || 'Failed to delete card expense item');
     }
 }
+
+export async function transferCardExpenseItemsAsync(itemIds: string[], targetEffectiveDateId: string): Promise<void> {
+    const response = await postAsync(`api/CardExpense/transfer-items`, {
+        cardExpenseItemIds: itemIds,
+        targetEffectiveDateId
+    });
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to transfer card items');
+    }
+}

@@ -72,6 +72,12 @@ namespace Financeiro.Business.Aggregates.Payable
 
 				this.Update(descriptions, subtotal, dueDate, discounts, observation, EffectiveDateId);
 			}
+
+			public void TransferTo(Guid cardExpenseId, Guid effectiveDateId)
+			{
+				CardExpenseId = cardExpenseId;
+				this.Update(Description, SubTotal, DueDate, Discount, Observation, effectiveDateId);
+			}
 		}
 	}
 
