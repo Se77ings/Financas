@@ -49,6 +49,15 @@ export default function Home() {
                             >
                                 💳 Configurar Cartão
                             </button>
+                            <button
+                                onClick={() => {
+                                    setShowSettingsDropdown(false);
+                                    router.push("/wage-history");
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
+                            >
+                                💼 Histórico de Salários
+                            </button>
                         </div>
                     )}
                 </div>

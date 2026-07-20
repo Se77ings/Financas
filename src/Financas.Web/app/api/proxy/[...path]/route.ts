@@ -5,9 +5,12 @@ async function proxyRequest(
   params: Promise<{ path: string[] }>,
   method: string
 ) {
+  // Ignora erros de SSL autoassinado (certificado Kestrel/IIS local) em ambiente de desenvolvimento
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   try {
     const { path } = await params;
     const API_URL = process.env.API_URL;
+    const WAGE_API_URL = process.env.WAGE_API_URL || 'http://localhost:5013';
 
     if (!API_URL) {
       return NextResponse.json(
@@ -17,7 +20,9 @@ async function proxyRequest(
     }
 
     const pathString = path.join('/');
-    const url = `${API_URL}/${pathString}`;
+    const isWageRoute = path.some(p => p.toLowerCase() === 'wage');
+    const baseUrl = isWageRoute ? WAGE_API_URL : API_URL;
+    const url = `${baseUrl}/${pathString}`;
 
     const init: RequestInit = {
       method,

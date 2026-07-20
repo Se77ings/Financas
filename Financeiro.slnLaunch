@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Standard",
+    "Projects": [
+      {
+        "Path": "src\\Financas.API\\Financas.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\WageHistory\\WageHistory.API\\WageHistory.API.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
