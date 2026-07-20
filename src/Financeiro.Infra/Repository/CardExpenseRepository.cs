@@ -50,9 +50,12 @@ namespace Financeiro.Infra.Repository
 		public async Task AddItemAsync(CardExpense.Expense item)
 		{
 			_context.CardExpenseItem.Add(item);
-		}
 
-		public async Task RecalculateCardExpenseAsync(Guid cardExpenseId)
+            await SaveChangesAsync();
+
+        }
+
+        public async Task RecalculateCardExpenseAsync(Guid cardExpenseId)
 		{ // TODO: Avaliar como posso substituir este método por uma forma mais convencional.
 			var cardExpense = await GetByIdAsync(cardExpenseId);
 			if (cardExpense != null && cardExpense.Expenses.Any())

@@ -13,7 +13,7 @@ namespace Financeiro.Infra.Mappings
 			builder.Property(x => x.Total).IsRequired();
 			builder.Property(x => x.DueDate).IsRequired();
 			builder.Property(x => x.SubTotal).IsRequired();
-			builder.Property(x => x.Observation).HasMaxLength(150);
+			builder.Property(x => x.Observation).HasMaxLength(500);
 		}
 	}
 }

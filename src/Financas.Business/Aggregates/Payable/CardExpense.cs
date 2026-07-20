@@ -1,84 +1,95 @@
 namespace Financeiro.Business.Aggregates.Payable
 {
-	public class CardExpense : Payable
-	{
-		private List<Expense> _expenses = new();
-		public ICollection<Expense> Expenses => _expenses;
+    public class CardExpense : Payable
+    {
+        private List<Expense> _expenses = new();
+        public ICollection<Expense> Expenses => _expenses;
 
-		public Guid CreditCardId { get; private set; }
-		public CreditCard CreditCard { get; private set; }
+        public Guid CreditCardId { get; private set; }
+        public CreditCard CreditCard { get; private set; }
 
-		#region Construtores
-		protected CardExpense() { }
-		public CardExpense(string descricao, decimal subtotal, DateOnly dataVencimento, decimal? descontos, string observacao, Guid competencia, Guid creditCardId) : base(descricao, subtotal, dataVencimento, descontos, observacao, competencia)
-		{
-			CreditCardId = creditCardId;
-		}
-		#endregion
+        #region Construtores
+        protected CardExpense() { }
+        public CardExpense(string descricao, decimal subtotal, DateOnly dataVencimento, decimal? descontos, string observacao, Guid competencia, Guid creditCardId) : base(descricao, subtotal, dataVencimento, descontos, observacao, competencia)
+        {
+            CreditCardId = creditCardId;
+        }
+        #endregion
 
-		public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid creditCardId)
-		{
-			base.Update(description, subtotal, dueDate, discounts, observation, effectiveDateId);
-			CreditCardId = creditCardId;
-		}
+        public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid creditCardId)
+        {
+            base.Update(description, subtotal, dueDate, discounts, observation, effectiveDateId);
+            CreditCardId = creditCardId;
+        }
 
-		public void AddExpense(Expense expense)
-		{
-			_expenses.Add(expense);
-			RecalculateValue();
-		}
-		public void RemoveExpense(Guid expenseId)
-		{
-			_expenses.Remove(_expenses.Find(x => x.Id == expenseId));
-			RecalculateValue();
-		}
+        public void AddExpense(Expense expense)
+        {
+            _expenses.Add(expense);
+            RecalculateValue();
+        }
+        public void RemoveExpense(Guid expenseId)
+        {
+            _expenses.Remove(_expenses.Find(x => x.Id == expenseId));
+            RecalculateValue();
+        }
 
-		public void UpdateExpense(Guid expenseId, string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments)
-		{
-			var expense = _expenses.Find(x => x.Id == expenseId);
+        public void UpdateExpense(Guid expenseId, string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments)
+        {
+            var expense = _expenses.Find(x => x.Id == expenseId);
 
-			expense.UpdateExpense(description, subtotal, dueDate, discounts, observation, currentInstallment, quantityInstallments);
-			RecalculateValue();
-		}
+            expense.UpdateExpense(description, subtotal, dueDate, discounts, observation, currentInstallment, quantityInstallments);
+            RecalculateValue();
+        }
 
-		private void RecalculateValue()
-		{
-			var listSubTotal = _expenses.Sum(x => x.SubTotal);
-			var listDiscounts = _expenses.Sum(x => x.Discount);
-			this.SetValues(listSubTotal, listDiscounts);
-		}		
+        private void RecalculateValue()
+        {
+            var listSubTotal = _expenses.Sum(x => x.SubTotal);
+            var listDiscounts = _expenses.Sum(x => x.Discount);
+            this.SetValues(listSubTotal, listDiscounts);
+        }
 
-		public class Expense : Payable
-		{
-			public int CurrentInstallment { get; private set; }
-			public int QuantityInstallments { get; private set; }
+        public override bool HasValue()
+        {
+            return _expenses.Any(x => x.Total > 0);
+        }
 
-			public Guid CardExpenseId { get; private set; }
-			public CardExpense CardExpense { get; private set; }
 
-			public Expense(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments, Guid effectiveDate, Guid cardExpenseId) : base(description, subtotal, dueDate, discounts, observation, effectiveDate)
-			{
-				CurrentInstallment = currentInstallment;
-				QuantityInstallments = quantityInstallments;
-				CardExpenseId = cardExpenseId;
-			}
+        public class Expense : Payable
+        {
+            public int CurrentInstallment { get; private set; }
+            public int QuantityInstallments { get; private set; }
 
-			protected Expense() { }
+            public Guid CardExpenseId { get; private set; }
+            public CardExpense CardExpense { get; private set; }
 
-			public void UpdateExpense(string descriptions, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments)
-			{
-				CurrentInstallment = currentInstallment;
-				QuantityInstallments = quantityInstallments;
+            public Expense(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments, Guid effectiveDate, Guid cardExpenseId) : base(description, subtotal, dueDate, discounts, observation, effectiveDate)
+            {
+                CurrentInstallment = currentInstallment;
+                QuantityInstallments = quantityInstallments;
+                CardExpenseId = cardExpenseId;
+            }
 
-				this.Update(descriptions, subtotal, dueDate, discounts, observation, EffectiveDateId);
-			}
+            protected Expense() { }
 
-			public void TransferTo(Guid cardExpenseId, Guid effectiveDateId)
-			{
-				CardExpenseId = cardExpenseId;
-				this.Update(Description, SubTotal, DueDate, Discount, Observation, effectiveDateId);
-			}
-		}
-	}
+            public void UpdateExpense(string descriptions, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments)
+            {
+                CurrentInstallment = currentInstallment;
+                QuantityInstallments = quantityInstallments;
+
+                this.Update(descriptions, subtotal, dueDate, discounts, observation, EffectiveDateId);
+            }
+
+            public void TransferTo(Guid cardExpenseId, Guid effectiveDateId)
+            {
+                CardExpenseId = cardExpenseId;
+                this.Update(Description, SubTotal, DueDate, Discount, Observation, effectiveDateId);
+            }
+
+            public override bool HasValue()
+            {
+                return this.Total > 0;
+            }
+        }
+    }
 
 }

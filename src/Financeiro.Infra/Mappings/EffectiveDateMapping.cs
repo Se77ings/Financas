@@ -16,8 +16,8 @@ namespace Financeiro.Infra.Mappings
 				.HasConversion<int>()
 				.IsRequired();
 			builder.Property(x => x.Year).IsRequired();
-			builder.HasMany(x => x.Receivable).WithOne(x => x.EffectiveDate).HasForeignKey(x => x.EffectiveDateId).OnDelete(DeleteBehavior.Restrict);
-			builder.HasMany(x => x.Payable).WithOne(x => x.EffectiveDate).HasForeignKey(x => x.EffectiveDateId).OnDelete(DeleteBehavior.Restrict);
+			builder.HasMany(x => x.Receivable).WithOne(x => x.EffectiveDate).HasForeignKey(x => x.EffectiveDateId).OnDelete(DeleteBehavior.Cascade);
+			builder.HasMany(x => x.Payable).WithOne(x => x.EffectiveDate).HasForeignKey(x => x.EffectiveDateId).OnDelete(DeleteBehavior.Cascade);
 		}
 	}
 }

@@ -29,10 +29,17 @@ namespace Financeiro.Infra.Repository
 		{
 			_context.EffectiveDate.Remove(effectiveDate);
 			await SaveChangesAsync();
-
 		}
 
-		public async Task<EffectiveDate> GetByIdAsync(Guid id)
+        public async Task RemoveAsync(Guid id)
+        {
+            await _context.EffectiveDate.Where(x => x.Id == id).ExecuteDeleteAsync();
+
+            await SaveChangesAsync();
+
+        }
+
+        public async Task<EffectiveDate> GetByIdAsync(Guid id)
 		{
 			return await _context.EffectiveDate
 				.Include(x => x.Receivable)

@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { CardExpenseItemRequest } from '@/services/cardExpenseServices';
-import { addSubscriptionAsync, FrequencyType } from '@/services/subscriptionServices';
 import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton, SaveMode } from '@/public/components/SaveButton';
@@ -80,22 +79,26 @@ export default function CardExpenseItemForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        
+        if (isRecurring && !recurrenceData.startDate) {
+            setError('A data de início é obrigatória para assinaturas.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
-            if (isRecurring && isNew) {
-                await addSubscriptionAsync({
-                    description: formData.description,
-                    value: formData.subTotal,
-                    frequencyType: parseInt(recurrenceData.frequencyType, 10) as FrequencyType,
-                    creditCardId: creditCardId || null,
-                    startDate: recurrenceData.startDate,
-                    endDate: recurrenceData.endDate || null,
-                    isActive: true
-                });
-            } else {
-                await onSubmit(formData);
-            }
+            const submitData: CardExpenseItemRequest = {
+                ...formData,
+                isSubscription: isRecurring,
+                ...(isRecurring ? {
+                    subscriptionFrequencyType: parseInt(recurrenceData.frequencyType, 10),
+                    subscriptionStartDate: recurrenceData.startDate,
+                    subscriptionEndDate: recurrenceData.endDate || null,
+                } : {})
+            };
+
+            await onSubmit(submitData);
 
             if (saveMode === 'continue' && isNew) {
                 setFormData(getEmptyForm(formData.dueDate));
@@ -162,14 +165,14 @@ export default function CardExpenseItemForm({
                                 tabIndex={2}
                             />
                         </div>
-                        <div>
+                        <div className={isRecurring ? "opacity-50 pointer-events-none" : ""}>
                             <label className="block text-xs font-semibold text-gray-400 mb-2">
                                 Descontos (R$)
                             </label>
                             <ValueComponent
                                 tabIndex={-1}
                                 value={formData.discounts}
-                                onChange={(discounts) => setFormData(prev => ({ ...prev, discounts }))}
+                                onChange={(discounts) => !isRecurring && setFormData(prev => ({ ...prev, discounts }))}
                             />
                         </div>
                         {formData.discounts !== 0 && (
@@ -201,39 +204,41 @@ export default function CardExpenseItemForm({
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-400 mb-2">
-                                Parcela Atual
-                            </label>
-                            <input tabIndex={-1}
-                                type="number"
-                                name="currentInstallment"
-                                min="1"
-                                value={formData.currentInstallment}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
-                                placeholder="1"
-                            />
+                    {!isRecurring && (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-2">
+                                    Parcela Atual
+                                </label>
+                                <input tabIndex={-1}
+                                    type="number"
+                                    name="currentInstallment"
+                                    min="1"
+                                    value={formData.currentInstallment}
+                                    onChange={handleChange}
+                                    required={!isRecurring}
+                                    className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                                    placeholder="1"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-400 mb-2">
+                                    Total de Parcelas
+                                </label>
+                                <input
+                                    tabIndex={-1}
+                                    type="number"
+                                    name="quantityInstallments"
+                                    min="1"
+                                    value={formData.quantityInstallments}
+                                    onChange={handleChange}
+                                    required={!isRecurring}
+                                    className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                                    placeholder="1"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-400 mb-2">
-                                Total de Parcelas
-                            </label>
-                            <input
-                                tabIndex={-1}
-                                type="number"
-                                name="quantityInstallments"
-                                min="1"
-                                value={formData.quantityInstallments}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
-                                placeholder="1"
-                            />
-                        </div>
-                    </div>
+                    )}
 
                     {isNew && creditCardId && (
                         <div className="border-t border-white/5 pt-4 space-y-3">
@@ -243,7 +248,18 @@ export default function CardExpenseItemForm({
                                     <input
                                         type="checkbox"
                                         checked={isRecurring}
-                                        onChange={(e) => setIsRecurring(e.target.checked)}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setIsRecurring(checked);
+                                            if (checked) {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    currentInstallment: 1,
+                                                    quantityInstallments: 1,
+                                                    discounts: 0
+                                                }));
+                                            }
+                                        }}
                                         className="sr-only peer"
                                     />
                                     <div className="w-9 h-5 bg-[#0f0e0c] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-500 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>

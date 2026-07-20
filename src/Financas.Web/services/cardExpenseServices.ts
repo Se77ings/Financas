@@ -19,6 +19,10 @@ export interface CardExpenseItemRequest {
     observation: string;
     currentInstallment: number;
     quantityInstallments: number;
+    subscriptionFrequencyType?: number;
+    subscriptionStartDate?: string;
+    subscriptionEndDate?: string | null;
+    isSubscription?: boolean;
 }
 
 export async function getCardExpenseAsync(cardExpenseId: string): Promise<CardExpenseSummary> {

@@ -16,6 +16,7 @@
 
 
 		protected Payable() { }
+		abstract public bool HasValue();
 
 		public Payable(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId)
 		{

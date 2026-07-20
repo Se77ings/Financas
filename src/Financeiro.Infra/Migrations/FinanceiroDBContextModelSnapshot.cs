@@ -97,7 +97,7 @@ namespace Financeiro.Infra.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Observation")
-                        .HasMaxLength(150)
+                        .HasMaxLength(500)
                         .HasColumnType("varchar(100)");
 
                     b.Property<decimal>("SubTotal")
