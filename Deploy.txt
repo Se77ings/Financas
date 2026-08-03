@@ -1,0 +1,17 @@
+dotnet publish .\src\Financas.API\Financas.API.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o C:\APIFinanceiro
+
+Para rodar o exe gerado como serviço:
+
+
+sc.exe create APIFinanceiro binPath= "C:\APIFinanceiro\Financas.API.exe" start= auto
+
+
+sc.exe start APIFinanceiro
+
+
+Parar a API:
+sc.exe stop APIFinanceiro
+
+Remover 
+sc.exe stop APIFinanceiro
+sc.exe delete APIFinanceiro

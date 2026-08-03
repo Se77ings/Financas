@@ -10,9 +10,9 @@ namespace Financeiro.Infra.Mappings
 		{
 			builder.HasKey(x => x.Id);
 			builder.Property(x => x.Description).IsRequired();
-			builder.Property(x => x.SubTotal).IsRequired();
-			builder.Property(x => x.Discounts).IsRequired();
-			builder.Property(x => x.Total).IsRequired();
+			builder.Property(x => x.SubTotal).IsRequired().HasPrecision(18, 2);
+			builder.Property(x => x.Discounts).IsRequired().HasPrecision(18, 2);
+			builder.Property(x => x.Total).IsRequired().HasPrecision(18, 2);
 			builder.Property(x => x.Date).IsRequired();
 		}
 	}
