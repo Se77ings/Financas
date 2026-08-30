@@ -108,40 +108,6 @@ export default function EffectiveDateDetails() {
         reloadData();
     }, [id]);
 
-    // Método para mockar os dados da View conforme as classes fornecidas
-    function loadEffectiveDateData(id: string) {
-        // Simulando Recebimentos
-        const recs = [
-            new ReceivableSummaryView("r1", "Salário Mensal", 5500.00, "05/03/2026"),
-            new ReceivableSummaryView("r2", "Reembolso", 150.00, "10/03/2026"),
-        ];
-
-        // Simulando Gastos à Vista
-        const imms = [
-            new ImmediateExpenseSummary("i1", "Internet", 89.90, "07/12/2022", 89.90, 0, "", id),
-            new ImmediateExpenseSummary("i2", "Água e Luz", 157.75, "07/12/2022", 157.75, 0, "", id),
-            new ImmediateExpenseSummary("i3", "Presente Marina", 120.00, "", 120.00, 0, "", id),
-            new ImmediateExpenseSummary("i4", "Rd Saude (Lidocaina)", 11.69, "13/04/2026", 11.69, 0, "", id),
-        ];
-
-        // Simulando Itens de Cartão (Inter)
-        const cardItemsInter = [
-            new CardExpenseItemSummary("ci1", "Amazon", 19.90, "27/02/2026", 0, "", 1, 1, true, "Amazon"),
-            new CardExpenseItemSummary("ci2", "Vivo Easy", 38.00, "01/03/2026", 0, "", 1, 1, true, "Vivo Easy"),
-            new CardExpenseItemSummary("ci3", "AppleBill", 9.99, "02/03/2026", 0, "", 1, 1, true, "AppleBill"),
-        ];
-
-        // Simulando Resumo de Cartões
-        const cards = [
-            new CardExpenseSummary("c1", "Inter", 1023.14, "07/12/2023", 1023.14, 0, "", cardItemsInter),
-            new CardExpenseSummary("c2", "PicpayCard", 334.90, "07/12/2023", 334.90, 0, "", []),
-            new CardExpenseSummary("c3", "C6 Bank", 540.51, "07/12/2026", 540.51, 0, "", []),
-        ];
-
-        const view = new EffectiveDateView(id, 3, 2026, recs, imms, cards);
-        setViewData(view);
-    }
-
     const reloadSelectedCard = async (cardId: string) => {
         try {
             const cardData = await getCardExpenseAsync(cardId);

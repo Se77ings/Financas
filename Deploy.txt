@@ -15,3 +15,10 @@ sc.exe stop APIFinanceiro
 Remover 
 sc.exe stop APIFinanceiro
 sc.exe delete APIFinanceiro
+
+Dar permissão ao SQL Server para o serviço que criei.
+
+
+eventvwr.msc
+
+services.msc
