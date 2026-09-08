@@ -17,7 +17,6 @@ interface CardExpenseItemFormProps {
         discounts: number;
         observation: string;
         currentInstallment?: number;
-        currentInstallments?: number;
         quantityInstallments: number;
     } | null;
     onSubmit: (data: CardExpenseItemRequest) => Promise<void>;
@@ -39,7 +38,7 @@ export default function CardExpenseItemForm({
         subTotal: initialData?.subTotal ?? initialData?.total ?? 0,
         discounts: initialData?.discounts || 0,
         observation: initialData?.observation || '',
-        currentInstallment: initialData?.currentInstallment ?? initialData?.currentInstallments ?? 1,
+        currentInstallment: initialData?.currentInstallment ?? 1,
         quantityInstallments: initialData?.quantityInstallments || 1,
     });
     const [error, setError] = useState<string | null>(null);
@@ -117,7 +116,7 @@ export default function CardExpenseItemForm({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-[#1a1917] rounded-xl border border-white/5 w-96 shadow-2xl max-h-screen overflow-y-auto">
+            <div className="bg-[#1a1917] rounded-xl border border-white/5 w-96 shadow-2xl max-h-screen overflow-y-auto" style={{ marginRight: '50vh' }}>
                 <div className="p-4 border-b border-white/5 flex justify-between items-center">
                     <h3 className="font-semibold text-sm uppercase tracking-wider">
                         {initialData ? 'Editar Item' : 'Novo Item'}
@@ -193,7 +192,7 @@ export default function CardExpenseItemForm({
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 mb-2">
-                            Data de Vencimento
+                            Data
                         </label>
                         <DateComponent
                             plustabindex={3}

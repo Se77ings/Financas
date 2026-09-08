@@ -608,11 +608,6 @@ export default function EffectiveDateDetails() {
                                                     </td>
                                                     <td className="px-4 py-4 text-gray-200">
                                                         {item.displayDescription}
-                                                        {item.quantityInstallments > 1 && (
-                                                            <span className="ml-2 text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-gray-400">
-                                                                {item.currentInstallments}/{item.quantityInstallments}
-                                                            </span>
-                                                        )}
                                                     </td>
                                                     <td className="px-4 py-4 text-gray-500">{formatDateBR(item.dueDate)}</td>
                                                     <td className="px-4 py-4 text-right">R$ {item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>

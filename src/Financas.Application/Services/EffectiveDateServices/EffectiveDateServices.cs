@@ -36,7 +36,7 @@ namespace Financas.Application.Services.CompetenciaServices
             await _repository.AddAsync(effectiveDate);
 
             // Run generation engine to create card invoices and subscriptions automatically
-            var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate.Id, request.Month, request.Year);
+            var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate, request.Month, request.Year);
 
             if (!generationResult.IsSuccess)
                 return Result<bool>.Failure(generationResult.Error);
@@ -71,7 +71,7 @@ namespace Financas.Application.Services.CompetenciaServices
             await _repository.AddAsync(effectiveDate);
 
             // Run generation engine to create card invoices and subscriptions automatically
-            var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate.Id, month, year);
+            var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate, month, year);
             if (!generationResult.IsSuccess)
                 return Result<Guid>.Failure(generationResult.Error);
 
@@ -136,6 +136,11 @@ namespace Financas.Application.Services.CompetenciaServices
         {
             var effectiveDate = await GetEffectiveDate(id);
 
+            if(effectiveDate == null)
+            {
+                return (Result<bool>.Failure(new Error("Não há registros.")), null);
+            }
+
             return (Result<bool>.Success(true), (EffectiveDateView)effectiveDate);
         }
 
@@ -177,7 +182,7 @@ namespace Financas.Application.Services.CompetenciaServices
         }
 
         #region Métodos internos
-        public async Task<EffectiveDate> GetEffectiveDate(Guid id)
+        public async Task<EffectiveDate?> GetEffectiveDate(Guid id)
         {
             return await _repository.GetByIdAsync(id);
 

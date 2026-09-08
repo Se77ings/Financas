@@ -17,12 +17,14 @@ namespace Financas.Application.Services.ObrigaçãoServices
         private readonly ICardExpenseRepository _repository;
         private readonly IEffectiveDateServices _effectiveDateServices;
         private readonly ISubscriptionServices _subscriptionServices;
+        private readonly IEffectiveDateRepository _effectiveDateRepository;
 
-        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, ISubscriptionServices subscriptionServices)
+        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, ISubscriptionServices subscriptionServices, IEffectiveDateRepository effectiveDateRepository)
         {
             _repository = repository;
             _effectiveDateServices = effectiveDateServices;
             _subscriptionServices = subscriptionServices;
+            _effectiveDateRepository = effectiveDateRepository;
         }
 
         public async Task<Result<bool>> AddAsync(CardExpenseRequest request)
@@ -96,37 +98,75 @@ namespace Financas.Application.Services.ObrigaçãoServices
 
         public async Task<Result<bool>> AddItemAsync(Guid id, CardExpenseItemRequest request)
         {
-            // TODO: Englobar isso em uma transação.
-            var despesaCartao = await _repository.GetByIdAsync(id);
-
-            var despesa = new Expense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, despesaCartao.EffectiveDateId, id);
-            if (despesaCartao == null)
+            var cardInvoice = await _repository.GetByIdAsync(id);
+            if (cardInvoice == null)
                 return Result<bool>.Failure(new Error("Fatura de cartão não encontrada."));
+
+            var initialEffectiveDate = await _effectiveDateRepository.GetByIdAsync(cardInvoice.EffectiveDateId);
+            if (initialEffectiveDate == null)
+                return Result<bool>.Failure(new Error("Competência inicial não encontrada."));
+
+            var affectedCardExpenseIds = new HashSet<Guid>();
+
+            for (int i = 0; i < request.QuantityInstallments; i++)
+            {
+                var (targetMonth, targetYear) = initialEffectiveDate.GetNextPeriod(i);
+
+                var targetEffectiveDate = await _effectiveDateRepository.GetByMonthYearAsync(targetMonth, targetYear);
+                if (targetEffectiveDate == null)
+                    break;
+
+                var targetCardExpense = targetEffectiveDate.GetCardExpenseByCreditCardId(cardInvoice.CreditCardId);
+                if (targetCardExpense == null)
+                    break;
+
+                int currentInstallment = i + 1;
+                var expenseDueDate = request.DueDate.AddMonths(i);
+
+                var expense = new Expense(
+                    request.Description,
+                    request.SubTotal,
+                    expenseDueDate,
+                    request.Discounts,
+                    request.Observation,
+                    currentInstallment,
+                    request.QuantityInstallments,
+                    targetEffectiveDate.Id,
+                    targetCardExpense.Id
+                );
+
+                await _repository.AddItemAsync(expense);
+                affectedCardExpenseIds.Add(targetCardExpense.Id);
+            }
 
             if (request.isSubscription)
             {
                 var subscriptionRequest = new SubscriptionRequest
                 {
-                    CreditCardId = despesaCartao.CreditCardId,
+                    CreditCardId = cardInvoice.CreditCardId,
                     Description = request.Description,
                     EndDate = request.SubscriptionEndDate,
                     FrequencyType = request.SubscriptionFrequencyType,
                     IsActive = true,
                     StartDate = request.SubscriptionStartDate,
                     Value = request.SubTotal
-
                 };
 
                 var result = await _subscriptionServices.AddAsync(subscriptionRequest);
-
                 if (!result.IsSuccess)
                     return Result<bool>.Failure(new Error("Erro ao criar Assinatura."));
             }
 
-            await _repository.AddItemAsync(despesa);
+            var savedChanges = await _repository.SaveChangesAsync();
+            if (savedChanges == 0)
+            {
+                return Result<bool>.Failure(new Error("Erro ao salvar item de despesa."));
+            }
 
-            await _repository.RecalculateCardExpenseAsync(id);
-
+            foreach (var cardExpenseId in affectedCardExpenseIds)
+            {// TODO: Paleativo, resolver com o #FN-11.
+                await _repository.RecalculateCardExpenseAsync(cardExpenseId);
+            }
 
             return Result<bool>.Success(true);
         }

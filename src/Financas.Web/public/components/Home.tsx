@@ -1,12 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import EffectiveDateSummary from '@/models/EffectiveDate/EffectiveDateSummary';
-import Content from '@/public/components/footer/Content';
-import { IonIcon } from '@ionic/react';
-import { home, addOutline } from 'ionicons/icons';
-import { useEffect, useState } from 'react';
-import { getEffectiveDateListAsync } from '@/services/effectiveDateServices';
+import { useState } from 'react';
 import CreditCardListModal from "@/public/components/CreditCardListModal";
 
 export default function Home() {

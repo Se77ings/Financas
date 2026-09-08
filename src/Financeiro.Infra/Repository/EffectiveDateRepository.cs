@@ -1,5 +1,6 @@
 ﻿using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Interfaces;
+using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Shared;
 using Financeiro.Infra.Context;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +44,6 @@ namespace Financeiro.Infra.Repository
         {
             return await _context.EffectiveDate
                 .AsSplitQuery()
-                .AsNoTracking()
                 .Include(x => x.Receivable)
                 .Include(x => x.Payable)
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -72,7 +72,11 @@ namespace Financeiro.Infra.Repository
 
         public async Task<EffectiveDate?> GetByMonthYearAsync(CalendarMonth month, int year)
         {
-            return await _context.EffectiveDate
+           return await _context.EffectiveDate
+                .AsSplitQuery()
+                .Include(x => x.Receivable)
+                .Include(x => x.Payable)
+                    .ThenInclude((Payable p) => (p as CardExpense)!.Expenses)
                 .FirstOrDefaultAsync(x => x.Month == month && x.Year == year);
         }
 

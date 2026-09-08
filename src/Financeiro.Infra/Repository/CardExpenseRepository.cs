@@ -39,7 +39,7 @@ namespace Financeiro.Infra.Repository
                 .AsSplitQuery()
                 .AsNoTracking()
                 .OfType<CardExpense>()
-                .Include(x => x.Expenses)
+                .Include(x => x.Expenses.OrderByDescending(e => e.DueDate).ThenByDescending(e => e.CreatedAt))
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
@@ -61,7 +61,6 @@ namespace Financeiro.Infra.Repository
         {
             _context.CardExpenseItem.Add(item);
 
-            await SaveChangesAsync();
 
         }
 

@@ -39,7 +39,7 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EffectiveDate");
+                    b.ToTable("EffectiveDate", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CreditCard", b =>
@@ -110,7 +110,7 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasIndex("EffectiveDateId");
 
-                    b.ToTable("Payable");
+                    b.ToTable("Payable", (string)null);
 
                     b.UseTptMappingStrategy();
                 });
@@ -187,7 +187,7 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasIndex("EffectiveDateId");
 
-                    b.ToTable("Receivable");
+                    b.ToTable("Receivable", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense", b =>
