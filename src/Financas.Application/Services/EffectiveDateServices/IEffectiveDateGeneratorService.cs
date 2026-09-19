@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Financeiro.Business.Aggregates;
+using Financeiro.Business.Aggregates.EffectiveDate;
 using Financeiro.Business.Shared;
 using Financeiro.Business.Shared.ResultPattern;
 

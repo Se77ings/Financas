@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Financeiro.Business.Shared;
 
-namespace Financeiro.Business.Aggregates.Validações
+namespace Financeiro.Business.Aggregates.EffectiveDate.Validations
 {
 	public class EffectiveDateValidator : AbstractValidator<EffectiveDate>
 	{

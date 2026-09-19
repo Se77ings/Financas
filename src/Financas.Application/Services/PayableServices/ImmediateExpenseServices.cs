@@ -1,11 +1,11 @@
 ﻿using Financas.Application.Services.CompetenciaServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Business.Shared.ServiceBase;
-using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Payable;
-using Financeiro.Business.Aggregates.Validações;
 using Financeiro.Application.Models.PayableModels;
 using Financeiro.Business.Shared.ResultPattern;
+using Financeiro.Business.Interfaces;
+using Financeiro.Business.Aggregates.Payable.Validations;
 
 namespace Financas.Application.Services.PayableServices
 {

@@ -1,6 +1,6 @@
 ﻿using Financeiro.Business.Aggregates.Payable;
 
-namespace Financeiro.Business.Aggregates.Interfaces
+namespace Financeiro.Business.Interfaces
 {
 	public interface IPayableRepository : IRepository<ImmediateExpense>
 	{

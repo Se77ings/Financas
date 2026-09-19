@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace Financeiro.Business.Aggregates.Validações
+namespace Financeiro.Business.Aggregates.Receivable.Validations
 {
 	public class ReceivableValidator : AbstractValidator<Receivable.Receivable>
 	{

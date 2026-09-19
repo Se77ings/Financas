@@ -1,4 +1,4 @@
-﻿namespace Financeiro.Business.Aggregates.Interfaces
+﻿namespace Financeiro.Business.Interfaces
 {
 	public interface IReceivableRepository : IRepository<Receivable.Receivable>
 	{

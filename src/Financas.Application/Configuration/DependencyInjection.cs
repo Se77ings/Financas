@@ -5,9 +5,9 @@ using Financas.Application.Services.PayableServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Application.Services.CreditCardServices;
 using Financas.Application.Services.SubscriptionServices;
-using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Infra.Repository;
 using Microsoft.Extensions.DependencyInjection;
+using Financeiro.Business.Interfaces;
 
 namespace Financas.Application.Configuration
 {

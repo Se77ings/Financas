@@ -1,11 +1,11 @@
 using Financas.Business.Shared.ServiceBase;
-using Financeiro.Business.Aggregates;
-using Financeiro.Business.Aggregates.Interfaces;
-using Financeiro.Business.Aggregates.Validações;
 using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Business.Shared;
 using Financeiro.Business.Shared.ResultPattern;
 using static Financeiro.Business.Shared.Localization.ErrorMessages;
+using Financeiro.Business.Interfaces;
+using Financeiro.Business.Aggregates.EffectiveDate;
+using Financeiro.Business.Aggregates.EffectiveDate.Validations;
 
 namespace Financas.Application.Services.CompetenciaServices
 {

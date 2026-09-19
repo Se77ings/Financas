@@ -1,4 +1,4 @@
-﻿using Financeiro.Business.Aggregates;
+﻿using Financeiro.Business.Aggregates.EffectiveDate;
 using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Aggregates.Receivable;
 using Financeiro.Business.Shared;

@@ -1,7 +1,7 @@
 ﻿using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Shared;
 
-namespace Financeiro.Business.Aggregates
+namespace Financeiro.Business.Aggregates.EffectiveDate
 {
     public class EffectiveDate : Entity
     {

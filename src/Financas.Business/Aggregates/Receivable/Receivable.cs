@@ -1,4 +1,6 @@
-﻿namespace Financeiro.Business.Aggregates.Receivable
+﻿using Financeiro.Business.Shared;
+
+namespace Financeiro.Business.Aggregates.Receivable
 {
 	public class Receivable : Entity
 	{

@@ -1,8 +1,8 @@
-using Financeiro.Business.Aggregates;
 using Financeiro.Business.Aggregates.Receivable;
 using Financeiro.Business.Aggregates.Payable;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic.FileIO;
+using Financeiro.Business.Aggregates.EffectiveDate;
 
 namespace Financeiro.Infra.Context
 {

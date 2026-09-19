@@ -1,4 +1,4 @@
-﻿namespace Financeiro.Business.Aggregates
+﻿namespace Financeiro.Business.Shared
 {
 	public abstract class Entity
 	{

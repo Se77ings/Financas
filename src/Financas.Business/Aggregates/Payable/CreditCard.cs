@@ -1,3 +1,5 @@
+using Financeiro.Business.Shared;
+
 namespace Financeiro.Business.Aggregates.Payable
 {
 	public class CreditCard : Entity

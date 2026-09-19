@@ -1,7 +1,7 @@
 ﻿using Financeiro.Business.Aggregates.Payable;
 using FluentValidation;
 
-namespace Financeiro.Business.Aggregates.Validações
+namespace Financeiro.Business.Aggregates.Payable.Validations
 {
 	public class CardExpenseValidator : AbstractValidator<CardExpense>
 	{

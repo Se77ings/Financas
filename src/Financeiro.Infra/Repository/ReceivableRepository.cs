@@ -1,7 +1,7 @@
 ﻿using Financeiro.Business.Aggregates.Receivable;
-using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Infra.Context;
 using Microsoft.EntityFrameworkCore;
+using Financeiro.Business.Interfaces;
 
 namespace Financeiro.Infra.Repository
 {

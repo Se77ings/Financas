@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Financas.Business.Shared.ServiceBase;
 using Financeiro.Application.Models.CreditCardModels;
-using Financeiro.Business.Aggregates.Interfaces;
 using Financeiro.Business.Aggregates.Payable;
-using Financeiro.Business.Aggregates.Validações;
+using Financeiro.Business.Aggregates.Payable.Validations;
+using Financeiro.Business.Interfaces;
 using Financeiro.Business.Shared.ResultPattern;
 
 namespace Financas.Application.Services.CreditCardServices

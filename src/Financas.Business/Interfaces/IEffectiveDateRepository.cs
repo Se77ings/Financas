@@ -1,6 +1,7 @@
-﻿using Financeiro.Business.Shared;
+﻿using Financeiro.Business.Aggregates.EffectiveDate;
+using Financeiro.Business.Shared;
 
-namespace Financeiro.Business.Aggregates.Interfaces
+namespace Financeiro.Business.Interfaces
 {
     public interface IEffectiveDateRepository : IRepository<EffectiveDate>
     {

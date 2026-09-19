@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using Financeiro.Application.Models.PayableModels;
 using Financeiro.Application.Models.ReceivableModels;
-using Financeiro.Business.Aggregates;
+using Financeiro.Business.Aggregates.EffectiveDate;
 using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Shared;
 

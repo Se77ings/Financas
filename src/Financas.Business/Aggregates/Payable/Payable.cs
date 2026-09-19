@@ -1,4 +1,6 @@
-﻿namespace Financeiro.Business.Aggregates.Payable
+﻿using Financeiro.Business.Shared;
+
+namespace Financeiro.Business.Aggregates.Payable
 {
 	public abstract class Payable : Entity
 	{
