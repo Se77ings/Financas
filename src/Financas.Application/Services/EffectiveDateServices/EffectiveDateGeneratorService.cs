@@ -181,7 +181,7 @@ namespace Financas.Application.Services.CompetenciaServices
                 1,
                 effectiveDateId,
                 cardExpenseId,
-                null // TODO: Implementar categoria para assinaturas recorrentes, quando desenvolver a tela no #FN-3
+                sub.CategoryId
             );
         }
 
@@ -197,7 +197,7 @@ namespace Financas.Application.Services.CompetenciaServices
                 0,
                 "Gerado automaticamente por assinatura recorrente",
                 effectiveDateId,
-                null // TODO: Implementar categoria para assinaturas recorrentes, quando desenvolver a tela no #FN-3
+                sub.CategoryId
             );
         }
     }

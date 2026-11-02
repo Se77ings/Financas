@@ -18,6 +18,7 @@ import ReceivableForm from '@/forms/ReceivableForm';
 import ImmediateExpenseForm from '@/forms/ImmediateExpenseForm';
 import CardExpenseForm from '@/forms/CardExpenseForm';
 import CardExpenseItemForm from '@/forms/CardExpenseItemForm';
+import SubscriptionListModal from '@/public/components/SubscriptionListModal';
 import { formatDateBR } from '@/utils/dateFormat';
 
 // Definição dos SVGs para evitar dependências externas
@@ -75,6 +76,7 @@ export default function EffectiveDateDetails() {
     const [showCardItemForm, setShowCardItemForm] = useState(false);
     const [editingCardItem, setEditingCardItem] = useState<any>(null);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [showSubscriptions, setShowSubscriptions] = useState(false);
 
     const handleSyncCards = async () => {
         if (!id) return;
@@ -533,6 +535,16 @@ export default function EffectiveDateDetails() {
                                         className="flex items-center justify-center p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition text-[11px]"
                                         title="Transferência entre competências"
                                     >
+                                        ⇄
+                                    </button>
+                                )}
+                                {selectedCard?.creditCardId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSubscriptions(true)}
+                                        className="flex items-center justify-center p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition text-[11px]"
+                                        title="Assinaturas do cartão"
+                                    >
                                         ⚙️
                                     </button>
                                 )}
@@ -727,6 +739,18 @@ export default function EffectiveDateDetails() {
                         setEditingCardItem(null);
                     }}
                     isLoading={isOperating}
+                />
+            )}
+
+            {showSubscriptions && selectedCard?.creditCardId && (
+                <SubscriptionListModal
+                    creditCardId={selectedCard.creditCardId}
+                    cardExpenseId={selectedCardId ?? undefined}
+                    onItemAdded={async () => {
+                        await reloadData();
+                        if (selectedCardId) await reloadSelectedCard(selectedCardId);
+                    }}
+                    onClose={() => setShowSubscriptions(false)}
                 />
             )}
 

@@ -7,7 +7,7 @@ import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
 
 interface CardExpenseItemFormProps {
-    cardExpenseId: string;
+    cardExpenseId?: string;
     creditCardId?: string | null;
     initialData?: {
         id: string;
@@ -24,6 +24,7 @@ interface CardExpenseItemFormProps {
     onSubmit: (data: CardExpenseItemRequest) => Promise<void>;
     onClose: () => void;
     isLoading?: boolean;
+    lockRecurring?: boolean;
 }
 
 export default function CardExpenseItemForm({
@@ -33,6 +34,7 @@ export default function CardExpenseItemForm({
     onSubmit,
     onClose,
     isLoading = false,
+    lockRecurring = false,
 }: CardExpenseItemFormProps) {
     const [formData, setFormData] = useState({
         description: initialData?.description || '',
@@ -49,7 +51,7 @@ export default function CardExpenseItemForm({
     const [saveMode, setSaveMode] = useState<SaveMode>('close');
     const formRef = useRef<HTMLFormElement>(null);
 
-    const [isRecurring, setIsRecurring] = useState(false);
+    const [isRecurring, setIsRecurring] = useState(lockRecurring);
     const [recurrenceData, setRecurrenceData] = useState({
         frequencyType: '1',
         startDate: formData.dueDate,
@@ -115,7 +117,7 @@ export default function CardExpenseItemForm({
 
             if (saveMode === 'continue' && isNew) {
                 setFormData(getEmptyForm(formData.dueDate));
-                setIsRecurring(false);
+                setIsRecurring(lockRecurring);
             } else {
                 onClose();
             }
@@ -133,7 +135,7 @@ export default function CardExpenseItemForm({
             <div className="bg-[#1a1917] rounded-xl border border-white/5 w-96 shadow-2xl max-h-screen overflow-y-auto" style={{ marginRight: '50vh' }}>
                 <div className="p-4 border-b border-white/5 flex justify-between items-center">
                     <h3 className="font-semibold text-sm uppercase tracking-wider">
-                        {initialData ? 'Editar Item' : 'Novo Item'}
+                        {initialData ? 'Editar Item' : lockRecurring ? 'Nova Assinatura' : 'Novo Item'}
                     </h3>
                     <button
                         onClick={onClose}
@@ -257,10 +259,11 @@ export default function CardExpenseItemForm({
                         <div className="border-t border-white/5 pt-4 space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-gray-400">Tornar este item recorrente (Assinatura)?</span>
-                                <label className="relative inline-flex items-center cursor-pointer">
+                                <label className={`relative inline-flex items-center ${lockRecurring ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}>
                                     <input
                                         type="checkbox"
                                         checked={isRecurring}
+                                        disabled={lockRecurring}
                                         onChange={(e) => {
                                             const checked = e.target.checked;
                                             setIsRecurring(checked);

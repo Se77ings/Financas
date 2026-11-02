@@ -21,6 +21,11 @@ namespace Financeiro.Infra.Mappings
 				.HasForeignKey(x => x.CreditCardId)
 				.OnDelete(DeleteBehavior.Restrict);
 
+			builder.HasOne(x => x.Category)
+				.WithMany()
+				.HasForeignKey(x => x.CategoryId)
+				.IsRequired(false);
+
 			builder.ToTable("Subscriptions");
 		}
 	}

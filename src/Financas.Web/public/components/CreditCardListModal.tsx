@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import CreditCardView from "@/models/CreditCard/CreditCardView";
 import { getCreditCardsAsync, addCreditCardAsync, updateCreditCardAsync, deleteCreditCardAsync, CreditCardRequest } from "@/services/creditCardServices";
 import CreditCardForm from "@/forms/CreditCardForm";
+import SubscriptionListModal from "@/public/components/SubscriptionListModal";
 
 interface CreditCardListModalProps {
     onClose: () => void;
@@ -16,6 +17,7 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
     const [showForm, setShowForm] = useState(false);
     const [editingCard, setEditingCard] = useState<CreditCardView | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [subscriptionsCardId, setSubscriptionsCardId] = useState<string | null>(null);
 
     const loadCards = async () => {
         setIsLoading(true);
@@ -118,7 +120,7 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                                         <th className="px-4 py-2.5 text-center">Fechamento / Vencimento</th>
                                         <th className="px-4 py-2.5 text-right">Limite</th>
                                         <th className="px-4 py-2.5 text-center">Status</th>
-                                        <th className="px-4 py-2.5 w-20"></th>
+                                        <th className="px-4 py-2.5 w-24"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5 font-mono text-xs">
@@ -136,6 +138,13 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex gap-2 justify-center">
+                                                    <button
+                                                        onClick={() => setSubscriptionsCardId(card.id)}
+                                                        className="text-blue-400 hover:text-blue-300 transition text-sm cursor-pointer"
+                                                        title="Assinaturas"
+                                                    >
+                                                        🔁
+                                                    </button>
                                                     <button
                                                         onClick={() => {
                                                             setEditingCard(card);
@@ -172,6 +181,13 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                         Fechar
                     </button>
                 </div>
+
+                {subscriptionsCardId && (
+                    <SubscriptionListModal
+                        creditCardId={subscriptionsCardId}
+                        onClose={() => setSubscriptionsCardId(null)}
+                    />
+                )}
 
                 {/* Inner Form Modal */}
                 {showForm && (

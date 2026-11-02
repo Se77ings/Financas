@@ -25,6 +25,7 @@ namespace Financas.Application.Services.SubscriptionServices
 				request.CreditCardId,
 				request.StartDate,
 				request.EndDate,
+				request.CategoryId,
 				request.IsActive
 			);
 
@@ -49,6 +50,7 @@ namespace Financas.Application.Services.SubscriptionServices
 				request.CreditCardId,
 				request.StartDate,
 				request.EndDate,
+				request.CategoryId,
 				request.IsActive
 			);
 
@@ -63,6 +65,7 @@ namespace Financas.Application.Services.SubscriptionServices
 				request.CreditCardId,
 				request.StartDate,
 				request.EndDate,
+				request.CategoryId,
 				request.IsActive
 			);
 
@@ -87,6 +90,12 @@ namespace Financas.Application.Services.SubscriptionServices
 				return (Result<bool>.Failure(new Error("Assinatura não encontrada.")), null);
 
 			return (Result<bool>.Success(true), subscription);
+		}
+
+		public async Task<(Result<bool> result, List<SubscriptionView> lista)> GetByCreditCardAsync(Guid creditCardId)
+		{
+			var list = await _repository.GetByCreditCardAsync(creditCardId);
+			return (Result<bool>.Success(true), list.Select(x => (SubscriptionView)x).ToList());
 		}
 
 		public async Task<(Result<bool> result, List<SubscriptionView> lista)> GetListAsync()

@@ -7,6 +7,7 @@ namespace Financeiro.Business.Interfaces
         Task<bool> ExistsAsync(string name);
         Task<bool> ExistsOtherAsync(Guid id, string name);
         Task<int> CountLinkedEntriesAsync(Guid id);
+        Task<int> CountLinkedSubscriptionsAsync(Guid id);
         Task<Dictionary<Guid, int>> CountLinkedEntriesByCategoryAsync();
 
         Task<int> CountExistingPayablesAsync(IReadOnlyCollection<Guid> payableIds);

@@ -16,6 +16,7 @@ namespace Financeiro.Application.Models.SubscriptionModels
 		public DateOnly StartDate { get; set; }
 		public DateOnly? EndDate { get; set; }
 		public bool IsActive { get; set; }
+		public Guid? CategoryId { get; set; }
 
 		public static implicit operator SubscriptionView(Subscription sub)
 		{
@@ -31,7 +32,8 @@ namespace Financeiro.Application.Models.SubscriptionModels
 				CreditCardName = sub.CreditCard?.Name,
 				StartDate = sub.StartDate,
 				EndDate = sub.EndDate,
-				IsActive = sub.IsActive
+				IsActive = sub.IsActive,
+				CategoryId = sub.CategoryId
 			};
 		}
 	}

@@ -152,6 +152,9 @@ namespace Financeiro.Infra.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -180,6 +183,8 @@ namespace Financeiro.Infra.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("CreditCardId");
 
@@ -284,9 +289,15 @@ namespace Financeiro.Infra.Migrations
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Subscription", b =>
                 {
+                    b.HasOne("Financeiro.Business.Aggregates.Category.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
                     b.HasOne("Financeiro.Business.Aggregates.Payable.CreditCard", "CreditCard")
                         .WithMany()
                         .HasForeignKey("CreditCardId");
+
+                    b.Navigation("Category");
 
                     b.Navigation("CreditCard");
                 });

@@ -13,10 +13,12 @@ namespace Financeiro.Business.Aggregates.Payable
 		public DateOnly StartDate { get; private set; }
 		public DateOnly? EndDate { get; private set; }
 		public bool IsActive { get; private set; }
+		public Guid? CategoryId { get; private set; }
+		public Category.Category? Category { get; private set; }
 
 		protected Subscription() { }
 
-		public Subscription(string description, decimal value, FrequencyType frequencyType, Guid? creditCardId, DateOnly startDate, DateOnly? endDate, bool isActive = true)
+		public Subscription(string description, decimal value, FrequencyType frequencyType, Guid? creditCardId, DateOnly startDate, DateOnly? endDate, Guid? categoryId, bool isActive = true)
 		{
 			Description = description;
 			Value = value;
@@ -25,9 +27,10 @@ namespace Financeiro.Business.Aggregates.Payable
 			StartDate = startDate;
 			EndDate = endDate;
 			IsActive = isActive;
+			CategoryId = categoryId;
 		}
 
-		public void Update(string description, decimal value, FrequencyType frequencyType, Guid? creditCardId, DateOnly startDate, DateOnly? endDate, bool isActive)
+		public void Update(string description, decimal value, FrequencyType frequencyType, Guid? creditCardId, DateOnly startDate, DateOnly? endDate, Guid? categoryId, bool isActive)
 		{
 			Description = description;
 			Value = value;
@@ -36,6 +39,7 @@ namespace Financeiro.Business.Aggregates.Payable
 			StartDate = startDate;
 			EndDate = endDate;
 			IsActive = isActive;
+			CategoryId = categoryId;
 		}
 	}
 }

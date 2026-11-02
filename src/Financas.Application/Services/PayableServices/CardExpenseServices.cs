@@ -140,6 +140,19 @@ namespace Financas.Application.Services.ObrigaçãoServices
                 affectedCardExpenseIds.Add(targetCardExpense.Id);
             }
 
+            // Salva os itens antes da assinatura: o SaveChanges dela grava o contexto inteiro, e o
+            // SaveChanges seguinte dos itens retornaria 0, acusando erro mesmo com tudo salvo.
+            var savedChanges = await _repository.SaveChangesAsync();
+            if (savedChanges == 0)
+            {
+                return Result<bool>.Failure(new Error("Erro ao salvar item de despesa."));
+            }
+
+            foreach (var cardExpenseId in affectedCardExpenseIds)
+            {// TODO: Paleativo, resolver com o #FN-11.
+                await _repository.RecalculateCardExpenseAsync(cardExpenseId);
+            }
+
             if (request.isSubscription)
             {
                 var subscriptionRequest = new SubscriptionRequest
@@ -150,23 +163,13 @@ namespace Financas.Application.Services.ObrigaçãoServices
                     FrequencyType = request.SubscriptionFrequencyType,
                     IsActive = true,
                     StartDate = request.SubscriptionStartDate,
-                    Value = request.SubTotal
+                    Value = request.SubTotal,
+                    CategoryId = request.CategoryId
                 };
 
                 var result = await _subscriptionServices.AddAsync(subscriptionRequest);
                 if (!result.IsSuccess)
-                    return Result<bool>.Failure(new Error("Erro ao criar Assinatura."));
-            }
-
-            var savedChanges = await _repository.SaveChangesAsync();
-            if (savedChanges == 0)
-            {
-                return Result<bool>.Failure(new Error("Erro ao salvar item de despesa."));
-            }
-
-            foreach (var cardExpenseId in affectedCardExpenseIds)
-            {// TODO: Paleativo, resolver com o #FN-11.
-                await _repository.RecalculateCardExpenseAsync(cardExpenseId);
+                    return Result<bool>.Failure(new Error("O item foi salvo, mas houve erro ao criar a assinatura."));
             }
 
             return Result<bool>.Success(true);

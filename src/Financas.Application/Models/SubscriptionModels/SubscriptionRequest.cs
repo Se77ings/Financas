@@ -25,5 +25,7 @@ namespace Financeiro.Application.Models.SubscriptionModels
 		public DateOnly? EndDate { get; set; }
 
 		public bool IsActive { get; set; } = true;
+
+		public Guid? CategoryId { get; set; }
 	}
 }

@@ -25,6 +25,16 @@ namespace Financas.API.Controllers.SubscriptionController
 			return Ok(lista);
 		}
 
+		[HttpGet("credit-card/{creditCardId:guid}")]
+		public async Task<IActionResult> GetByCreditCardAsync([FromRoute] Guid creditCardId)
+		{
+			var (result, lista) = await _services.GetByCreditCardAsync(creditCardId);
+			if (!result.IsSuccess)
+				return BadRequest(result.Error.Message);
+
+			return Ok(lista);
+		}
+
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
 		{
