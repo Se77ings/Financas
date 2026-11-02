@@ -160,7 +160,8 @@ namespace Financas.Application.Services.CompetenciaServices
                 ReceivableCount = x.Receivable?.Count() ?? 0,
                 PayableCount = x.Payable?.Count() ?? 0,
                 Balance = (x.Receivable?.Sum(r => r.Total) ?? 0) - (x.Payable?.Sum(p => p.Total) ?? 0)
-            }).OrderBy(x => x.Month)
+            }).OrderBy(x => x.Year)
+              .ThenBy(x => x.Month)
               .ToList();
 
             return (Result<bool>.Success(true), summaries);
