@@ -138,7 +138,7 @@ namespace Financas.Application.Services.EffectiveDateServices
 
         public async Task<Result<EffectiveDateView>> GetByIdAsync(Guid id)
         {
-            var effectiveDate = await GetEffectiveDate(id);
+            var effectiveDate = await _repository.GetDetailsByIdAsync(id);
 
             if(effectiveDate == null)
                 return Result<EffectiveDateView>.Failure(Error.NotFound("Não há registros."));

@@ -20,6 +20,9 @@ import CardExpenseForm from '@/forms/CardExpenseForm';
 import CardExpenseItemForm from '@/forms/CardExpenseItemForm';
 import RecurrentPaymentListModal from '@/public/components/RecurrentPaymentListModal';
 import { formatDateBR } from '@/utils/dateFormat';
+import InfoHint from '@/public/components/dashboard/InfoHint';
+
+const formatDayMonth = (value: string) => formatDateBR(value).slice(0, 5);
 
 // Definição dos SVGs para evitar dependências externas
 const Icons = {
@@ -321,6 +324,21 @@ export default function EffectiveDateDetails() {
             <header className="shrink-0 w-full p-4 flex flex-wrap items-center justify-between gap-4 border-b border-white/5 bg-[#1a1917]">
                 <h1 className="text-xl font-bold flex items-center gap-2">
                     Competência: <span className="text-gray-400">{viewData.monthAbbreviation}-{viewData.year.toString().slice(-2)}</span>
+                    <InfoHint align="left" label="Período da competência">
+                        <p className="font-semibold text-white mb-1">Período dos lançamentos</p>
+                        <ul className="space-y-1">
+                            <li>
+                                Gastos à vista e recebimentos: {formatDateBR(viewData.periodStart)} a {formatDateBR(viewData.periodEnd)}
+                            </li>
+                            {viewData.cardExpenses.map(card => (
+                                <li key={card.id}>
+                                    {card.description}: fatura vence {formatDayMonth(card.dueDate)}
+                                    {card.firstItemDate && card.lastItemDate &&
+                                        `, compras de ${formatDayMonth(card.firstItemDate)} a ${formatDayMonth(card.lastItemDate)}`}
+                                </li>
+                            ))}
+                        </ul>
+                    </InfoHint>
                 </h1>
 
                 <div className="flex gap-2">

@@ -49,6 +49,19 @@ namespace Financeiro.Infra.Repository
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        // Somente leitura: carrega os itens de cada fatura para a tela de detalhe sem rastreá-los,
+        // para que o GetByIdAsync usado nas gravações continue sem arrastar os itens no Update.
+        public async Task<EffectiveDate?> GetDetailsByIdAsync(Guid id)
+        {
+            return await _context.EffectiveDate
+                .AsSplitQuery()
+                .AsNoTracking()
+                .Include(x => x.Receivable)
+                .Include(x => x.Payable)
+                    .ThenInclude((Payable p) => (p as CardExpense)!.Expenses)
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
         public async Task<List<EffectiveDate>> GetListAsync()
         {
             // incluir coleções filhas para permitir cálculos e exibição de informações resumo

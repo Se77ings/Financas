@@ -11,9 +11,10 @@ export default class CardExpenseSummary {
     observation: string;
     creditCardId: string;
     items: CardExpenseItemSummary[];
-    
+    firstItemDate: string | null;
+    lastItemDate: string | null;
 
-    constructor(id: string, description: string, total: number, dueDate: string, subtotal: number, discounts: number, observation:string, creditCardId: string, items: CardExpenseItemSummary[]) {
+    constructor(id: string, description: string, total: number, dueDate: string, subtotal: number, discounts: number, observation:string, creditCardId: string, items: CardExpenseItemSummary[], firstItemDate: string | null = null, lastItemDate: string | null = null) {
         this.id = id;
         this.description = description;
         this.total = total;
@@ -23,6 +24,8 @@ export default class CardExpenseSummary {
         this.observation = observation;
         this.creditCardId = creditCardId;
         this.items = items;
+        this.firstItemDate = firstItemDate;
+        this.lastItemDate = lastItemDate;
     }
 
     static fromJSON(data: any): CardExpenseSummary {
@@ -35,7 +38,9 @@ export default class CardExpenseSummary {
             data.discounts,
             data.observation,
             data.creditCardId || data.creditCardId,
-            Deserializer.deserializeArray(data.items || [], CardExpenseItemSummary)
+            Deserializer.deserializeArray(data.items || [], CardExpenseItemSummary),
+            data.firstItemDate ?? null,
+            data.lastItemDate ?? null
         );
     }
 }

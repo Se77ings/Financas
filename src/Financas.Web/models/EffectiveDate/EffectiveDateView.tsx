@@ -7,6 +7,8 @@ export default class EffectiveDateView {
     month: number;
     year: number;
     monthAbbreviation: string;
+    periodStart: string;
+    periodEnd: string;
     receivables: ReceivableSummaryView[];
     immediateExpenses: ImmediateExpenseSummary[];
     cardExpenses: CardExpenseSummary[];
@@ -15,6 +17,8 @@ export default class EffectiveDateView {
         id: string,
         month: number,
         year: number,
+        periodStart: string,
+        periodEnd: string,
         receivables: ReceivableSummaryView[],
         immediateExpenses: ImmediateExpenseSummary[],
         cardExpenses: CardExpenseSummary[]
@@ -22,6 +26,8 @@ export default class EffectiveDateView {
         this.month = month;
         this.year = year;
         this.monthAbbreviation = formatCalendarMonthAbbrev(month);
+        this.periodStart = periodStart;
+        this.periodEnd = periodEnd;
         this.receivables = receivables;
         this.immediateExpenses = immediateExpenses;
         this.cardExpenses = cardExpenses;
@@ -33,6 +39,8 @@ export default class EffectiveDateView {
             data.id ?? '',
             month,
             data.year,
+            data.periodStart ?? '',
+            data.periodEnd ?? '',
             (data.receivable ?? []).map((r: any) => ReceivableSummaryView.fromJSON(r)),
             (data.payable ?? []).map((p: any) => ImmediateExpenseSummary.fromJSON(p)),
             (data.cardExpense ?? []).map((c: any) => CardExpenseSummary.fromJSON(c))

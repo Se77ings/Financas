@@ -13,11 +13,17 @@ namespace Financeiro.Application.Models.PayableModels
 		public string? Observation { get; set; }
 		public Guid CreditCardId { get; set; }
 
+		// Datas da primeira e da última compra da fatura; null quando a fatura não tem itens.
+		public DateOnly? FirstItemDate { get; set; }
+		public DateOnly? LastItemDate { get; set; }
+
 		public List<CardExpenseItemView> Items { get; set; } = new List<CardExpenseItemView>();
 
 
 		public static implicit operator CardExpenseView(CardExpense card)
 		{
+			var hasItems = card.Expenses.Any();
+
 			return new CardExpenseView
 			{
 				Id = card.Id,
@@ -28,7 +34,9 @@ namespace Financeiro.Application.Models.PayableModels
 				Discounts = card.Discount,
 				Observation = card.Observation,
 				CreditCardId = card.CreditCardId,
-				Items = card.Expenses.OrderByDescending(d => d.DueDate).Select(d => (CardExpenseItemView)d).ToList()
+				FirstItemDate = hasItems ? card.Expenses.Min(d => d.DueDate) : null,
+				LastItemDate = hasItems ? card.Expenses.Max(d => d.DueDate) : null,
+				Items =card.Expenses.OrderByDescending(d => d.DueDate).Select(d => (CardExpenseItemView)d).ToList()
 			};
 		}
 	}
