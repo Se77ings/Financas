@@ -41,5 +41,34 @@ namespace Financeiro.Business.Aggregates.Payable
 			IsActive = isActive;
 			CategoryId = categoryId;
 		}
+
+		/// <summary>
+		/// Indica se a assinatura gera lançamento na competência informada, pela vigência e pela frequência
+		/// contada a partir do mês de início. Não considera <see cref="IsActive"/>.
+		/// </summary>
+		public bool IsDueIn(CalendarMonth month, int year)
+		{
+			var competenceStart = new DateOnly(year, (int)month, 1);
+			var competenceEnd = new DateOnly(year, (int)month, DateTime.DaysInMonth(year, (int)month));
+
+			if (StartDate > competenceEnd)
+				return false;
+
+			if (EndDate.HasValue && EndDate.Value < competenceStart)
+				return false;
+
+			var diffMonths = (year - StartDate.Year) * 12 + ((int)month - StartDate.Month);
+			if (diffMonths < 0)
+				return false;
+
+			return FrequencyType switch
+			{
+				FrequencyType.Mensal => true,
+				FrequencyType.Trimestral => diffMonths % 3 == 0,
+				FrequencyType.Semestral => diffMonths % 6 == 0,
+				FrequencyType.Anual => diffMonths % 12 == 0,
+				_ => false
+			};
+		}
 	}
 }

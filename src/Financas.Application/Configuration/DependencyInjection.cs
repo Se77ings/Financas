@@ -9,6 +9,7 @@ using Financeiro.Infra.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Financeiro.Business.Interfaces;
 using Financas.Application.Services.CategoryServices;
+using Financas.Application.Services.DashboardServices;
 
 namespace Financas.Application.Configuration
 {
@@ -39,6 +40,8 @@ namespace Financas.Application.Configuration
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICategoryEntriesRepository, CategoryEntriesRepository>();
             services.AddScoped<ICategoryManagementService, CategoryManagementService>();
+
+            services.AddScoped<IDashboardService, DashboardService>();
 
             return services;
         }

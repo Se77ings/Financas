@@ -91,7 +91,7 @@ namespace Financas.Application.Services.CompetenciaServices
 
                 foreach (var sub in cardSubscriptions)
                 {
-                    if (IsSubscriptionActiveForMonth(sub, month, year))
+                    if (sub.IsDueIn(month, year))
                     {
                         var expenseItem = CreateSubscriptionExpenseItem(sub, cardExpense.Id, effectiveDate.Id, month, year);
                         cardExpense.AddExpense(expenseItem);
@@ -123,37 +123,12 @@ namespace Financas.Application.Services.CompetenciaServices
 
             foreach (var sub in standaloneSubs)
             {
-                if (IsSubscriptionActiveForMonth(sub, month, year))
+                if (sub.IsDueIn(month, year))
                 {
                     var immediateExpense = CreateStandaloneExpense(sub, effectiveDateId, month, year);
                     await _payableRepository.AddAsync(immediateExpense);
                 }
             }
-        }
-
-        private bool IsSubscriptionActiveForMonth(Subscription sub, CalendarMonth month, int year)
-        {
-            var competenceStart = new DateOnly(year, (int)month, 1);
-            var competenceEnd = new DateOnly(year, (int)month, DateTime.DaysInMonth(year, (int)month));
-
-            if (sub.StartDate > competenceEnd)
-                return false;
-
-            if (sub.EndDate.HasValue && sub.EndDate.Value < competenceStart)
-                return false;
-
-            var diffMonths = (year - sub.StartDate.Year) * 12 + ((int)month - sub.StartDate.Month);
-            if (diffMonths < 0)
-                return false;
-
-            return sub.FrequencyType switch
-            {
-                FrequencyType.Mensal => diffMonths % 1 == 0,
-                FrequencyType.Trimestral => diffMonths % 3 == 0,
-                FrequencyType.Semestral => diffMonths % 6 == 0,
-                FrequencyType.Anual => diffMonths % 12 == 0,
-                _ => false
-            };
         }
 
         private CardExpense CreateCardExpense(CreditCard card, Guid effectiveDateId, CalendarMonth month, int year)
