@@ -1,4 +1,4 @@
-import { getAsync, postAsync, putAsync, deleteAsync } from "./baseServices";
+import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 import WageSummaryView from "@/models/Wage/WageSummary";
 import WageView, { DeductionModel } from "@/models/Wage/WageView";
 import { Deserializer } from "./Deserializer";
@@ -40,8 +40,7 @@ export async function addWageAsync(request: WageRequest): Promise<void> {
 	const response = await postAsync(`api/Wage`, request);
 	
 	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: 'Failed to add wage' }));
-		throw new Error(error.message || 'Failed to add wage');
+		throw new Error(await readErrorAsync(response, 'Failed to add wage'));
 	}
 }
 
@@ -49,8 +48,7 @@ export async function updateWageAsync(id: string, request: WageRequest): Promise
 	const response = await putAsync(`api/Wage/${id}`, request);
 
 	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: 'Failed to update wage' }));
-		throw new Error(error.message || 'Failed to update wage');
+		throw new Error(await readErrorAsync(response, 'Failed to update wage'));
 	}
 }
 
@@ -58,7 +56,6 @@ export async function deleteWageAsync(id: string): Promise<void> {
 	const response = await deleteAsync(`api/Wage/${id}`);
 
 	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: 'Failed to delete wage' }));
-		throw new Error(error.message || 'Failed to delete wage');
+		throw new Error(await readErrorAsync(response, 'Failed to delete wage'));
 	}
 }

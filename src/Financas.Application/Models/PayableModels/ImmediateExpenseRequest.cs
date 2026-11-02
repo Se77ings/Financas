@@ -22,5 +22,7 @@ namespace Financeiro.Application.Models.PayableModels
 		/// Opcional. Se omitido, a competência é resolvida automaticamente pelo mês/ano de <see cref="DueDate"/>.
 		/// </summary>
 		public Guid? EffectiveDateId { get; set; }
-	}
+        public Guid? CategoryId { get; set; }
+
+    }
 }

@@ -2,7 +2,6 @@ using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Interfaces;
 using Financeiro.Infra.Context;
 using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 
 namespace Financeiro.Infra.Repository
 {

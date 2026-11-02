@@ -1,4 +1,4 @@
-import { getAsync, postAsync, putAsync, deleteAsync } from "./baseServices";
+import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 import CreditCardView from "@/models/CreditCard/CreditCardView";
 import { Deserializer } from "./Deserializer";
 
@@ -36,8 +36,7 @@ export async function addCreditCardAsync(request: CreditCardRequest): Promise<vo
     const response = await postAsync(`api/CreditCard`, request);
     
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to add credit card' }));
-        throw new Error(error.message || 'Failed to add credit card');
+        throw new Error(await readErrorAsync(response, 'Failed to add credit card'));
     }
 }
 
@@ -45,8 +44,7 @@ export async function updateCreditCardAsync(id: string, request: CreditCardReque
     const response = await putAsync(`api/CreditCard/${id}`, request);
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to update credit card' }));
-        throw new Error(error.message || 'Failed to update credit card');
+        throw new Error(await readErrorAsync(response, 'Failed to update credit card'));
     }
 }
 
@@ -54,7 +52,6 @@ export async function deleteCreditCardAsync(id: string): Promise<void> {
     const response = await deleteAsync(`api/CreditCard/${id}`);
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to delete credit card' }));
-        throw new Error(error.message || 'Failed to delete credit card');
+        throw new Error(await readErrorAsync(response, 'Failed to delete credit card'));
     }
 }

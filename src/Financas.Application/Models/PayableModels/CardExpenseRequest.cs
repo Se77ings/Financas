@@ -22,6 +22,7 @@ namespace Financeiro.Application.Models.PayableModels
         public string? Observation { get; set; }
 
         public Guid CreditCardId { get; set; }
+        public Guid? CategoryId { get; set; }
 
         /// <summary>
         /// Opcional. Se omitido, a competência é resolvida automaticamente pelo mês/ano de <see cref="DueDate"/>.
@@ -55,6 +56,7 @@ namespace Financeiro.Application.Models.PayableModels
         public int CurrentInstallment { get; set; } = 1;
 
         public int QuantityInstallments { get; set; } = 1;
+        public Guid? CategoryId { get; set; }
 
         #region Subscription Info
 

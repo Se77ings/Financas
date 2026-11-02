@@ -29,7 +29,7 @@ namespace Financas.Application.Services.DireitoServices
 			var effectiveDateId = effectiveDateResult.Value!;
 
 			//TODO: Verificar se já existe essa entidade.
-			var contaAReceber = new Receivable(request.Description, request.SubTotal, request.Date, request.Discounts, effectiveDateId);
+			var contaAReceber = new Receivable(request.Description, request.SubTotal, request.Date, request.Discounts, effectiveDateId, request.CategoryId);
 
 			var validation = await ValidateEntityAsync<Receivable, ReceivableValidator>(contaAReceber);
 
@@ -51,14 +51,14 @@ namespace Financas.Application.Services.DireitoServices
 
 			var contaAReceber = await GetReceivableById(id);
 
-			var novaEntidade = new Receivable(request.Description, request.SubTotal, request.Date, request.Discounts, effectiveDateId);
+			var novaEntidade = new Receivable(request.Description, request.SubTotal, request.Date, request.Discounts, effectiveDateId, request.CategoryId);
 			//TODO: Verificar se já existe a nova entidade ou homônima.
 
 			var validation = await ValidateEntityAsync<Receivable, ReceivableValidator>(novaEntidade);
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
-			contaAReceber.Update(request.Description, request.SubTotal, request.Date, request.Discounts, effectiveDateId);
+			contaAReceber.Update(request.Description, request.SubTotal, request.Date, request.Discounts, effectiveDateId, request.CategoryId);
 
 			await _repository.UpdateAsync(contaAReceber);
 

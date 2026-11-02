@@ -12,6 +12,7 @@ namespace Financeiro.Application.Models.PayableModels
 		public decimal Discounts { get; set; }
 		public string? Observation { get; set; }
 		public Guid EffectiveDateId { get; set; }
+		public Guid? CategoryId { get; set; }
 
 		public static implicit operator ImmediateExpenseView(ImmediateExpense expense)
 		{
@@ -25,6 +26,7 @@ namespace Financeiro.Application.Models.PayableModels
 				Discounts = expense.Discount,
 				Observation = expense.Observation,
 				EffectiveDateId = expense.EffectiveDateId,
+				CategoryId = expense.CategoryId,
 			};
 		}
 	}

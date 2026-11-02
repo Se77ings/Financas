@@ -2,7 +2,7 @@
 
 namespace Financeiro.Business.Aggregates.Receivable.Validations
 {
-	public class ReceivableValidator : AbstractValidator<Receivable.Receivable>
+	public class ReceivableValidator : AbstractValidator<Receivable>
 	{
 		public ReceivableValidator()
 		{

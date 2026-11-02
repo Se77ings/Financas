@@ -108,7 +108,7 @@ namespace Financas.Application.Services.CompetenciaServices
                 {
                     if (previousExpense.QuantityInstallments != 1 && previousExpense.CurrentInstallment < previousExpense.QuantityInstallments)
                     {
-                        cardExpense.AddExpense(new CardExpense.Expense(previousExpense.Description, previousExpense.SubTotal, previousExpense.DueDate, previousExpense.Discount, previousExpense.Observation, previousExpense.CurrentInstallment + 1, previousExpense.QuantityInstallments, effectiveDate.Id, card.Id));
+                        cardExpense.AddExpense(new CardExpense.Expense(previousExpense.Description, previousExpense.SubTotal, previousExpense.DueDate, previousExpense.Discount, previousExpense.Observation, previousExpense.CurrentInstallment + 1, previousExpense.QuantityInstallments, effectiveDate.Id, card.Id, previousExpense.CategoryId));
                     }
                 }
 
@@ -163,7 +163,7 @@ namespace Financas.Application.Services.CompetenciaServices
             var dueDay = Math.Min(card.DueDay, daysInMonth);
             var dueDate = new DateOnly(year, (int)month, dueDay);
 
-            return new CardExpense(invoiceDescription, 0, dueDate, 0, null, effectiveDateId, card.Id);
+            return new CardExpense(invoiceDescription, 0, dueDate, 0, null, effectiveDateId, card.Id, null);
         }
 
         private CardExpense.Expense CreateSubscriptionExpenseItem(Subscription sub, Guid cardExpenseId, Guid effectiveDateId, CalendarMonth month, int year)
@@ -180,7 +180,8 @@ namespace Financas.Application.Services.CompetenciaServices
                 1,
                 1,
                 effectiveDateId,
-                cardExpenseId
+                cardExpenseId,
+                null // TODO: Implementar categoria para assinaturas recorrentes, quando desenvolver a tela no #FN-3
             );
         }
 
@@ -195,7 +196,8 @@ namespace Financas.Application.Services.CompetenciaServices
                 itemDueDate,
                 0,
                 "Gerado automaticamente por assinatura recorrente",
-                effectiveDateId
+                effectiveDateId,
+                null // TODO: Implementar categoria para assinaturas recorrentes, quando desenvolver a tela no #FN-3
             );
         }
     }

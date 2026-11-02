@@ -1,4 +1,4 @@
-import { getAsync, postAsync, putAsync, deleteAsync } from "./baseServices";
+import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 import CardExpenseSummary from "@/models/CardExpense/CardExpenseSummary";
 import { Deserializer } from "./Deserializer";
 
@@ -19,6 +19,7 @@ export interface CardExpenseItemRequest {
     observation: string;
     currentInstallment: number;
     quantityInstallments: number;
+    categoryId: string | null;
     subscriptionFrequencyType?: number;
     subscriptionStartDate?: string;
     subscriptionEndDate?: string | null;
@@ -53,8 +54,7 @@ export async function addCardExpenseAsync(request: CardExpenseRequest): Promise<
     const response = await postAsync(`api/CardExpense`, request);
     
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add card expense');
+        throw new Error(await readErrorAsync(response, 'Failed to add card expense'));
     }
 }
 
@@ -62,8 +62,7 @@ export async function updateCardExpenseAsync(id: string, request: CardExpenseReq
     const response = await putAsync(`api/CardExpense/${id}`, request);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update card expense');
+        throw new Error(await readErrorAsync(response, 'Failed to update card expense'));
     }
 }
 
@@ -71,8 +70,7 @@ export async function deleteCardExpenseAsync(id: string): Promise<void> {
     const response = await deleteAsync(`api/CardExpense/${id}`);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete card expense');
+        throw new Error(await readErrorAsync(response, 'Failed to delete card expense'));
     }
 }
 
@@ -80,8 +78,7 @@ export async function addCardExpenseItemAsync(cardExpenseId: string, request: Ca
     const response = await postAsync(`api/CardExpense/${cardExpenseId}/items`, request);
     
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add card expense item');
+        throw new Error(await readErrorAsync(response, 'Failed to add card expense item'));
     }
 }
 
@@ -89,8 +86,7 @@ export async function updateCardExpenseItemAsync(cardExpenseId: string, itemId: 
     const response = await putAsync(`api/CardExpense/${cardExpenseId}/items/${itemId}`, request);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update card expense item');
+        throw new Error(await readErrorAsync(response, 'Failed to update card expense item'));
     }
 }
 
@@ -98,8 +94,7 @@ export async function deleteCardExpenseItemAsync(cardExpenseId: string, itemId: 
     const response = await deleteAsync(`api/CardExpense/${cardExpenseId}/items/${itemId}`);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete card expense item');
+        throw new Error(await readErrorAsync(response, 'Failed to delete card expense item'));
     }
 }
 

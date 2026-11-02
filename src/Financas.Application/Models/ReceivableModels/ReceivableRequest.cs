@@ -20,5 +20,7 @@ namespace Financeiro.Application.Models.ReceivableModels
 		/// Opcional. Se omitido, a competência é resolvida automaticamente pelo mês/ano de <see cref="Date"/>.
 		/// </summary>
 		public Guid? EffectiveDateId { get; set; }
-	}
+        public Guid? CategoryId { get; set; }
+
+    }
 }

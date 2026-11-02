@@ -47,6 +47,15 @@ export default function Home() {
                             <button
                                 onClick={() => {
                                     setShowSettingsDropdown(false);
+                                    router.push("/categories");
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
+                            >
+                                🏷️ Gerenciar Categorias
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowSettingsDropdown(false);
                                     router.push("/wage-history");
                                 }}
                                 className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
@@ -87,8 +96,7 @@ export default function Home() {
 
             {showCardModal && (
                 <CreditCardListModal onClose={() => setShowCardModal(false)} />
-            )}
-        </div>
+            )}        </div>
 
     );
 

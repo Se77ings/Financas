@@ -8,6 +8,7 @@ using Financas.Application.Services.SubscriptionServices;
 using Financeiro.Infra.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Financeiro.Business.Interfaces;
+using Financas.Application.Services.CategoryServices;
 
 namespace Financas.Application.Configuration
 {
@@ -33,6 +34,11 @@ namespace Financas.Application.Configuration
 
             services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
             services.AddScoped<ISubscriptionServices, SubscriptionServices>();
+
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ICategoryEntriesRepository, CategoryEntriesRepository>();
+            services.AddScoped<ICategoryManagementService, CategoryManagementService>();
 
             return services;
         }

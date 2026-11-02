@@ -47,6 +47,7 @@ namespace Financeiro.Application.Models.PayableModels
         public string? Observation { get; set; }
         public int CurrentInstallment { get; set; }
         public int QuantityInstallments { get; set; }
+        public Guid? CategoryId { get; set; }
         public bool IsChecked
         {
             get => _isChecked;
@@ -75,6 +76,7 @@ namespace Financeiro.Application.Models.PayableModels
                 Observation = expense.Observation,
                 CurrentInstallment = expense.CurrentInstallment,
                 QuantityInstallments = expense.QuantityInstallments,
+                CategoryId = expense.CategoryId,
                 IsChecked = false
             };
         }

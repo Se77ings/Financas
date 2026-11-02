@@ -3,6 +3,7 @@ import { ImmediateExpenseRequest } from '@/services/immediateExpenseServices';
 import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton, SaveMode } from '@/public/components/SaveButton';
+import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
 
 interface ImmediateExpenseFormProps {
@@ -15,6 +16,7 @@ interface ImmediateExpenseFormProps {
         subTotal: number;
         discounts: number;
         observation: string;
+        categoryId?: string | null;
     } | null;
     onSubmit: (data: ImmediateExpenseRequest) => Promise<void>;
     onClose: () => void;
@@ -34,6 +36,7 @@ export default function ImmediateExpenseForm({
         subTotal: initialData?.subTotal ?? initialData?.total ?? 0,
         discounts: initialData?.discounts || 0,
         observation: initialData?.observation || '',
+        categoryId: initialData?.categoryId ?? null,
     });
 
     const computedTotal = Math.max(0, formData.subTotal - formData.discounts);
@@ -50,6 +53,7 @@ export default function ImmediateExpenseForm({
         subTotal: 0,
         discounts: 0,
         observation: '',
+        categoryId: null,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -63,6 +67,17 @@ export default function ImmediateExpenseForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        if (formData.subTotal <= 0) {
+            setError('O valor deve ser maior que zero.');
+            return;
+        }
+
+        if (!formData.categoryId) {
+            setError('Selecione uma categoria.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -164,6 +179,17 @@ export default function ImmediateExpenseForm({
                             tabIndex={5}
                             plustabindex={6}
                             minustabindex={4}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-400 mb-2">
+                            Categoria
+                        </label>
+                        <CategoryComboBox
+                            value={formData.categoryId}
+                            onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
+                            tabIndex={7}
                         />
                     </div>
 

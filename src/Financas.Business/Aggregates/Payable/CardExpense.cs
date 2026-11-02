@@ -10,15 +10,15 @@ namespace Financeiro.Business.Aggregates.Payable
 
         #region Construtores
         protected CardExpense() { }
-        public CardExpense(string descricao, decimal subtotal, DateOnly dataVencimento, decimal? descontos, string observacao, Guid competencia, Guid creditCardId) : base(descricao, subtotal, dataVencimento, descontos, observacao, competencia)
+        public CardExpense(string descricao, decimal subtotal, DateOnly dataVencimento, decimal? descontos, string observacao, Guid competencia, Guid creditCardId, Guid? categoryId) : base(descricao, subtotal, dataVencimento, descontos, observacao, competencia, categoryId)
         {
             CreditCardId = creditCardId;
         }
         #endregion
 
-        public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid creditCardId)
+        public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid creditCardId, Guid? categoryId)
         {
-            base.Update(description, subtotal, dueDate, discounts, observation, effectiveDateId);
+            base.Update(description, subtotal, dueDate, discounts, observation, effectiveDateId, categoryId);
             CreditCardId = creditCardId;
         }
 
@@ -33,11 +33,11 @@ namespace Financeiro.Business.Aggregates.Payable
             RecalculateValue();
         }
 
-        public void UpdateExpense(Guid expenseId, string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments)
+        public void UpdateExpense(Guid expenseId, string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments, Guid? categoryId)
         {
             var expense = _expenses.Find(x => x.Id == expenseId);
 
-            expense.UpdateExpense(description, subtotal, dueDate, discounts, observation, currentInstallment, quantityInstallments);
+            expense.UpdateExpense(description, subtotal, dueDate, discounts, observation, currentInstallment, quantityInstallments, categoryId);
             RecalculateValue();
         }
 
@@ -62,7 +62,7 @@ namespace Financeiro.Business.Aggregates.Payable
             public Guid CardExpenseId { get; private set; }
             public CardExpense CardExpense { get; private set; }
 
-            public Expense(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments, Guid effectiveDate, Guid cardExpenseId) : base(description, subtotal, dueDate, discounts, observation, effectiveDate)
+            public Expense(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments, Guid effectiveDate, Guid cardExpenseId, Guid? categoryId) : base(description, subtotal, dueDate, discounts, observation, effectiveDate, categoryId)
             {
                 CurrentInstallment = currentInstallment;
                 QuantityInstallments = quantityInstallments;
@@ -71,18 +71,18 @@ namespace Financeiro.Business.Aggregates.Payable
 
             protected Expense() { }
 
-            public void UpdateExpense(string descriptions, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments)
+            public void UpdateExpense(string descriptions, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, int currentInstallment, int quantityInstallments, Guid? categoryId)
             {
                 CurrentInstallment = currentInstallment;
                 QuantityInstallments = quantityInstallments;
 
-                this.Update(descriptions, subtotal, dueDate, discounts, observation, EffectiveDateId);
+                this.Update(descriptions, subtotal, dueDate, discounts, observation, EffectiveDateId, categoryId);
             }
 
             public void TransferTo(Guid cardExpenseId, Guid effectiveDateId)
             {
                 CardExpenseId = cardExpenseId;
-                this.Update(Description, SubTotal, DueDate, Discount, Observation, effectiveDateId);
+                this.Update(Description, SubTotal, DueDate, Discount, Observation, effectiveDateId, CategoryId);
             }
 
             public override bool HasValue()

@@ -1,4 +1,4 @@
-import { getAsync, postAsync } from "./baseServices";
+import { getAsync, postAsync, readErrorAsync } from "./baseServices";
 import EffectiveDateSummary from '@/models/EffectiveDate/EffectiveDateSummary';
 import EffectiveDateView from "@/models/EffectiveDate/EffectiveDateView";
 import { Deserializer } from "./Deserializer";
@@ -13,8 +13,7 @@ export async function getEffectiveDateByIdAsync(id: string): Promise<EffectiveDa
         return Deserializer.deserialize(data, EffectiveDateView);
     }
 
-    const error = await response.json().catch(() => ({ message: 'No data available' }));
-    throw new Error(error.message || 'Failed to fetch competencies');
+    throw new Error(await readErrorAsync(response, 'Failed to fetch competencies'));
 }
 
 export async function getEffectiveDateListAsync(): Promise<EffectiveDateSummary[]> {
@@ -25,16 +24,14 @@ export async function getEffectiveDateListAsync(): Promise<EffectiveDateSummary[
         return Deserializer.deserializeArray(data, EffectiveDateSummary);
     }
 
-    const error = await response.json().catch(() => ({ message: 'No data available' }));
-    throw new Error(error.message || 'Failed to fetch competencies');
+    throw new Error(await readErrorAsync(response, 'Failed to fetch competencies'));
 }
 
 export async function syncMissingCardInvoicesAsync(id: string): Promise<void> {
     const response = await postAsync(`api/effectiveDate/${id}/sync-cards`, {});
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to sync cards' }));
-        throw new Error(error.message || 'Failed to sync cards');
+        throw new Error(await readErrorAsync(response, 'Failed to sync cards'));
     }
 }
 
@@ -42,8 +39,7 @@ export async function addEffectiveDateAsync(request: { month: number, year: numb
     const response = await postAsync(`api/effectiveDate`, request);
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to add competency' }));
-        throw new Error(error.message || 'Failed to add competency');
+        throw new Error(await readErrorAsync(response, 'Failed to add competency'));
     }
 }
 

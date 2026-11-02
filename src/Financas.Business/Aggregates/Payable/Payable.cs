@@ -1,4 +1,5 @@
-﻿using Financeiro.Business.Shared;
+﻿using Financeiro.Business.Aggregates.Category;
+using Financeiro.Business.Shared;
 
 namespace Financeiro.Business.Aggregates.Payable
 {
@@ -11,16 +12,18 @@ namespace Financeiro.Business.Aggregates.Payable
 		public decimal Discount { get; private set; } = 0;
 		public string? Observation { get; private set; }
 		public Guid EffectiveDateId { get; private set; }
-		public EffectiveDate EffectiveDate { get; private set; }
-		//TODO: Urgente: implementar bool recorrente.
-		// caso for recorrente, ao gerar a proxima competencia, verificar na anterior se há dados recorrentes
-		// caso haja, gerá-los apenas atualizando o mês
+		public EffectiveDate.EffectiveDate EffectiveDate { get; private set; }
+        public Guid? CategoryId { get; private set; }
+        public Category.Category? Category { get; private set; }
+        //TODO: Urgente: implementar bool recorrente.
+        // caso for recorrente, ao gerar a proxima competencia, verificar na anterior se há dados recorrentes
+        // caso haja, gerá-los apenas atualizando o mês
 
 
-		protected Payable() { }
+        protected Payable() { }
 		abstract public bool HasValue();
 
-		public Payable(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId)
+		public Payable(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid? categoryId)
 		{
 			Description = description;
 			SubTotal = subtotal;
@@ -28,10 +31,11 @@ namespace Financeiro.Business.Aggregates.Payable
 			Discount = discounts.HasValue ? discounts.Value : 0;
 			Observation = observation;
 			EffectiveDateId = effectiveDateId;
+			CategoryId = categoryId;
 
 			CalculateTotal();
 		}
-		public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId)
+		public void Update(string description, decimal subtotal, DateOnly dueDate, decimal? discounts, string observation, Guid effectiveDateId, Guid? categoryId)
 		{
 			Description = description;
 			SubTotal = subtotal;
@@ -40,6 +44,7 @@ namespace Financeiro.Business.Aggregates.Payable
 			Observation = observation;
 			Total = SubTotal - Discount;
 			EffectiveDateId = effectiveDateId;
+			CategoryId = categoryId;
 
 			CalculateTotal();
 		}

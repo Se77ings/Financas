@@ -3,6 +3,7 @@ import { CardExpenseItemRequest } from '@/services/cardExpenseServices';
 import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton, SaveMode } from '@/public/components/SaveButton';
+import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
 
 interface CardExpenseItemFormProps {
@@ -18,6 +19,7 @@ interface CardExpenseItemFormProps {
         observation: string;
         currentInstallment?: number;
         quantityInstallments: number;
+        categoryId?: string | null;
     } | null;
     onSubmit: (data: CardExpenseItemRequest) => Promise<void>;
     onClose: () => void;
@@ -40,6 +42,7 @@ export default function CardExpenseItemForm({
         observation: initialData?.observation || '',
         currentInstallment: initialData?.currentInstallment ?? 1,
         quantityInstallments: initialData?.quantityInstallments || 1,
+        categoryId: initialData?.categoryId ?? null,
     });
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +66,7 @@ export default function CardExpenseItemForm({
         observation: '',
         currentInstallment: 1,
         quantityInstallments: 1,
+        categoryId: null,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -79,6 +83,16 @@ export default function CardExpenseItemForm({
         e.preventDefault();
         setError(null);
         
+        if (formData.subTotal <= 0) {
+            setError('O valor deve ser maior que zero.');
+            return;
+        }
+
+        if (!formData.categoryId) {
+            setError('Selecione uma categoria.');
+            return;
+        }
+
         if (isRecurring && !recurrenceData.startDate) {
             setError('A data de início é obrigatória para assinaturas.');
             return;
@@ -304,6 +318,17 @@ export default function CardExpenseItemForm({
                             )}
                         </div>
                     )}
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-400 mb-2">
+                            Categoria
+                        </label>
+                        <CategoryComboBox
+                            value={formData.categoryId}
+                            onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
+                            tabIndex={3}
+                        />
+                    </div>
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 mb-2">

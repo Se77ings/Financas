@@ -1,8 +1,8 @@
-using Financeiro.Business.Aggregates.Receivable;
-using Financeiro.Business.Aggregates.Payable;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic.FileIO;
+using Financeiro.Business.Aggregates.Category;
 using Financeiro.Business.Aggregates.EffectiveDate;
+using Financeiro.Business.Aggregates.Payable;
+using Financeiro.Business.Aggregates.Receivable;
+using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Infra.Context
 {
@@ -25,6 +25,7 @@ namespace Financeiro.Infra.Context
         public DbSet<CardExpense.Expense> CardExpenseItem { get; set; }
         public DbSet<CreditCard> CreditCard { get; set; }
         public DbSet<Subscription> Subscription { get; set; }
+        public DbSet<Category> Category { get; set; }
 
         public FinanceiroDBContext(DbContextOptions<FinanceiroDBContext> options) : base(options)
         {

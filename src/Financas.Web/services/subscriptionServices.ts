@@ -1,4 +1,4 @@
-import { getAsync, postAsync, putAsync, deleteAsync } from "./baseServices";
+import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 
 export enum FrequencyType {
     Mensal = 1,
@@ -21,8 +21,7 @@ export async function addSubscriptionAsync(request: SubscriptionRequest): Promis
     const response = await postAsync(`api/Subscription`, request);
     
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to add subscription' }));
-        throw new Error(error.message || 'Failed to add subscription');
+        throw new Error(await readErrorAsync(response, 'Failed to add subscription'));
     }
 }
 

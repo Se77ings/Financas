@@ -1,7 +1,4 @@
 ﻿using Financeiro.Business.Aggregates.EffectiveDate;
-using Financeiro.Business.Aggregates.Payable;
-using Financeiro.Business.Aggregates.Receivable;
-using Financeiro.Business.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,4 +1,4 @@
-import { getAsync, postAsync, putAsync, deleteAsync } from "./baseServices";
+import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 import ReceivableSummaryView from "@/models/Receivable/ReceivableSummary";
 import { Deserializer } from "./Deserializer";
 
@@ -7,6 +7,7 @@ export interface ReceivableRequest {
     subtotal: number;
     date: string;
     effectiveDateId: string;
+    categoryId: string | null;
 }
 
 export async function getReceivablesAsync(): Promise<ReceivableSummaryView[]> {
@@ -37,8 +38,7 @@ export async function addReceivableAsync(request: ReceivableRequest): Promise<vo
     const response = await postAsync(`api/Receivable`, request);
     
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add receivable');
+        throw new Error(await readErrorAsync(response, 'Failed to add receivable'));
     }
 }
 
@@ -46,8 +46,7 @@ export async function updateReceivableAsync(id: string, request: ReceivableReque
     const response = await putAsync(`api/Receivable/${id}`, request);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update receivable');
+        throw new Error(await readErrorAsync(response, 'Failed to update receivable'));
     }
 }
 
@@ -55,7 +54,6 @@ export async function deleteReceivableAsync(id: string): Promise<void> {
     const response = await deleteAsync(`api/Receivable/${id}`);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete receivable');
+        throw new Error(await readErrorAsync(response, 'Failed to delete receivable'));
     }
 }

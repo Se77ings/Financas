@@ -22,7 +22,30 @@ namespace Financeiro.Infra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.EffectiveDate", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Category.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories", (string)null);
+                });
+
+            modelBuilder.Entity("Financeiro.Business.Aggregates.EffectiveDate.EffectiveDate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,7 +62,7 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EffectiveDate", (string)null);
+                    b.ToTable("EffectiveDate");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CreditCard", b =>
@@ -80,6 +103,9 @@ namespace Financeiro.Infra.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -88,6 +114,7 @@ namespace Financeiro.Infra.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<decimal>("Discount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateOnly>("DueDate")
@@ -101,16 +128,20 @@ namespace Financeiro.Infra.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<decimal>("SubTotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("EffectiveDateId");
 
-                    b.ToTable("Payable", (string)null);
+                    b.ToTable("Payable");
 
                     b.UseTptMappingStrategy();
                 });
@@ -161,6 +192,9 @@ namespace Financeiro.Infra.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -172,22 +206,27 @@ namespace Financeiro.Infra.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<decimal>("Discounts")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("EffectiveDateId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("SubTotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("EffectiveDateId");
 
-                    b.ToTable("Receivable", (string)null);
+                    b.ToTable("Receivable");
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.CardExpense", b =>
@@ -229,10 +268,16 @@ namespace Financeiro.Infra.Migrations
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Payable", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.EffectiveDate", "EffectiveDate")
+                    b.HasOne("Financeiro.Business.Aggregates.Category.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("Financeiro.Business.Aggregates.EffectiveDate.EffectiveDate", "EffectiveDate")
                         .WithMany("Payable")
                         .HasForeignKey("EffectiveDateId")
                         .IsRequired();
+
+                    b.Navigation("Category");
 
                     b.Navigation("EffectiveDate");
                 });
@@ -248,10 +293,16 @@ namespace Financeiro.Infra.Migrations
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.Receivable", b =>
                 {
-                    b.HasOne("Financeiro.Business.Aggregates.EffectiveDate", "EffectiveDate")
+                    b.HasOne("Financeiro.Business.Aggregates.Category.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("Financeiro.Business.Aggregates.EffectiveDate.EffectiveDate", "EffectiveDate")
                         .WithMany("Receivable")
                         .HasForeignKey("EffectiveDateId")
                         .IsRequired();
+
+                    b.Navigation("Category");
 
                     b.Navigation("EffectiveDate");
                 });
@@ -297,7 +348,7 @@ namespace Financeiro.Infra.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.EffectiveDate", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.EffectiveDate.EffectiveDate", b =>
                 {
                     b.Navigation("Payable");
 

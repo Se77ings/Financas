@@ -36,7 +36,7 @@ namespace Financas.Application.Services.ObrigaçãoServices
 
             var effectiveDateId = effectiveDateResult.Value!;
 
-            var entidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId);
+            var entidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId, request.CategoryId);
 
             var validation = await ValidateEntityAsync<CardExpense, CardExpenseValidator>(entidade);
 
@@ -58,14 +58,14 @@ namespace Financas.Application.Services.ObrigaçãoServices
 
             var result = await GetCardExpenseById(id);
 
-            var novaEntidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId);
+            var novaEntidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId, request.CategoryId);
 
             var validation = await ValidateEntityAsync<CardExpense, CardExpenseValidator>(novaEntidade);
 
             if (!validation.Success)
                 return Result<bool>.Failure(validation.Error);
 
-            result.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId);
+            result.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId, request.CategoryId);
 
             await _repository.UpdateAsync(result);
             return Result<bool>.Success(true);
@@ -132,7 +132,8 @@ namespace Financas.Application.Services.ObrigaçãoServices
                     currentInstallment,
                     request.QuantityInstallments,
                     targetEffectiveDate.Id,
-                    targetCardExpense.Id
+                    targetCardExpense.Id,
+                    request.CategoryId
                 );
 
                 await _repository.AddItemAsync(expense);
@@ -175,7 +176,7 @@ namespace Financas.Application.Services.ObrigaçãoServices
         {
             var result = await GetCardExpenseById(id);
 
-            result.UpdateExpense(itemId, request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments);
+            result.UpdateExpense(itemId, request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, request.CategoryId);
 
             await _repository.UpdateAsync(result);
             return Result<bool>.Success(true);
@@ -237,7 +238,8 @@ namespace Financas.Application.Services.ObrigaçãoServices
                             0,
                             sourceCard.Observation,
                             request.TargetEffectiveDateId,
-                            creditCardId
+                            creditCardId,
+                            sourceCard.CategoryId
                         );
 
                         await _repository.AddAsync(targetCard);

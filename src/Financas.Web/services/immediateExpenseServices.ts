@@ -1,4 +1,4 @@
-import { getAsync, postAsync, putAsync, deleteAsync } from "./baseServices";
+import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 import ImmediateExpenseSummary from "@/models/ImmediateExpense/ImmediateExpenseSummary";
 import { Deserializer } from "./Deserializer";
 
@@ -9,6 +9,7 @@ export interface ImmediateExpenseRequest {
     discounts: number;
     observation: string;
     effectiveDateId: string;
+    categoryId: string | null;
 }
 
 export async function getImmediateExpensesAsync(): Promise<ImmediateExpenseSummary[]> {
@@ -39,8 +40,7 @@ export async function addImmediateExpenseAsync(request: ImmediateExpenseRequest)
     const response = await postAsync(`api/ImmediateExpense`, request);
     
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add immediate expense');
+        throw new Error(await readErrorAsync(response, 'Failed to add immediate expense'));
     }
 }
 
@@ -48,8 +48,7 @@ export async function updateImmediateExpenseAsync(id: string, request: Immediate
     const response = await putAsync(`api/ImmediateExpense/${id}`, request);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update immediate expense');
+        throw new Error(await readErrorAsync(response, 'Failed to update immediate expense'));
     }
 }
 
@@ -57,7 +56,6 @@ export async function deleteImmediateExpenseAsync(id: string): Promise<void> {
     const response = await deleteAsync(`api/ImmediateExpense/${id}`);
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete immediate expense');
+        throw new Error(await readErrorAsync(response, 'Failed to delete immediate expense'));
     }
 }

@@ -11,6 +11,7 @@ namespace Financeiro.Application.Models.ReceivableModels
 		public decimal Total { get; set; }
 		public DateOnly Date { get; set; }
 		public Guid EffectiveDateId { get; set;  }
+		public Guid? CategoryId { get; set; }
 
 		public static implicit operator ReceivableView(Receivable receivable)
 		{
@@ -22,7 +23,8 @@ namespace Financeiro.Application.Models.ReceivableModels
 				Discounts = receivable.Discounts,
 				Total = receivable.Total,
 				Date = receivable.Date,
-				EffectiveDateId = receivable.EffectiveDateId
+				EffectiveDateId = receivable.EffectiveDateId,
+				CategoryId = receivable.CategoryId
 			};
 		}
 	}

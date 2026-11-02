@@ -14,6 +14,7 @@ namespace Financeiro.Infra.Mappings
 			builder.Property(x => x.Discounts).IsRequired().HasPrecision(18, 2);
 			builder.Property(x => x.Total).IsRequired().HasPrecision(18, 2);
 			builder.Property(x => x.Date).IsRequired();
+			builder.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).IsRequired(false);
 		}
 	}
 }
