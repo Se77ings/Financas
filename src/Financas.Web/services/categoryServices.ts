@@ -1,6 +1,7 @@
 import { getAsync, postAsync, putAsync, deleteAsync, readErrorAsync } from "./baseServices";
 import CategoryView from "@/models/Category/CategoryView";
 import EntriesByDescriptionView from "@/models/Entry/EntriesByDescriptionView";
+import EntryView from "@/models/Entry/EntryView";
 import { Deserializer } from "./Deserializer";
 
 export interface CategoryRequest {
@@ -109,6 +110,17 @@ export async function getEntriesByCategoryAsync(categoryId: string): Promise<Ent
 
     const data = await response.json();
     return Deserializer.deserializeArray(data, EntriesByDescriptionView);
+}
+
+export async function searchEntriesAsync(term: string): Promise<EntryView[]> {
+    const response = await getAsync(`api/Category/entries/search?term=${encodeURIComponent(term)}`);
+
+    if (!response.ok) {
+        throw new Error(await readErrorAsync(response, 'Failed to search entries'));
+    }
+
+    const data = await response.json();
+    return Deserializer.deserializeArray(data, EntryView);
 }
 
 export async function renameEntriesAsync(request: RenameEntriesRequest): Promise<void> {

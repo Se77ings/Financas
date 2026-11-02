@@ -18,5 +18,9 @@ namespace Financeiro.Application.Models.EntryModels
 
         /// <summary>Nulo nos recebimentos, que não têm observação.</summary>
         public string? Observation { get; set; }
+
+        /// <summary>Nulos quando o lançamento está sem categoria.</summary>
+        public Guid? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
     }
 }

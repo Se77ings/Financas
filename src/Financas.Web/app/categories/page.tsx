@@ -7,8 +7,15 @@ import { getCategoriesAsync, addCategoryAsync, updateCategoryAsync, deleteCatego
 import CategoryForm from "@/forms/CategoryForm";
 import CategoryEntriesDialog from "@/public/components/CategoryEntriesDialog";
 import CategoryEntriesPanel from "@/public/components/CategoryEntriesPanel";
+import { useEntrySearch } from "@/public/components/useEntrySearch";
+import EntryView from "@/models/Entry/EntryView";
 
 type Tab = 'categories' | 'uncategorized';
+type SortKey = 'name' | 'description' | 'entriesCount';
+
+const normalize = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+const distinctDescriptions = (entries: EntryView[]) => [...new Set(entries.map(e => e.description.trim()))];
 
 export default function CategoriesPage() {
     const router = useRouter();
@@ -30,6 +37,11 @@ export default function CategoriesPage() {
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState<CategoryView | null>(null);
     const [viewingCategory, setViewingCategory] = useState<CategoryView | null>(null);
+
+    const [entryQuery, setEntryQuery] = useState("");
+    const [nameQuery, setNameQuery] = useState("");
+    const [sort, setSort] = useState<{ key: SortKey; ascending: boolean }>({ key: 'name', ascending: true });
+    const entrySearch = useEntrySearch(entryQuery);
 
     const loadCategories = async () => {
         setErrorMsg("");
@@ -67,6 +79,41 @@ export default function CategoriesPage() {
             alert(err instanceof Error ? err.message : "Erro ao remover categoria.");
         }
     };
+
+    const refreshAll = () => {
+        loadCategories();
+        entrySearch.refresh();
+    };
+
+    const matchesByCategory = new Map<string, EntryView[]>();
+    for (const entry of entrySearch.entries) {
+        if (!entry.categoryId) continue;
+        matchesByCategory.set(entry.categoryId, [...(matchesByCategory.get(entry.categoryId) ?? []), entry]);
+    }
+    const uncategorizedMatches = entrySearch.entries.filter(e => !e.categoryId);
+
+    const normalizedName = normalize(nameQuery.trim());
+    const visibleCategories = categories
+        .filter(c => !normalizedName || normalize(c.name).includes(normalizedName))
+        .filter(c => !entrySearch.isActive || matchesByCategory.has(c.id))
+        .sort((a, b) => {
+            const order = sort.key === 'entriesCount'
+                ? a.entriesCount - b.entriesCount
+                : (a[sort.key] ?? '').localeCompare(b[sort.key] ?? '', 'pt-BR');
+            return sort.ascending ? order : -order;
+        });
+
+    const toggleSort = (key: SortKey) =>
+        setSort(current => ({ key, ascending: current.key === key ? !current.ascending : true }));
+
+    const sortHeader = (key: SortKey, label: string, className: string) => (
+        <th className={`py-3 px-4 ${className}`}>
+            <button onClick={() => toggleSort(key)} className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-white cursor-pointer">
+                {label}
+                <span className="text-[10px] w-2">{sort.key === key ? (sort.ascending ? '▲' : '▼') : ''}</span>
+            </button>
+        </th>
+    );
 
     const tabClass = (value: Tab) =>
         `px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition cursor-pointer ${tab === value
@@ -113,36 +160,81 @@ export default function CategoriesPage() {
             {tab === 'uncategorized' ? (
                 <CategoryEntriesPanel categoryId={null} initialEffectiveDateId={resolverEffectiveDateId} onChanged={loadCategories} />
             ) : (
-                <main className="flex-1 overflow-auto p-6 max-w-5xl w-full mx-auto">
+                <main className="flex-1 overflow-auto p-6 w-full">
                     {errorMsg && (
-                        <div className="mb-4 p-3.5 bg-red-950/60 border border-red-500/20 text-red-200 text-sm rounded-lg">
+                        <div className="w-full xl:w-1/2 mx-auto mb-4 p-3.5 bg-red-950/60 border border-red-500/20 text-red-200 text-sm rounded-lg">
                             {errorMsg}
                         </div>
                     )}
 
+                    <div className="w-full xl:w-1/2 mx-auto mb-4 flex flex-wrap items-center gap-3">
+                        <input
+                            value={entryQuery}
+                            onChange={(e) => setEntryQuery(e.target.value)}
+                            placeholder="🔎 Buscar lançamento (ex.: mercado)"
+                            className="flex-1 min-w-56 px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-sm text-white focus:outline-none focus:border-blue-500"
+                        />
+                        <input
+                            value={nameQuery}
+                            onChange={(e) => setNameQuery(e.target.value)}
+                            placeholder="Nome da categoria"
+                            className="w-56 px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-sm text-white focus:outline-none focus:border-blue-500"
+                        />
+                        {entrySearch.isSearching && <span className="text-xs text-gray-500">Buscando...</span>}
+                    </div>
+
+                    {entrySearch.error && (
+                        <div className="w-full xl:w-1/2 mx-auto mb-4 p-3 bg-red-950/60 border border-red-500/20 text-red-200 text-sm rounded-lg">{entrySearch.error}</div>
+                    )}
+
+                    {entrySearch.isActive && !entrySearch.isSearching && uncategorizedMatches.length > 0 && (
+                        <div className="w-full xl:w-1/2 mx-auto mb-4 p-3 rounded-lg border border-amber-500/20 bg-amber-900/10 text-xs text-amber-200 flex items-center justify-between gap-3">
+                            <span className="truncate" title={distinctDescriptions(uncategorizedMatches).join('\n')}>
+                                {uncategorizedMatches.length} lançamento(s) sem categoria: {distinctDescriptions(uncategorizedMatches).join(' · ')}
+                            </span>
+                            <button onClick={() => selectTab('uncategorized')} className="shrink-0 font-semibold text-blue-400 hover:text-blue-300 cursor-pointer">
+                                Ver em Sem categoria
+                            </button>
+                        </div>
+                    )}
+
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-20">
+                        <div className="w-full xl:w-1/2 mx-auto flex items-center justify-center py-20">
                             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
                         </div>
                     ) : categories.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-white/5">
+                        <div className="w-full xl:w-1/2 mx-auto flex flex-col items-center justify-center py-20 gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-white/5">
                             <p className="text-gray-400 text-sm">Nenhuma categoria cadastrada.</p>
                         </div>
                     ) : (
-                        <div className="overflow-hidden rounded-xl border border-white/15 bg-black/20 shadow-2xl">
+                        <div className="w-full xl:w-1/2 mx-auto overflow-hidden rounded-xl border border-white/15 bg-black/20 shadow-2xl">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/10">
-                                        <th className="py-3 px-4">Nome</th>
-                                        <th className="py-3 px-4">Descrição</th>
-                                        <th className="py-3 px-4 text-center w-32">Lançamentos</th>
+                                        {sortHeader('name', 'Nome', '')}
+                                        {sortHeader('description', 'Descrição', '')}
+                                        {sortHeader('entriesCount', 'Lançamentos', 'text-center w-32')}
                                         <th className="py-3 px-4 text-right w-32">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5 text-sm">
-                                    {categories.map((category) => (
+                                    {visibleCategories.length === 0 && (
+                                        <tr>
+                                            <td colSpan={4} className="py-10 text-center text-gray-500 italic">
+                                                {entrySearch.isSearching ? 'Buscando...' : 'Nenhuma categoria encontrada.'}
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {visibleCategories.map((category) => (
                                         <tr key={category.id} className="hover:bg-white/5 transition">
-                                            <td className="py-3 px-4 font-medium">{category.name}</td>
+                                            <td className="py-3 px-4 font-medium">
+                                                {category.name}
+                                                {matchesByCategory.has(category.id) && (
+                                                    <p className="mt-0.5 text-xs font-normal text-blue-300/80 truncate max-w-sm" title={distinctDescriptions(matchesByCategory.get(category.id)!).join('\n')}>
+                                                        🔎 {matchesByCategory.get(category.id)!.length} encontrado(s): {distinctDescriptions(matchesByCategory.get(category.id)!).join(' · ')}
+                                                    </p>
+                                                )}
+                                            </td>
                                             <td className="py-3 px-4 text-gray-400">{category.description ?? '—'}</td>
                                             <td className="py-3 px-4 text-center font-mono text-gray-300">{category.entriesCount}</td>
                                             <td className="py-3 px-4">
@@ -198,7 +290,7 @@ export default function CategoriesPage() {
                 <CategoryEntriesDialog
                     category={viewingCategory}
                     onClose={() => setViewingCategory(null)}
-                    onChanged={loadCategories}
+                    onChanged={refreshAll}
                     onDeleted={() => {
                         setViewingCategory(null);
                         loadCategories();

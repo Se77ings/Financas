@@ -88,6 +88,13 @@ namespace Financas.API.Controllers
             return QueryResult(result);
         }
 
+        [HttpGet("entries/search")]
+        public async Task<IActionResult> SearchEntriesAsync([FromQuery] string? term)
+        {
+            var result = await _managementServices.SearchEntriesAsync(term);
+            return QueryResult(result);
+        }
+
         [HttpPut("entries/description")]
         public async Task<IActionResult> RenameEntriesAsync([FromBody] RenameEntriesRequest request)
         {

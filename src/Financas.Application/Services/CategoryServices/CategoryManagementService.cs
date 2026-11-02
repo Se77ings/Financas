@@ -1,4 +1,6 @@
 using Financeiro.Application.Models.EntryModels;
+using Financeiro.Business.Aggregates.Payable;
+using Financeiro.Business.Aggregates.Receivable;
 using Financeiro.Business.Interfaces;
 using Financeiro.Business.Shared.ResultPattern;
 
@@ -7,6 +9,7 @@ namespace Financas.Application.Services.CategoryServices
     public class CategoryManagementService : ICategoryManagementService
     {
         private const int DescriptionMaxLength = 100;
+        private const int SearchTermMinLength = 2;
 
         private readonly ICategoryEntriesRepository _repository;
         private readonly ICategoryRepository _categoryRepository;
@@ -67,47 +70,28 @@ namespace Financas.Application.Services.CategoryServices
                 .ToList());
         }
 
+        public async Task<Result<List<EntryView>>> SearchEntriesAsync(string? term)
+        {
+            var trimmed = term?.Trim();
+            if (string.IsNullOrEmpty(trimmed) || trimmed.Length < SearchTermMinLength)
+                return Result<List<EntryView>>.Failure(new Error($"Digite ao menos {SearchTermMinLength} caracteres para buscar."));
+
+            var (immediateExpenses, cardExpenseItems, receivables) = await _repository.SearchByDescriptionAsync(trimmed);
+
+            return Result<List<EntryView>>.Success(immediateExpenses.Select(ToEntryView)
+                .Concat(cardExpenseItems.Select(ToEntryView))
+                .Concat(receivables.Select(ToEntryView))
+                .OrderByDescending(x => x.Date)
+                .ThenBy(x => x.Description)
+                .ToList());
+        }
+
         private async Task<List<EntriesByDescriptionView>> GetEntriesGroupedByDescriptionAsync(Guid? categoryId)
         {
             var entries = new List<EntryView>();
-
-            entries.AddRange((await _repository.GetImmediateExpensesByCategoryAsync(categoryId)).Select(x => new EntryView
-            {
-                Id = x.Id,
-                Type = EntryType.ImmediateExpense,
-                Description = x.Description,
-                Total = x.Total,
-                Date = x.DueDate,
-                Month = x.EffectiveDate.Month,
-                Year = x.EffectiveDate.Year,
-                Observation = x.Observation
-            }));
-
-            entries.AddRange((await _repository.GetCardExpenseItemsByCategoryAsync(categoryId)).Select(x => new EntryView
-            {
-                Id = x.Id,
-                Type = EntryType.CardExpenseItem,
-                Description = x.Description,
-                Total = x.Total,
-                Date = x.DueDate,
-                Month = x.EffectiveDate.Month,
-                Year = x.EffectiveDate.Year,
-                CreditCardName = x.CardExpense?.CreditCard?.Name,
-                CurrentInstallment = x.CurrentInstallment,
-                QuantityInstallments = x.QuantityInstallments,
-                Observation = x.Observation
-            }));
-
-            entries.AddRange((await _repository.GetReceivablesByCategoryAsync(categoryId)).Select(x => new EntryView
-            {
-                Id = x.Id,
-                Type = EntryType.Receivable,
-                Description = x.Description,
-                Total = x.Total,
-                Date = x.Date,
-                Month = x.EffectiveDate.Month,
-                Year = x.EffectiveDate.Year
-            }));
+            entries.AddRange((await _repository.GetImmediateExpensesByCategoryAsync(categoryId)).Select(ToEntryView));
+            entries.AddRange((await _repository.GetCardExpenseItemsByCategoryAsync(categoryId)).Select(ToEntryView));
+            entries.AddRange((await _repository.GetReceivablesByCategoryAsync(categoryId)).Select(ToEntryView));
 
             // Agrupa ignorando espaços nas pontas e maiúsculas, para que "Mercado" e "mercado " caiam juntos;
             // o grupo exibe a grafia mais usada.
@@ -124,5 +108,49 @@ namespace Financas.Application.Services.CategoryServices
                 .ThenBy(g => g.Description)
                 .ToList();
         }
+
+        private static EntryView ToEntryView(ImmediateExpense x) => new()
+        {
+            Id = x.Id,
+            Type = EntryType.ImmediateExpense,
+            Description = x.Description,
+            Total = x.Total,
+            Date = x.DueDate,
+            Month = x.EffectiveDate.Month,
+            Year = x.EffectiveDate.Year,
+            Observation = x.Observation,
+            CategoryId = x.CategoryId,
+            CategoryName = x.Category?.Name
+        };
+
+        private static EntryView ToEntryView(CardExpense.Expense x) => new()
+        {
+            Id = x.Id,
+            Type = EntryType.CardExpenseItem,
+            Description = x.Description,
+            Total = x.Total,
+            Date = x.DueDate,
+            Month = x.EffectiveDate.Month,
+            Year = x.EffectiveDate.Year,
+            CreditCardName = x.CardExpense?.CreditCard?.Name,
+            CurrentInstallment = x.CurrentInstallment,
+            QuantityInstallments = x.QuantityInstallments,
+            Observation = x.Observation,
+            CategoryId = x.CategoryId,
+            CategoryName = x.Category?.Name
+        };
+
+        private static EntryView ToEntryView(Receivable x) => new()
+        {
+            Id = x.Id,
+            Type = EntryType.Receivable,
+            Description = x.Description,
+            Total = x.Total,
+            Date = x.Date,
+            Month = x.EffectiveDate.Month,
+            Year = x.EffectiveDate.Year,
+            CategoryId = x.CategoryId,
+            CategoryName = x.Category?.Name
+        };
     }
 }

@@ -9,5 +9,6 @@ namespace Financas.Application.Services.CategoryServices
         Task<Result<List<EntriesByDescriptionView>>> GetEntriesByCategoryAsync(Guid categoryId);
         Task<Result<bool>> RenameEntriesAsync(RenameEntriesRequest request);
         Task<Result<List<CategorizedDescriptionView>>> GetCategorizedDescriptionsAsync();
+        Task<Result<List<EntryView>>> SearchEntriesAsync(string? term);
     }
 }
