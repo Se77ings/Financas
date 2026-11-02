@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from 'react';
 import CreditCardListModal from "@/public/components/CreditCardListModal";
+import SubscriptionListModal from "@/public/components/SubscriptionListModal";
 
 export default function Home() {
     const totalBalance = 0;
@@ -12,6 +13,7 @@ export default function Home() {
     const router = useRouter();
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
     const [showCardModal, setShowCardModal] = useState(false);
+    const [showImmediateRecurrences, setShowImmediateRecurrences] = useState(false);
 
     return (
         <div
@@ -34,7 +36,7 @@ export default function Home() {
                         </svg>
                     </button>
                     {showSettingsDropdown && (
-                        <div className="absolute right-0 mt-2 w-48 bg-[#1a1917] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div className="absolute right-0 mt-2 w-60 bg-[#1a1917] border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
                             <button
                                 onClick={() => {
                                     setShowSettingsDropdown(false);
@@ -43,6 +45,15 @@ export default function Home() {
                                 className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
                             >
                                 💳 Configurar Cartão
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowSettingsDropdown(false);
+                                    setShowImmediateRecurrences(true);
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
+                            >
+                                🔁 Gerenciar Recorrências à vista
                             </button>
                             <button
                                 onClick={() => {
@@ -96,6 +107,10 @@ export default function Home() {
 
             {showCardModal && (
                 <CreditCardListModal onClose={() => setShowCardModal(false)} />
+            )}
+
+            {showImmediateRecurrences && (
+                <SubscriptionListModal onClose={() => setShowImmediateRecurrences(false)} />
             )}        </div>
 
     );

@@ -56,6 +56,17 @@ export async function getSubscriptionsByCreditCardAsync(creditCardId: string): P
     return Deserializer.deserializeArray(data, SubscriptionView);
 }
 
+export async function getImmediateExpenseSubscriptionsAsync(): Promise<SubscriptionView[]> {
+    const response = await getAsync(`api/Subscription/immediate-expense`);
+
+    if (!response.ok) {
+        throw new Error(await readErrorAsync(response, 'Failed to fetch immediate expense subscriptions'));
+    }
+
+    const data = await response.json();
+    return Deserializer.deserializeArray(data, SubscriptionView);
+}
+
 export async function updateSubscriptionAsync(id: string, request: SubscriptionRequest): Promise<void> {
     const response = await putAsync(`api/Subscription/${id}`, request);
 

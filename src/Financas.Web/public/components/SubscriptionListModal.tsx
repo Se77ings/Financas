@@ -3,6 +3,7 @@ import SubscriptionView from "@/models/Subscription/SubscriptionView";
 import CategoryView from "@/models/Category/CategoryView";
 import {
     getSubscriptionsByCreditCardAsync,
+    getImmediateExpenseSubscriptionsAsync,
     updateSubscriptionAsync,
     deleteSubscriptionAsync,
     addSubscriptionAsync,
@@ -14,15 +15,19 @@ import { getCreditCardByIdAsync } from "@/services/creditCardServices";
 import SubscriptionForm from "@/forms/SubscriptionForm";
 import CardExpenseItemForm from "@/forms/CardExpenseItemForm";
 import { addCardExpenseItemAsync, CardExpenseItemRequest } from "@/services/cardExpenseServices";
+import ImmediateExpenseForm from "@/forms/ImmediateExpenseForm";
+import { addImmediateExpenseAsync, ImmediateExpenseRequest } from "@/services/immediateExpenseServices";
 import { formatDateBR } from "@/utils/dateFormat";
 
 interface SubscriptionListModalProps {
-    creditCardId: string;
+    /** Sem cartão, o modal gerencia as recorrências à vista. */
+    creditCardId?: string;
     /**
-     * Fatura aberta na tela, quando houver. Com ela, a nova recorrência também lança o item nesta fatura;
-     * sem ela (cadastro de cartões), só a assinatura é criada e o item surge na próxima competência gerada.
+     * Fatura (cartão) ou competência (à vista) aberta na tela, quando houver. Com ela, a nova recorrência
+     * também é lançada agora; sem ela, só a recorrência é criada e o lançamento surge na próxima competência gerada.
      */
     cardExpenseId?: string;
+    effectiveDateId?: string;
     onItemAdded?: () => void;
     onClose: () => void;
 }
@@ -40,7 +45,7 @@ function toRequest(subscription: SubscriptionView): SubscriptionRequest {
     };
 }
 
-export default function SubscriptionListModal({ creditCardId, cardExpenseId, onItemAdded, onClose }: SubscriptionListModalProps) {
+export default function SubscriptionListModal({ creditCardId, cardExpenseId, effectiveDateId, onItemAdded, onClose }: SubscriptionListModalProps) {
     const [subscriptions, setSubscriptions] = useState<SubscriptionView[]>([]);
     const [categories, setCategories] = useState<CategoryView[]>([]);
     const [creditCardName, setCreditCardName] = useState("");
@@ -52,7 +57,9 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
     const loadSubscriptions = async () => {
         setError(null);
         try {
-            setSubscriptions(await getSubscriptionsByCreditCardAsync(creditCardId));
+            setSubscriptions(await (creditCardId
+                ? getSubscriptionsByCreditCardAsync(creditCardId)
+                : getImmediateExpenseSubscriptionsAsync()));
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erro ao carregar assinaturas");
         } finally {
@@ -63,7 +70,8 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
     useEffect(() => {
         loadSubscriptions();
         getCategoriesAsync().then(setCategories).catch(err => console.error('Erro ao carregar categorias:', err));
-        getCreditCardByIdAsync(creditCardId).then(card => setCreditCardName(card.name)).catch(err => console.error('Erro ao carregar cartão:', err));
+        if (creditCardId)
+            getCreditCardByIdAsync(creditCardId).then(card => setCreditCardName(card.name)).catch(err => console.error('Erro ao carregar cartão:', err));
     }, [creditCardId]);
 
     const categoryName = (categoryId: string | null) =>
@@ -79,7 +87,7 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
     };
 
     const handleDelete = async (subscription: SubscriptionView) => {
-        if (!confirm(`Remover a assinatura "${subscription.description}"? Os itens já lançados nas faturas continuam.`)) return;
+        if (!confirm(`Remover a assinatura "${subscription.description}"? Os lançamentos já feitos continuam.`)) return;
         try {
             await deleteSubscriptionAsync(subscription.id);
             await loadSubscriptions();
@@ -92,6 +100,25 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
         if (!editingSubscription) return;
         await updateSubscriptionAsync(editingSubscription.id, data);
         setEditingSubscription(null);
+        await loadSubscriptions();
+    };
+
+    const handleCreateImmediate = async (data: ImmediateExpenseRequest) => {
+        if (effectiveDateId) {
+            await addImmediateExpenseAsync(data);
+            onItemAdded?.();
+        } else {
+            await addSubscriptionAsync({
+                description: data.description,
+                value: data.subTotal,
+                frequencyType: data.subscriptionFrequencyType!,
+                creditCardId: null,
+                startDate: data.subscriptionStartDate!,
+                endDate: data.subscriptionEndDate ?? null,
+                isActive: true,
+                categoryId: data.categoryId,
+            });
+        }
         await loadSubscriptions();
     };
 
@@ -120,10 +147,14 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
                 <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#151413] shrink-0">
                     <div>
                         <h3 className="font-bold text-sm uppercase tracking-wider text-blue-400">
-                            🔁 Assinaturas{creditCardName ? ` · ${creditCardName}` : ""}
+                            {creditCardId
+                                ? <>🔁 Assinaturas{creditCardName ? ` · ${creditCardName}` : ""}</>
+                                : <>🔁 Recorrências à vista</>}
                         </h3>
                         <p className="text-xs text-gray-400 mt-1">
-                            Itens recorrentes gerados nas faturas deste cartão a cada nova competência.
+                            {creditCardId
+                                ? "Itens recorrentes gerados nas faturas deste cartão a cada nova competência."
+                                : "Gastos pagos à vista lançados a cada nova competência, como aluguel, internet e água."}
                         </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
@@ -153,7 +184,7 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
                         <div className="text-center py-12 text-gray-500 text-sm">Carregando assinaturas...</div>
                     ) : subscriptions.length === 0 ? (
                         <div className="m-5 text-center py-16 border-2 border-dashed border-white/5 rounded-lg text-gray-500 text-sm italic">
-                            Nenhuma assinatura neste cartão.
+                            {creditCardId ? "Nenhuma assinatura neste cartão." : "Nenhuma recorrência à vista cadastrada."}
                         </div>
                     ) : (
                         <table className="w-full text-left text-sm">
@@ -225,7 +256,16 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, onI
                     </button>
                 </div>
 
-                {showCreateForm && (
+                {showCreateForm && !creditCardId && (
+                    <ImmediateExpenseForm
+                        effectiveDateId={effectiveDateId}
+                        lockRecurring
+                        onSubmit={handleCreateImmediate}
+                        onClose={() => setShowCreateForm(false)}
+                    />
+                )}
+
+                {showCreateForm && creditCardId && (
                     <CardExpenseItemForm
                         cardExpenseId={cardExpenseId}
                         creditCardId={creditCardId}

@@ -6,5 +6,6 @@ namespace Financeiro.Business.Interfaces
 	{
 		Task<List<Subscription>> GetActiveSubscriptionsAsync();
 		Task<List<Subscription>> GetByCreditCardAsync(Guid creditCardId);
+		Task<List<Subscription>> GetWithoutCreditCardAsync();
 	}
 }

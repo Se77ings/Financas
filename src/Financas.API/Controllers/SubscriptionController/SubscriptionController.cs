@@ -35,6 +35,16 @@ namespace Financas.API.Controllers.SubscriptionController
 			return Ok(lista);
 		}
 
+		[HttpGet("immediate-expense")]
+		public async Task<IActionResult> GetImmediateExpenseSubscriptionsAsync()
+		{
+			var (result, lista) = await _services.GetImmediateExpenseSubscriptionsAsync();
+			if (!result.IsSuccess)
+				return BadRequest(result.Error.Message);
+
+			return Ok(lista);
+		}
+
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
 		{

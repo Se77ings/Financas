@@ -62,6 +62,15 @@ namespace Financeiro.Infra.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<Subscription>> GetWithoutCreditCardAsync()
+        {
+            return await _context.Subscription
+                .AsNoTracking()
+                .Where(x => x.CreditCardId == null)
+                .OrderBy(x => x.Description)
+                .ToListAsync();
+        }
+
         public async Task UpdateAsync(Subscription entity)
         {
             _context.Subscription.Update(entity);

@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Financas.Domain.Validations;
+using Financeiro.Business.Shared;
 
 namespace Financeiro.Application.Models.PayableModels
 {
@@ -24,5 +26,17 @@ namespace Financeiro.Application.Models.PayableModels
 		public Guid? EffectiveDateId { get; set; }
         public Guid? CategoryId { get; set; }
 
+        #region Subscription Info
+
+        [RequiredIf(nameof(isSubscription), ErrorMessage = "O tipo de frequência é obrigatório.")]
+        public FrequencyType SubscriptionFrequencyType { get; set; }
+
+        [RequiredIf(nameof(isSubscription), ErrorMessage = "A data de início é obrigatória.")]
+        public DateOnly SubscriptionStartDate { get; set; }
+
+        public DateOnly? SubscriptionEndDate { get; set; }
+
+        public bool isSubscription { get; set; } = false;
+        #endregion
     }
 }

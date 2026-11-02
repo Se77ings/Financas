@@ -6,6 +6,8 @@ using Financeiro.Application.Models.PayableModels;
 using Financeiro.Business.Shared.ResultPattern;
 using Financeiro.Business.Interfaces;
 using Financeiro.Business.Aggregates.Payable.Validations;
+using Financas.Application.Services.SubscriptionServices;
+using Financeiro.Application.Models.SubscriptionModels;
 
 namespace Financas.Application.Services.PayableServices
 {
@@ -13,11 +15,13 @@ namespace Financas.Application.Services.PayableServices
 	{
 		private readonly IPayableRepository _repository;
 		private readonly IEffectiveDateServices _effectiveDateServices;
+		private readonly ISubscriptionServices _subscriptionServices;
 
-		public ImmediateExpenseServices(IPayableRepository repository, IEffectiveDateServices effectiveDateServices)
+		public ImmediateExpenseServices(IPayableRepository repository, IEffectiveDateServices effectiveDateServices, ISubscriptionServices subscriptionServices)
 		{
 			_repository = repository;
 			_effectiveDateServices = effectiveDateServices;
+			_subscriptionServices = subscriptionServices;
 		}
 
 		public async Task<Result<bool>> AddAsync(ImmediateExpenseRequest request)
@@ -36,6 +40,25 @@ namespace Financas.Application.Services.PayableServices
 				return Result<bool>.Failure(validation.Error);
 
 			await _repository.AddAsync(despesa);
+
+			if (request.isSubscription)
+			{
+				var subscriptionRequest = new SubscriptionRequest
+				{
+					Description = request.Description,
+					Value = request.SubTotal,
+					FrequencyType = request.SubscriptionFrequencyType,
+					StartDate = request.SubscriptionStartDate,
+					EndDate = request.SubscriptionEndDate,
+					IsActive = true,
+					CategoryId = request.CategoryId
+				};
+
+				var result = await _subscriptionServices.AddAsync(subscriptionRequest);
+				if (!result.IsSuccess)
+					return Result<bool>.Failure(new Error("O gasto foi salvo, mas houve erro ao criar a recorrência."));
+			}
+
 			return Result<bool>.Success(true);
 		}
 

@@ -5,9 +5,10 @@ import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton, SaveMode } from '@/public/components/SaveButton';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
+import { FREQUENCY_LABELS } from '@/services/subscriptionServices';
 
 interface ImmediateExpenseFormProps {
-    effectiveDateId: string;
+    effectiveDateId?: string;
     initialData?: {
         id: string;
         description: string;
@@ -21,6 +22,7 @@ interface ImmediateExpenseFormProps {
     onSubmit: (data: ImmediateExpenseRequest) => Promise<void>;
     onClose: () => void;
     isLoading?: boolean;
+    lockRecurring?: boolean;
 }
 
 export default function ImmediateExpenseForm({
@@ -29,6 +31,7 @@ export default function ImmediateExpenseForm({
     onSubmit,
     onClose,
     isLoading = false,
+    lockRecurring = false,
 }: ImmediateExpenseFormProps) {
     const [formData, setFormData] = useState({
         description: initialData?.description || '',
@@ -37,6 +40,13 @@ export default function ImmediateExpenseForm({
         discounts: initialData?.discounts || 0,
         observation: initialData?.observation || '',
         categoryId: initialData?.categoryId ?? null,
+    });
+
+    const [isRecurring, setIsRecurring] = useState(lockRecurring);
+    const [recurrenceData, setRecurrenceData] = useState({
+        frequencyType: '1',
+        startDate: formData.dueDate,
+        endDate: '',
     });
 
     const computedTotal = Math.max(0, formData.subTotal - formData.discounts);
@@ -78,16 +88,28 @@ export default function ImmediateExpenseForm({
             return;
         }
 
+        if (isRecurring && !recurrenceData.startDate) {
+            setError('A data de início é obrigatória para recorrências.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
             await onSubmit({
                 ...formData,
-                effectiveDateId,
+                effectiveDateId: effectiveDateId ?? '',
+                isSubscription: isRecurring,
+                ...(isRecurring ? {
+                    subscriptionFrequencyType: parseInt(recurrenceData.frequencyType, 10),
+                    subscriptionStartDate: recurrenceData.startDate,
+                    subscriptionEndDate: recurrenceData.endDate || null,
+                } : {})
             });
 
             if (saveMode === 'continue' && isNew) {
                 setFormData(getEmptyForm(formData.dueDate));
+                setIsRecurring(lockRecurring);
             } else {
                 onClose();
             }
@@ -105,7 +127,7 @@ export default function ImmediateExpenseForm({
             <div className="bg-[#1a1917] rounded-xl border border-white/5 w-96 shadow-2xl max-h-screen overflow-y-auto">
                 <div className="p-4 border-b border-white/5 flex justify-between items-center">
                     <h3 className="font-semibold text-sm uppercase tracking-wider">
-                        {initialData ? 'Editar Gasto' : 'Novo Gasto'}
+                        {initialData ? 'Editar Gasto' : lockRecurring ? 'Nova Recorrência à Vista' : 'Novo Gasto'}
                     </h3>
                     <button
                         onClick={onClose}
@@ -156,7 +178,8 @@ export default function ImmediateExpenseForm({
                             </label>
                             <ValueComponent
                                 value={formData.discounts}
-                                onChange={(discounts) => setFormData(prev => ({ ...prev, discounts }))}
+                                onChange={(discounts) => !isRecurring && setFormData(prev => ({ ...prev, discounts }))}
+                                readOnly={isRecurring}
                                 tabIndex={3}
                             />
                         </div>
@@ -181,6 +204,65 @@ export default function ImmediateExpenseForm({
                             minustabindex={4}
                         />
                     </div>
+
+                    {isNew && (
+                        <div className="border-t border-white/5 pt-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-400">Tornar este gasto recorrente?</span>
+                                <label className={`relative inline-flex items-center ${lockRecurring ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={isRecurring}
+                                        disabled={lockRecurring}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setIsRecurring(checked);
+                                            if (checked) setFormData(prev => ({ ...prev, discounts: 0 }));
+                                        }}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-9 h-5 bg-[#0f0e0c] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-500 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
+                                </label>
+                            </div>
+
+                            {isRecurring && (
+                                <div className="p-3 bg-[#0f0e0c]/40 border border-white/5 rounded space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-400 mb-1">Frequência</label>
+                                        <select
+                                            value={recurrenceData.frequencyType}
+                                            onChange={(e) => setRecurrenceData(prev => ({ ...prev, frequencyType: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-[#0f0e0c] border border-white/10 rounded text-white focus:outline-none focus:border-blue-500 text-xs"
+                                        >
+                                            {Object.entries(FREQUENCY_LABELS).map(([value, label]) => (
+                                                <option key={value} value={value}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">Início</label>
+                                            <input
+                                                type="date"
+                                                value={recurrenceData.startDate}
+                                                onChange={(e) => setRecurrenceData(prev => ({ ...prev, startDate: e.target.value }))}
+                                                className="w-full px-2 py-1 bg-[#0f0e0c] border border-white/10 rounded text-white focus:outline-none focus:border-blue-500 text-xs"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">Fim (Opcional)</label>
+                                            <input
+                                                type="date"
+                                                value={recurrenceData.endDate}
+                                                onChange={(e) => setRecurrenceData(prev => ({ ...prev, endDate: e.target.value }))}
+                                                className="w-full px-2 py-1 bg-[#0f0e0c] border border-white/10 rounded text-white focus:outline-none focus:border-blue-500 text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 mb-2">

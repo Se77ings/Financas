@@ -98,6 +98,12 @@ namespace Financas.Application.Services.SubscriptionServices
 			return (Result<bool>.Success(true), list.Select(x => (SubscriptionView)x).ToList());
 		}
 
+		public async Task<(Result<bool> result, List<SubscriptionView> lista)> GetImmediateExpenseSubscriptionsAsync()
+		{
+			var list = await _repository.GetWithoutCreditCardAsync();
+			return (Result<bool>.Success(true), list.Select(x => (SubscriptionView)x).ToList());
+		}
+
 		public async Task<(Result<bool> result, List<SubscriptionView> lista)> GetListAsync()
 		{
 			var list = await _repository.GetListAsync();
