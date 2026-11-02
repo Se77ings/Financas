@@ -6,12 +6,14 @@ import { formatDateBR } from "@/utils/dateFormat";
 import DashboardPanel from "./DashboardPanel";
 import CategoryFilterMenu, { CategoryOption } from "./CategoryFilterMenu";
 import SpendingEntryList from "./SpendingEntryList";
+import IdealPercentageInput, { DEFAULT_IDEAL_PERCENTAGE, useIdealPercentage } from "./IdealPercentageInput";
 import { AXIS_TICK, CHART_COLORS, formatBRL, formatCompactBRL, formatDayMonth, TOOLTIP_STYLE } from "./chartTheme";
 import { useToggleableSeries } from "./useToggleableSeries";
 import { useCategoryFilter } from "./useCategoryFilter";
 
 const FILTER_STORAGE_KEY = 'dashboard.dailySpending.excludedCategories';
 const RANGE_STORAGE_KEY = 'dashboard.dailySpending.range';
+const PERCENTAGE_STORAGE_KEY = 'dashboard.dailySpending.idealPercentage';
 
 type Range = 'lastDays' | 'selectedMonth';
 
@@ -41,6 +43,7 @@ export default function DailySpendingChart({ data, monthLabel }: DailySpendingCh
     const filter = useCategoryFilter(FILTER_STORAGE_KEY);
     const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
     const [range, setRange] = useState<Range>(readRange);
+    const idealPercentage = useIdealPercentage(PERCENTAGE_STORAGE_KEY);
     // A seleção guarda a lista de origem: ao trocar de competência ou de período, ela deixa de valer sozinha.
     const [selection, setSelection] = useState<{ source: DailySpendingDay[]; date: string } | null>(null);
     const selectedDate = selection !== null && selection.source === data[range] ? selection.date : null;
@@ -73,10 +76,10 @@ export default function DailySpendingChart({ data, monthLabel }: DailySpendingCh
         label: formatDayMonth(day.date),
         total: totals[index],
         average: averageDaily,
-        ideal: day.idealDaily,
+        ideal: day.idealDaily === null ? null : day.idealDaily * idealPercentage.factor,
     }));
 
-    const latestIdeal = [...days].reverse().find(day => day.idealDaily !== null)?.idealDaily ?? null;
+    const latestIdeal = [...rows].reverse().find(row => row.ideal !== null)?.ideal ?? null;
     const selectedDay = days.find(day => day.date === selectedDate);
     const toggleDay = (date: string) => setSelection(selectedDate === date ? null : { source: data[range], date });
 
@@ -93,9 +96,10 @@ export default function DailySpendingChart({ data, monthLabel }: DailySpendingCh
                     <ul className="mt-2 space-y-1">
                         <li><span className="text-red-400 font-semibold">Barras</span>: gastos à vista e itens de cartão do dia.</li>
                         <li><span className="text-amber-400 font-semibold">Média</span>: quanto gastou, em média, por dia.</li>
-                        <li><span className="text-green-400 font-semibold">Ideal</span>: quanto pode gastar por dia sem passar da receita do mês.</li>
+                        <li><span className="text-green-400 font-semibold">Ideal</span>: quanto pode gastar por dia para terminar o mês no percentual escolhido da receita.</li>
                     </ul>
                     <p className="mt-2">Use <span className="text-blue-400 font-semibold">🏷️ Categorias</span> para deixar só os gastos do dia a dia, tirando contas como aluguel. A escolha fica salva neste navegador.</p>
+                    <p className="mt-2">Em <span className="text-green-400 font-semibold">% da receita</span> defina quanto da receita o ideal diário deve considerar, de 1 a 100. Vazio vale 100%. É independente do percentual do Ritmo do mês e fica salvo neste navegador.</p>
                     <p className="mt-2 text-gray-400">Média acima do ideal indica um ritmo maior do que a receita comporta.</p>
                 </>
             }
@@ -120,6 +124,7 @@ export default function DailySpendingChart({ data, monthLabel }: DailySpendingCh
                         onExcludeAll={() => filter.excludeAll(categoryOptions.map(option => option.id))}
                         excludedCount={filter.excludedCount}
                     />
+                    <IdealPercentageInput state={idealPercentage} />
                     <div>
                         <p className="text-[10px] uppercase text-gray-500">Média diária</p>
                         <p className="text-sm font-bold font-mono" style={{ color: CHART_COLORS.average }}>{formatBRL(averageDaily)}</p>
@@ -156,7 +161,7 @@ export default function DailySpendingChart({ data, monthLabel }: DailySpendingCh
                             ))}
                         </Bar>
                         <Line dataKey="average" name="Média diária" stroke={CHART_COLORS.average} strokeWidth={2} dot={false} hide={isHidden('average')} />
-                        <Line dataKey="ideal" name="Ideal diário" type="stepAfter" stroke={CHART_COLORS.ideal} strokeWidth={2} strokeDasharray="6 4" dot={false} connectNulls={false} hide={isHidden('ideal')} />
+                        <Line dataKey="ideal" name={idealPercentage.percentage === DEFAULT_IDEAL_PERCENTAGE ? 'Ideal diário' : `Ideal diário (${idealPercentage.percentage}%)`} type="stepAfter" stroke={CHART_COLORS.ideal} strokeWidth={2} strokeDasharray="6 4" dot={false} connectNulls={false} hide={isHidden('ideal')} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
