@@ -14,6 +14,10 @@ export default function Footer() {
     const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[]>([]);
     const [isCreating, setIsCreating] = useState(false);
 
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+
     useEffect(() => {
         getEffectiveDateListAsync()
             .then((dates) => {
@@ -80,13 +84,14 @@ export default function Footer() {
                 <div className="flex flex-row items-stretch">
                     {effectiveDates.map((effectiveDate) => {
                         const isActive = effectiveDate.id === activeId;
+                        const isCurrent = effectiveDate.month === currentMonth && effectiveDate.year === currentYear;
                         return (
                             <button
                                 key={effectiveDate.id}
                                 onClick={() => goToEffectiveDate(effectiveDate.id)}
                                 className={`flex items-stretch transition-colors ${isActive ? 'bg-blue-900/10' : ''}`}
                             >
-                                <Content isActive={isActive}>
+                                <Content isActive={isActive} isCurrent={isCurrent}>
                                     {effectiveDate.display}
                                 </Content>
                             </button>
