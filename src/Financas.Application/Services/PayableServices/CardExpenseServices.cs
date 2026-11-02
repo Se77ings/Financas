@@ -106,6 +106,33 @@ namespace Financas.Application.Services.ObrigaçãoServices
             if (initialEffectiveDate == null)
                 return Result<bool>.Failure(new Error("Competência inicial não encontrada."));
 
+            var requestedItem = new Expense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, cardInvoice.EffectiveDateId, cardInvoice.Id, request.CategoryId);
+            var itemValidation = await ValidateEntityAsync<Expense, CardExpenseItemValidator>(requestedItem);
+            if (!itemValidation.Success)
+                return Result<bool>.Failure(itemValidation.Error);
+
+            SubscriptionRequest? subscriptionRequest = null;
+            if (request.isSubscription)
+            {
+                subscriptionRequest = new SubscriptionRequest
+                {
+                    CreditCardId = cardInvoice.CreditCardId,
+                    Description = request.Description,
+                    EndDate = request.SubscriptionEndDate,
+                    FrequencyType = request.SubscriptionFrequencyType,
+                    IsActive = true,
+                    StartDate = request.SubscriptionStartDate,
+                    Value = request.SubTotal,
+                    CategoryId = request.CategoryId
+                };
+
+                // A assinatura só é gravada depois dos itens; validá-la aqui evita salvar itens de uma assinatura inválida.
+                var subscription = new Subscription(subscriptionRequest.Description, subscriptionRequest.Value, subscriptionRequest.FrequencyType, subscriptionRequest.CreditCardId, subscriptionRequest.StartDate, subscriptionRequest.EndDate, subscriptionRequest.CategoryId, subscriptionRequest.IsActive);
+                var subscriptionValidation = await ValidateEntityAsync<Subscription, SubscriptionValidator>(subscription);
+                if (!subscriptionValidation.Success)
+                    return Result<bool>.Failure(subscriptionValidation.Error);
+            }
+
             var affectedCardExpenseIds = new HashSet<Guid>();
 
             for (int i = 0; i < request.QuantityInstallments; i++)
@@ -153,20 +180,8 @@ namespace Financas.Application.Services.ObrigaçãoServices
                 await _repository.RecalculateCardExpenseAsync(cardExpenseId);
             }
 
-            if (request.isSubscription)
+            if (subscriptionRequest != null)
             {
-                var subscriptionRequest = new SubscriptionRequest
-                {
-                    CreditCardId = cardInvoice.CreditCardId,
-                    Description = request.Description,
-                    EndDate = request.SubscriptionEndDate,
-                    FrequencyType = request.SubscriptionFrequencyType,
-                    IsActive = true,
-                    StartDate = request.SubscriptionStartDate,
-                    Value = request.SubTotal,
-                    CategoryId = request.CategoryId
-                };
-
                 var result = await _subscriptionServices.AddAsync(subscriptionRequest);
                 if (!result.IsSuccess)
                     return Result<bool>.Failure(new Error("O item foi salvo, mas houve erro ao criar a assinatura."));
@@ -178,6 +193,17 @@ namespace Financas.Application.Services.ObrigaçãoServices
         public async Task<Result<bool>> UpdateItemAsync(Guid id, Guid itemId, CardExpenseItemRequest request)
         {
             var result = await GetCardExpenseById(id);
+            if (result == null)
+                return Result<bool>.Failure(new Error("Fatura de cartão não encontrada."));
+
+            var item = result.Expenses.FirstOrDefault(x => x.Id == itemId);
+            if (item == null)
+                return Result<bool>.Failure(new Error("Item da fatura não encontrado."));
+
+            var updatedItem = new Expense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, item.EffectiveDateId, result.Id, request.CategoryId);
+            var validation = await ValidateEntityAsync<Expense, CardExpenseItemValidator>(updatedItem);
+            if (!validation.Success)
+                return Result<bool>.Failure(validation.Error);
 
             result.UpdateExpense(itemId, request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, request.CategoryId);
 

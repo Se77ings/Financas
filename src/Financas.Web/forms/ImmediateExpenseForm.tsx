@@ -93,6 +93,11 @@ export default function ImmediateExpenseForm({
             return;
         }
 
+        if (isRecurring && recurrenceData.endDate && recurrenceData.endDate < recurrenceData.startDate) {
+            setError('A data de término não pode ser anterior à data de início.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {

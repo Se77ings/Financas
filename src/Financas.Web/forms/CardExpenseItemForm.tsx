@@ -84,7 +84,37 @@ export default function CardExpenseItemForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        
+
+        if (!formData.description.trim()) {
+            setError('A descrição deve ser informada.');
+            return;
+        }
+
+        if (formData.description.length > 100) {
+            setError('A descrição deve ter no máximo 100 caracteres.');
+            return;
+        }
+
+        if (!formData.dueDate) {
+            setError('A data de vencimento não pode ser vazia.');
+            return;
+        }
+
+        if (formData.discounts < 0) {
+            setError('Os descontos não podem ser negativos.');
+            return;
+        }
+
+        if (formData.currentInstallment < 1 || formData.quantityInstallments < 1) {
+            setError('A parcela atual e a quantidade de parcelas devem ser no mínimo 1.');
+            return;
+        }
+
+        if (formData.currentInstallment > formData.quantityInstallments) {
+            setError('A parcela atual não pode ser maior que a quantidade de parcelas.');
+            return;
+        }
+
         if (formData.subTotal <= 0) {
             setError('O valor deve ser maior que zero.');
             return;
@@ -97,6 +127,11 @@ export default function CardExpenseItemForm({
 
         if (isRecurring && !recurrenceData.startDate) {
             setError('A data de início é obrigatória para assinaturas.');
+            return;
+        }
+
+        if (isRecurring && recurrenceData.endDate && recurrenceData.endDate < recurrenceData.startDate) {
+            setError('A data de término não pode ser anterior à data de início.');
             return;
         }
 
