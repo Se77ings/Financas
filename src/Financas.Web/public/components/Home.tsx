@@ -174,11 +174,11 @@ export default function Home() {
                     {dashboard && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             <div className="lg:col-span-3 min-w-0">
-                                <DailySpendingChart data={dashboard.dailySpending} />
+                                <DailySpendingChart data={dashboard.dailySpending} monthLabel={monthLabel} />
                             </div>
                             <SpendingPaceChart data={dashboard.spendingPace} monthLabel={monthLabel} />
                             <CategorySpendingChart data={dashboard.spendingByCategory} monthLabel={monthLabel} />
-                            <CreditCardUsagePanel data={dashboard.creditCards} monthLabel={monthLabel} />
+                            <CreditCardUsagePanel data={dashboard.creditCards} history={dashboard.creditCardHistory} monthLabel={monthLabel} />
                             <FutureCommitmentsChart data={dashboard.futureCommitments} />
                             <MonthlyHistoryChart data={dashboard.monthlyHistory} />
                         </div>

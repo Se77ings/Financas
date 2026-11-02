@@ -4,21 +4,25 @@ export interface DashboardTotals {
     balance: number;
 }
 
-/** `categoryId` nulo agrupa os lançamentos sem categoria. */
-export interface CategoryAmount {
-    categoryId: string | null;
+/** `creditCardName` nulo indica gasto à vista; `installment` vem como "2/3" só nos parcelados. */
+export interface SpendingEntry {
+    description: string;
+    date: string;
     total: number;
+    categoryId: string | null;
+    creditCardName: string | null;
+    installment: string | null;
 }
 
 export interface DailySpendingDay {
     date: string;
-    total: number;
-    byCategory: CategoryAmount[];
+    entries: SpendingEntry[];
     idealDaily: number | null;
 }
 
 export interface DailySpending {
-    days: DailySpendingDay[];
+    lastDays: DailySpendingDay[];
+    selectedMonth: DailySpendingDay[];
 }
 
 export interface SpendingPaceDay {
@@ -38,6 +42,7 @@ export interface CategorySpending {
     name: string;
     total: number;
     percentage: number;
+    entries: SpendingEntry[];
 }
 
 export interface CreditCardUsage {
@@ -51,6 +56,21 @@ export interface CreditCardUsage {
     futureInstallments: number;
     committed: number;
     usagePercentage: number;
+}
+
+export interface CreditCardInvoiceAmount {
+    creditCardId: string;
+    name: string;
+    total: number;
+}
+
+/** `invoices` traz só os cartões com fatura na competência. */
+export interface CreditCardInvoiceMonth {
+    effectiveDateId: string;
+    month: number;
+    year: number;
+    isSelected: boolean;
+    invoices: CreditCardInvoiceAmount[];
 }
 
 export interface InstallmentCommitment {
@@ -87,6 +107,7 @@ export default interface DashboardView {
     spendingPace: SpendingPace;
     spendingByCategory: CategorySpending[];
     creditCards: CreditCardUsage[];
+    creditCardHistory: CreditCardInvoiceMonth[];
     futureCommitments: FutureCommitments;
     monthlyHistory: MonthlyHistory[];
 }

@@ -2,9 +2,46 @@
 
 import { getEffectiveDateListAsync, addEffectiveDateAsync } from '@/services/effectiveDateServices';
 import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import Content from "./Content";
+
+const SCROLL_THRESHOLD = 8;
+const HIDE_ON_SCROLL_PATH = '/';
+
+/**
+ * Só no dashboard. As páginas rolam dentro dos próprios containers, não na janela, e o evento de scroll
+ * não sobe pela árvore: por isso a captura no documento, com a última posição guardada por elemento.
+ */
+function useHideOnScroll(ignoreInside: React.RefObject<HTMLElement | null>) {
+    // Guardado com a rota: ao navegar, a barra volta a aparecer sem precisar zerar o estado.
+    const [hiddenOn, setHiddenOn] = useState<string | null>(null);
+    const pathname = usePathname();
+
+    useEffect(() => {
+        if (pathname !== HIDE_ON_SCROLL_PATH) return;
+
+        const lastTop = new WeakMap<EventTarget, number>();
+
+        const onScroll = (event: Event) => {
+            const target = event.target;
+            const element = target instanceof Document ? target.scrollingElement : target as HTMLElement | null;
+            if (!element || ignoreInside.current?.contains(element)) return;
+
+            const top = element.scrollTop;
+            const delta = top - (lastTop.get(element) ?? 0);
+            if (Math.abs(delta) < SCROLL_THRESHOLD) return;
+
+            lastTop.set(element, top);
+            setHiddenOn(delta > 0 && top > 0 ? pathname : null);
+        };
+
+        document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+        return () => document.removeEventListener('scroll', onScroll, { capture: true });
+    }, [ignoreInside, pathname]);
+
+    return hiddenOn === pathname;
+}
 
 export default function Footer() {
     const router = useRouter();
@@ -13,6 +50,8 @@ export default function Footer() {
 
     const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[]>([]);
     const [isCreating, setIsCreating] = useState(false);
+    const footerRef = useRef<HTMLElement>(null);
+    const hidden = useHideOnScroll(footerRef);
 
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
@@ -73,7 +112,10 @@ export default function Footer() {
     }
 
     return (
-        <footer className=" h-11 border-t flex items-stretch overflow-hidden shrink-0">
+        <footer
+            ref={footerRef}
+            className={`flex items-stretch overflow-hidden shrink-0 transition-[height,border-width] duration-200 ${hidden ? 'h-0 border-t-0' : 'h-11 border-t'}`}
+        >
             <button type="button" onClick={() => router.push("/")} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10 cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5H10v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />

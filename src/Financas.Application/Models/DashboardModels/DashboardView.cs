@@ -7,6 +7,7 @@ namespace Financeiro.Application.Models.DashboardModels
         public SpendingPaceView SpendingPace { get; set; }
         public List<CategorySpendingView> SpendingByCategory { get; set; } = new();
         public List<CreditCardUsageView> CreditCards { get; set; } = new();
+        public List<CreditCardInvoiceMonthView> CreditCardHistory { get; set; } = new();
         public FutureCommitmentsView FutureCommitments { get; set; }
         public List<MonthlyHistoryView> MonthlyHistory { get; set; } = new();
     }

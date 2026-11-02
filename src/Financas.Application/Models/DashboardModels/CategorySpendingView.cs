@@ -7,5 +7,6 @@ namespace Financeiro.Application.Models.DashboardModels
         public string Name { get; set; }
         public decimal Total { get; set; }
         public decimal Percentage { get; set; }
+        public List<SpendingEntryView> Entries { get; set; } = new();
     }
 }
