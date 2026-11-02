@@ -18,9 +18,11 @@ namespace Financas.Application.Services.ObrigaçãoServices
         private readonly IEffectiveDateServices _effectiveDateServices;
         private readonly IRecurrentPaymentServices _recurrentPaymentServices;
         private readonly IEffectiveDateRepository _effectiveDateRepository;
+        private readonly ITransactionRunner _transactionRunner;
 
-        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices, IEffectiveDateRepository effectiveDateRepository)
+        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices, IEffectiveDateRepository effectiveDateRepository, ITransactionRunner transactionRunner)
         {
+            _transactionRunner = transactionRunner;
             _repository = repository;
             _effectiveDateServices = effectiveDateServices;
             _recurrentPaymentServices = recurrentPaymentServices;
@@ -133,8 +135,6 @@ namespace Financas.Application.Services.ObrigaçãoServices
                     return Result<bool>.Failure(recurrentPaymentValidation.Error);
             }
 
-            var affectedCardExpenseIds = new HashSet<Guid>();
-
             for (int i = 0; i < request.QuantityInstallments; i++)
             {
                 var (targetMonth, targetYear) = initialEffectiveDate.GetNextPeriod(i);
@@ -163,31 +163,35 @@ namespace Financas.Application.Services.ObrigaçãoServices
                     request.CategoryId
                 );
 
-                await _repository.AddItemAsync(expense);
-                affectedCardExpenseIds.Add(targetCardExpense.Id);
+                targetCardExpense.AddExpense(expense);
+                _repository.AddItem(targetCardExpense, expense);
             }
 
-            // Salva os itens antes da assinatura: o SaveChanges dela grava o contexto inteiro, e o
-            // SaveChanges seguinte dos itens retornaria 0, acusando erro mesmo com tudo salvo.
-            var savedChanges = await _repository.SaveChangesAsync();
-            if (savedChanges == 0)
+            // Itens e assinatura são gravados juntos. Os itens vão primeiro porque o SaveChanges da assinatura
+            // grava o contexto inteiro, e o dos itens, chamado depois, retornaria 0.
+            var outcome = Result<bool>.Success(true);
+            await _transactionRunner.RunAsync(async () =>
             {
-                return Result<bool>.Failure(new Error("Erro ao salvar item de despesa."));
-            }
+                if (await _repository.SaveChangesAsync() == 0)
+                {
+                    outcome = Result<bool>.Failure(new Error("Erro ao salvar item de despesa."));
+                    return false;
+                }
 
-            foreach (var cardExpenseId in affectedCardExpenseIds)
-            {// TODO: Paleativo, resolver com o #FN-11.
-                await _repository.RecalculateCardExpenseAsync(cardExpenseId);
-            }
+                if (recurrentPaymentRequest != null)
+                {
+                    var recurrentPaymentResult = await _recurrentPaymentServices.AddAsync(recurrentPaymentRequest);
+                    if (!recurrentPaymentResult.IsSuccess)
+                    {
+                        outcome = Result<bool>.Failure(new Error("Erro ao criar a assinatura. O item não foi salvo."));
+                        return false;
+                    }
+                }
 
-            if (recurrentPaymentRequest != null)
-            {
-                var result = await _recurrentPaymentServices.AddAsync(recurrentPaymentRequest);
-                if (!result.IsSuccess)
-                    return Result<bool>.Failure(new Error("O item foi salvo, mas houve erro ao criar a assinatura."));
-            }
+                return true;
+            });
 
-            return Result<bool>.Success(true);
+            return outcome;
         }
 
         public async Task<Result<bool>> UpdateItemAsync(Guid id, Guid itemId, CardExpenseItemRequest request)

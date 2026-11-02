@@ -56,24 +56,10 @@ namespace Financeiro.Infra.Repository
             return await _context.SaveChangesAsync();
         }
 
-        public async Task AddItemAsync(CardExpense.Expense item)
+        public void AddItem(CardExpense invoice, CardExpense.Expense item)
         {
             _context.CardExpenseItem.Add(item);
-
-
-        }
-
-        public async Task RecalculateCardExpenseAsync(Guid cardExpenseId)
-        { // TODO: Avaliar como posso substituir este método por uma forma mais convencional.
-            var cardExpense = await GetByIdAsync(cardExpenseId);
-            if (cardExpense != null && cardExpense.Expenses.Any())
-            {
-                var subTotal = cardExpense.Expenses.Sum(e => e.SubTotal);
-                var discounts = cardExpense.Expenses.Sum(e => e.Discount);
-
-                await _context.Database.ExecuteSqlInterpolatedAsync(
-                    $"UPDATE Payable SET SubTotal = {subTotal}, Discount = {discounts}, Total = {subTotal - discounts} WHERE Id = {cardExpenseId}");
-            }
+            _context.Entry(invoice).State = EntityState.Modified;
         }
 
         public async Task RemoveItemAsync(CardExpense.Expense item)
