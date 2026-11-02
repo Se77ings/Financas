@@ -15,9 +15,6 @@ namespace Financeiro.Business.Aggregates.Payable
 		public EffectiveDate.EffectiveDate EffectiveDate { get; private set; }
         public Guid? CategoryId { get; private set; }
         public Category.Category? Category { get; private set; }
-        //TODO: Urgente: implementar bool recorrente.
-        // caso for recorrente, ao gerar a proxima competencia, verificar na anterior se há dados recorrentes
-        // caso haja, gerá-los apenas atualizando o mês
 
 
         protected Payable() { }

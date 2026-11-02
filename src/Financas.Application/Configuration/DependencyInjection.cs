@@ -4,7 +4,7 @@ using Financas.Application.Services.ObrigaçãoServices;
 using Financas.Application.Services.PayableServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Application.Services.CreditCardServices;
-using Financas.Application.Services.SubscriptionServices;
+using Financas.Application.Services.RecurrentPaymentServices;
 using Financeiro.Infra.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Financeiro.Business.Interfaces;
@@ -33,8 +33,8 @@ namespace Financas.Application.Configuration
             services.AddScoped<ICreditCardRepository, CreditCardRepository>();
             services.AddScoped<ICreditCardServices, CreditCardServices>();
 
-            services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-            services.AddScoped<ISubscriptionServices, SubscriptionServices>();
+            services.AddScoped<IRecurrentPaymentRepository, RecurrentPaymentRepository>();
+            services.AddScoped<IRecurrentPaymentServices, RecurrentPaymentServices>();
 
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICategoryService, CategoryService>();
@@ -42,6 +42,8 @@ namespace Financas.Application.Configuration
             services.AddScoped<ICategoryManagementService, CategoryManagementService>();
 
             services.AddScoped<IDashboardService, DashboardService>();
+
+            services.AddScoped<ITransactionRunner, TransactionRunner>();
 
             return services;
         }

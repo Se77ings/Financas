@@ -4,8 +4,8 @@ import DashboardPanel from "./DashboardPanel";
 import { AXIS_TICK, CHART_COLORS, formatBRL, formatCompactBRL, formatMonthLabel, SERIES_PALETTE } from "./chartTheme";
 import { useToggleableSeries } from "./useToggleableSeries";
 
-const CARD_SUBSCRIPTIONS_KEY = 'cardSubscriptions';
-const IMMEDIATE_RECURRENCES_KEY = 'immediateRecurrences';
+const CARD_RECURRENT_PAYMENTS_KEY = 'cardRecurrentPayments';
+const IMMEDIATE_RECURRENT_PAYMENTS_KEY = 'immediateRecurrentPayments';
 
 function CommitmentsTooltip({ active, payload, label }: TooltipContentProps) {
     const entries = (payload ?? []).filter(entry => Number(entry.value) > 0);
@@ -43,8 +43,8 @@ export default function FutureCommitmentsChart({ data }: { data: FutureCommitmen
     const rows = data.months.map(month => ({
         label: formatMonthLabel(month.month, month.year),
         ...Object.fromEntries(month.installmentsByCreditCard.map(x => [installmentKey(x.creditCardName), x.total])),
-        [CARD_SUBSCRIPTIONS_KEY]: month.cardSubscriptions,
-        [IMMEDIATE_RECURRENCES_KEY]: month.immediateRecurrences,
+        [CARD_RECURRENT_PAYMENTS_KEY]: month.cardRecurrentPayments,
+        [IMMEDIATE_RECURRENT_PAYMENTS_KEY]: month.immediateRecurrentPayments,
     }));
 
     return (
@@ -91,8 +91,8 @@ export default function FutureCommitmentsChart({ data }: { data: FutureCommitmen
                                 hide={isHidden(installmentKey(cardName))}
                             />
                         ))}
-                        <Bar dataKey={CARD_SUBSCRIPTIONS_KEY} name="Assinaturas" stackId="commitments" fill="#a78bfa" hide={isHidden(CARD_SUBSCRIPTIONS_KEY)} />
-                        <Bar dataKey={IMMEDIATE_RECURRENCES_KEY} name="Recorrências à vista" stackId="commitments" fill={CHART_COLORS.average} radius={[3, 3, 0, 0]} hide={isHidden(IMMEDIATE_RECURRENCES_KEY)} />
+                        <Bar dataKey={CARD_RECURRENT_PAYMENTS_KEY} name="Assinaturas" stackId="commitments" fill="#a78bfa" hide={isHidden(CARD_RECURRENT_PAYMENTS_KEY)} />
+                        <Bar dataKey={IMMEDIATE_RECURRENT_PAYMENTS_KEY} name="Recorrências à vista" stackId="commitments" fill={CHART_COLORS.average} radius={[3, 3, 0, 0]} hide={isHidden(IMMEDIATE_RECURRENT_PAYMENTS_KEY)} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

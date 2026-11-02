@@ -13,35 +13,26 @@ namespace Financas.Application.Services.CompetenciaServices
     {
         private readonly IEffectiveDateRepository _repository;
         private readonly IEffectiveDateGeneratorService _generatorService;
-        public EffectiveDateServices(IEffectiveDateRepository repository, IEffectiveDateGeneratorService generatorService)
+        private readonly ITransactionRunner _transactionRunner;
+
+        public EffectiveDateServices(IEffectiveDateRepository repository, IEffectiveDateGeneratorService generatorService, ITransactionRunner transactionRunner)
         {
             _repository = repository;
             _generatorService = generatorService;
+            _transactionRunner = transactionRunner;
         }
 
         public async Task<Result<bool>> AddAsync(EffectiveDateRequest request)
         {
-            var effectiveDate = new EffectiveDate(request.Month, request.Year);
-
             if (await _repository.ExistsAsync(request.Month, request.Year))
             {
                 return Result<bool>.Failure(new Error("Já existe uma competência para esse mês/ano."));
             }
 
-            var validation = await ValidateEntityAsync<EffectiveDate, EffectiveDateValidator>(effectiveDate);
-
-            if (!validation.Success)
-                return Result<bool>.Failure(validation.Error);
-
-            await _repository.AddAsync(effectiveDate);
-
-            // Run generation engine to create card invoices and subscriptions automatically
-            var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate, request.Month, request.Year);
-
-            if (!generationResult.IsSuccess)
-                return Result<bool>.Failure(generationResult.Error);
-
-            return Result<bool>.Success(true);
+            var creation = await CreateWithGeneratedEntriesAsync(request.Month, request.Year);
+            return creation.IsSuccess
+                ? Result<bool>.Success(true)
+                : Result<bool>.Failure(creation.Error!);
         }
 
         public async Task<Result<bool>> EnsureExistsAsync(EffectiveDateRequest request)
@@ -62,20 +53,30 @@ namespace Financas.Application.Services.CompetenciaServices
             if (existing != null)
                 return Result<Guid>.Success(existing.Id);
 
+            return await CreateWithGeneratedEntriesAsync(month, year);
+        }
+
+        // A competência, as faturas e as recorrências geradas para ela são gravadas juntas: se a geração
+        // falhar, a competência não fica salva sem os lançamentos automáticos.
+        private async Task<Result<Guid>> CreateWithGeneratedEntriesAsync(CalendarMonth month, int year)
+        {
             var effectiveDate = new EffectiveDate(month, year);
 
             var validation = await ValidateEntityAsync<EffectiveDate, EffectiveDateValidator>(effectiveDate);
             if (!validation.Success)
                 return Result<Guid>.Failure(validation.Error);
 
-            await _repository.AddAsync(effectiveDate);
+            Result<bool> generation = Result<bool>.Success(true);
+            await _transactionRunner.RunAsync(async () =>
+            {
+                await _repository.AddAsync(effectiveDate);
+                generation = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate, month, year);
+                return generation.IsSuccess;
+            });
 
-            // Run generation engine to create card invoices and subscriptions automatically
-            var generationResult = await _generatorService.GenerateAutomaticExpensesAsync(effectiveDate, month, year);
-            if (!generationResult.IsSuccess)
-                return Result<Guid>.Failure(generationResult.Error);
-
-            return Result<Guid>.Success(effectiveDate.Id);
+            return generation.IsSuccess
+                ? Result<Guid>.Success(effectiveDate.Id)
+                : Result<Guid>.Failure(generation.Error);
         }
 
         public async Task<Result<Guid>> ResolveForOperationAsync(DateOnly operationDate, Guid? explicitEffectiveDateId = null)

@@ -2,9 +2,9 @@ using System;
 using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Shared;
 
-namespace Financeiro.Application.Models.SubscriptionModels
+namespace Financeiro.Application.Models.RecurrentPaymentModels
 {
-	public class SubscriptionView
+	public class RecurrentPaymentView
 	{
 		public Guid Id { get; set; }
 		public string Description { get; set; }
@@ -18,11 +18,11 @@ namespace Financeiro.Application.Models.SubscriptionModels
 		public bool IsActive { get; set; }
 		public Guid? CategoryId { get; set; }
 
-		public static implicit operator SubscriptionView(Subscription sub)
+		public static implicit operator RecurrentPaymentView(RecurrentPayment sub)
 		{
 			if (sub == null) return null;
 
-			return new SubscriptionView
+			return new RecurrentPaymentView
 			{
 				Id = sub.Id,
 				Description = sub.Description,

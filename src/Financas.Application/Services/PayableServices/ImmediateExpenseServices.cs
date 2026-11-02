@@ -6,8 +6,8 @@ using Financeiro.Application.Models.PayableModels;
 using Financeiro.Business.Shared.ResultPattern;
 using Financeiro.Business.Interfaces;
 using Financeiro.Business.Aggregates.Payable.Validations;
-using Financas.Application.Services.SubscriptionServices;
-using Financeiro.Application.Models.SubscriptionModels;
+using Financas.Application.Services.RecurrentPaymentServices;
+using Financeiro.Application.Models.RecurrentPaymentModels;
 
 namespace Financas.Application.Services.PayableServices
 {
@@ -15,13 +15,13 @@ namespace Financas.Application.Services.PayableServices
 	{
 		private readonly IPayableRepository _repository;
 		private readonly IEffectiveDateServices _effectiveDateServices;
-		private readonly ISubscriptionServices _subscriptionServices;
+		private readonly IRecurrentPaymentServices _recurrentPaymentServices;
 
-		public ImmediateExpenseServices(IPayableRepository repository, IEffectiveDateServices effectiveDateServices, ISubscriptionServices subscriptionServices)
+		public ImmediateExpenseServices(IPayableRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices)
 		{
 			_repository = repository;
 			_effectiveDateServices = effectiveDateServices;
-			_subscriptionServices = subscriptionServices;
+			_recurrentPaymentServices = recurrentPaymentServices;
 		}
 
 		public async Task<Result<bool>> AddAsync(ImmediateExpenseRequest request)
@@ -41,20 +41,20 @@ namespace Financas.Application.Services.PayableServices
 
 			await _repository.AddAsync(despesa);
 
-			if (request.isSubscription)
+			if (request.IsRecurrent)
 			{
-				var subscriptionRequest = new SubscriptionRequest
+				var recurrentPaymentRequest = new RecurrentPaymentRequest
 				{
 					Description = request.Description,
 					Value = request.SubTotal,
-					FrequencyType = request.SubscriptionFrequencyType,
-					StartDate = request.SubscriptionStartDate,
-					EndDate = request.SubscriptionEndDate,
+					FrequencyType = request.RecurrenceFrequencyType,
+					StartDate = request.RecurrenceStartDate,
+					EndDate = request.RecurrenceEndDate,
 					IsActive = true,
 					CategoryId = request.CategoryId
 				};
 
-				var result = await _subscriptionServices.AddAsync(subscriptionRequest);
+				var result = await _recurrentPaymentServices.AddAsync(recurrentPaymentRequest);
 				if (!result.IsSuccess)
 					return Result<bool>.Failure(new Error("O gasto foi salvo, mas houve erro ao criar a recorrência."));
 			}

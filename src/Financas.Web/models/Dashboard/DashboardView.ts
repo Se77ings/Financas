@@ -62,8 +62,8 @@ export interface FutureCommitmentMonth {
     month: number;
     year: number;
     installmentsByCreditCard: InstallmentCommitment[];
-    cardSubscriptions: number;
-    immediateRecurrences: number;
+    cardRecurrentPayments: number;
+    immediateRecurrentPayments: number;
     total: number;
 }
 

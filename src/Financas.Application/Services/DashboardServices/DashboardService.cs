@@ -16,18 +16,18 @@ namespace Financas.Application.Services.DashboardServices
 
         private readonly IEffectiveDateRepository _effectiveDateRepository;
         private readonly ICreditCardRepository _creditCardRepository;
-        private readonly ISubscriptionRepository _subscriptionRepository;
+        private readonly IRecurrentPaymentRepository _recurrentPaymentRepository;
         private readonly ICategoryRepository _categoryRepository;
 
         public DashboardService(
             IEffectiveDateRepository effectiveDateRepository,
             ICreditCardRepository creditCardRepository,
-            ISubscriptionRepository subscriptionRepository,
+            IRecurrentPaymentRepository recurrentPaymentRepository,
             ICategoryRepository categoryRepository)
         {
             _effectiveDateRepository = effectiveDateRepository;
             _creditCardRepository = creditCardRepository;
-            _subscriptionRepository = subscriptionRepository;
+            _recurrentPaymentRepository = recurrentPaymentRepository;
             _categoryRepository = categoryRepository;
         }
 
@@ -43,10 +43,10 @@ namespace Financas.Application.Services.DashboardServices
                 return (Result<bool>.Failure(new Error("Competência não encontrada.")), null);
 
             var creditCards = await _creditCardRepository.GetListAsync();
-            var subscriptions = await _subscriptionRepository.GetActiveSubscriptionsAsync();
+            var recurrentPayments = await _recurrentPaymentRepository.GetActiveRecurrentPaymentsAsync();
             var categories = await _categoryRepository.GetListAsync();
 
-            var context = new DashboardContext(effectiveDates, subscriptions);
+            var context = new DashboardContext(effectiveDates, recurrentPayments);
 
             var view = new DashboardView
             {
@@ -210,18 +210,18 @@ namespace Financas.Application.Services.DashboardServices
                         .OrderBy(x => x.CreditCardName)
                         .ToList();
 
-                    var dueSubscriptions = context.Subscriptions.Where(x => x.IsDueIn(month, date.Year)).ToList();
-                    var cardSubscriptions = dueSubscriptions.Where(x => x.CreditCardId.HasValue).Sum(x => x.Value);
-                    var immediateRecurrences = dueSubscriptions.Where(x => !x.CreditCardId.HasValue).Sum(x => x.Value);
+                    var dueRecurrentPayments = context.RecurrentPayments.Where(x => x.IsDueIn(month, date.Year)).ToList();
+                    var cardRecurrentPayments = dueRecurrentPayments.Where(x => x.CreditCardId.HasValue).Sum(x => x.Value);
+                    var immediateRecurrences = dueRecurrentPayments.Where(x => !x.CreditCardId.HasValue).Sum(x => x.Value);
 
                     return new FutureCommitmentMonthView
                     {
                         Month = month,
                         Year = date.Year,
                         InstallmentsByCreditCard = installments,
-                        CardSubscriptions = cardSubscriptions,
-                        ImmediateRecurrences = immediateRecurrences,
-                        Total = installments.Sum(x => x.Total) + cardSubscriptions + immediateRecurrences
+                        CardRecurrentPayments = cardRecurrentPayments,
+                        ImmediateRecurrentPayments = immediateRecurrences,
+                        Total = installments.Sum(x => x.Total) + cardRecurrentPayments + immediateRecurrences
                     };
                 })
                 .ToList();
@@ -278,13 +278,13 @@ namespace Financas.Application.Services.DashboardServices
             private readonly Dictionary<(CalendarMonth, int), decimal> _idealDailyByMonth;
 
             public List<EffectiveDate> EffectiveDates { get; }
-            public List<Subscription> Subscriptions { get; }
+            public List<RecurrentPayment> RecurrentPayments { get; }
             public List<Payable> Spendings { get; }
 
-            public DashboardContext(List<EffectiveDate> effectiveDates, List<Subscription> subscriptions)
+            public DashboardContext(List<EffectiveDate> effectiveDates, List<RecurrentPayment> recurrentPayments)
             {
                 EffectiveDates = effectiveDates;
-                Subscriptions = subscriptions;
+                RecurrentPayments = recurrentPayments;
                 Spendings = effectiveDates.SelectMany(DashboardService.Spendings).ToList();
                 _idealDailyByMonth = effectiveDates.ToDictionary(x => (x.Month, x.Year), CalculateIdealDaily);
             }
@@ -299,12 +299,12 @@ namespace Financas.Application.Services.DashboardServices
             // superam a receita.
             private decimal CalculateIdealDaily(EffectiveDate effectiveDate)
             {
-                var dueSubscriptions = Subscriptions.Where(x => x.IsDueIn(effectiveDate.Month, effectiveDate.Year)).Sum(x => x.Value);
+                var dueRecurrentPayments = RecurrentPayments.Where(x => x.IsDueIn(effectiveDate.Month, effectiveDate.Year)).Sum(x => x.Value);
                 var installments = effectiveDate.Payable.OfType<CardExpense.Expense>()
                     .Where(x => x.QuantityInstallments > 1)
                     .Sum(x => x.Total);
 
-                var available = Income(effectiveDate) - dueSubscriptions - installments;
+                var available = Income(effectiveDate) - dueRecurrentPayments - installments;
                 var daysInMonth = DateTime.DaysInMonth(effectiveDate.Year, (int)effectiveDate.Month);
 
                 return Math.Round(available / daysInMonth, 2);

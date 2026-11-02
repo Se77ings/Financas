@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace Financeiro.Business.Aggregates.Payable.Validations
 {
-	public class SubscriptionValidator : AbstractValidator<Subscription>
+	public class RecurrentPaymentValidator : AbstractValidator<RecurrentPayment>
 	{
-		public SubscriptionValidator()
+		public RecurrentPaymentValidator()
 		{
 			RuleFor(x => x.Description).NotEmpty().MaximumLength(150).WithMessage("A descrição deve ter no máximo 150 caracteres.");
 			RuleFor(x => x.Value).GreaterThan(0).WithMessage("O valor da assinatura deve ser maior que zero.");

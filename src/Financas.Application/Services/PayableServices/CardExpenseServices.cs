@@ -1,9 +1,9 @@
 using Financas.Application.Services.CompetenciaServices;
 using Financas.Application.Services.PayableServices.Interfaces;
-using Financas.Application.Services.SubscriptionServices;
+using Financas.Application.Services.RecurrentPaymentServices;
 using Financas.Business.Shared.ServiceBase;
 using Financeiro.Application.Models.PayableModels;
-using Financeiro.Application.Models.SubscriptionModels;
+using Financeiro.Application.Models.RecurrentPaymentModels;
 using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Aggregates.Payable.Validations;
 using Financeiro.Business.Interfaces;
@@ -16,14 +16,14 @@ namespace Financas.Application.Services.ObrigaçãoServices
     {
         private readonly ICardExpenseRepository _repository;
         private readonly IEffectiveDateServices _effectiveDateServices;
-        private readonly ISubscriptionServices _subscriptionServices;
+        private readonly IRecurrentPaymentServices _recurrentPaymentServices;
         private readonly IEffectiveDateRepository _effectiveDateRepository;
 
-        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, ISubscriptionServices subscriptionServices, IEffectiveDateRepository effectiveDateRepository)
+        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices, IEffectiveDateRepository effectiveDateRepository)
         {
             _repository = repository;
             _effectiveDateServices = effectiveDateServices;
-            _subscriptionServices = subscriptionServices;
+            _recurrentPaymentServices = recurrentPaymentServices;
             _effectiveDateRepository = effectiveDateRepository;
         }
 
@@ -111,26 +111,26 @@ namespace Financas.Application.Services.ObrigaçãoServices
             if (!itemValidation.Success)
                 return Result<bool>.Failure(itemValidation.Error);
 
-            SubscriptionRequest? subscriptionRequest = null;
-            if (request.isSubscription)
+            RecurrentPaymentRequest? recurrentPaymentRequest = null;
+            if (request.IsRecurrent)
             {
-                subscriptionRequest = new SubscriptionRequest
+                recurrentPaymentRequest = new RecurrentPaymentRequest
                 {
                     CreditCardId = cardInvoice.CreditCardId,
                     Description = request.Description,
-                    EndDate = request.SubscriptionEndDate,
-                    FrequencyType = request.SubscriptionFrequencyType,
+                    EndDate = request.RecurrenceEndDate,
+                    FrequencyType = request.RecurrenceFrequencyType,
                     IsActive = true,
-                    StartDate = request.SubscriptionStartDate,
+                    StartDate = request.RecurrenceStartDate,
                     Value = request.SubTotal,
                     CategoryId = request.CategoryId
                 };
 
                 // A assinatura só é gravada depois dos itens; validá-la aqui evita salvar itens de uma assinatura inválida.
-                var subscription = new Subscription(subscriptionRequest.Description, subscriptionRequest.Value, subscriptionRequest.FrequencyType, subscriptionRequest.CreditCardId, subscriptionRequest.StartDate, subscriptionRequest.EndDate, subscriptionRequest.CategoryId, subscriptionRequest.IsActive);
-                var subscriptionValidation = await ValidateEntityAsync<Subscription, SubscriptionValidator>(subscription);
-                if (!subscriptionValidation.Success)
-                    return Result<bool>.Failure(subscriptionValidation.Error);
+                var recurrentPayment = new RecurrentPayment(recurrentPaymentRequest.Description, recurrentPaymentRequest.Value, recurrentPaymentRequest.FrequencyType, recurrentPaymentRequest.CreditCardId, recurrentPaymentRequest.StartDate, recurrentPaymentRequest.EndDate, recurrentPaymentRequest.CategoryId, recurrentPaymentRequest.IsActive);
+                var recurrentPaymentValidation = await ValidateEntityAsync<RecurrentPayment, RecurrentPaymentValidator>(recurrentPayment);
+                if (!recurrentPaymentValidation.Success)
+                    return Result<bool>.Failure(recurrentPaymentValidation.Error);
             }
 
             var affectedCardExpenseIds = new HashSet<Guid>();
@@ -180,9 +180,9 @@ namespace Financas.Application.Services.ObrigaçãoServices
                 await _repository.RecalculateCardExpenseAsync(cardExpenseId);
             }
 
-            if (subscriptionRequest != null)
+            if (recurrentPaymentRequest != null)
             {
-                var result = await _subscriptionServices.AddAsync(subscriptionRequest);
+                var result = await _recurrentPaymentServices.AddAsync(recurrentPaymentRequest);
                 if (!result.IsSuccess)
                     return Result<bool>.Failure(new Error("O item foi salvo, mas houve erro ao criar a assinatura."));
             }

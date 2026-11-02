@@ -18,7 +18,7 @@ import ReceivableForm from '@/forms/ReceivableForm';
 import ImmediateExpenseForm from '@/forms/ImmediateExpenseForm';
 import CardExpenseForm from '@/forms/CardExpenseForm';
 import CardExpenseItemForm from '@/forms/CardExpenseItemForm';
-import SubscriptionListModal from '@/public/components/SubscriptionListModal';
+import RecurrentPaymentListModal from '@/public/components/RecurrentPaymentListModal';
 import { formatDateBR } from '@/utils/dateFormat';
 
 // Definição dos SVGs para evitar dependências externas
@@ -91,7 +91,7 @@ export default function EffectiveDateDetails() {
     const [showCardItemForm, setShowCardItemForm] = useState(false);
     const [editingCardItem, setEditingCardItem] = useState<any>(null);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [showSubscriptions, setShowSubscriptions] = useState(false);
+    const [showRecurrentPayments, setShowRecurrentPayments] = useState(false);
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
     const [showImmediateRecurrences, setShowImmediateRecurrences] = useState(false);
 
@@ -583,7 +583,7 @@ export default function EffectiveDateDetails() {
                                 {selectedCard?.creditCardId && (
                                     <button
                                         type="button"
-                                        onClick={() => setShowSubscriptions(true)}
+                                        onClick={() => setShowRecurrentPayments(true)}
                                         className="flex items-center justify-center p-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition text-[11px]"
                                         title="Assinaturas do cartão"
                                     >
@@ -786,20 +786,20 @@ export default function EffectiveDateDetails() {
                 />
             )}
 
-            {showSubscriptions && selectedCard?.creditCardId && (
-                <SubscriptionListModal
+            {showRecurrentPayments && selectedCard?.creditCardId && (
+                <RecurrentPaymentListModal
                     creditCardId={selectedCard.creditCardId}
                     cardExpenseId={selectedCardId ?? undefined}
                     onItemAdded={async () => {
                         await reloadData();
                         if (selectedCardId) await reloadSelectedCard(selectedCardId);
                     }}
-                    onClose={() => setShowSubscriptions(false)}
+                    onClose={() => setShowRecurrentPayments(false)}
                 />
             )}
 
             {showImmediateRecurrences && (
-                <SubscriptionListModal
+                <RecurrentPaymentListModal
                     effectiveDateId={id}
                     onItemAdded={reloadData}
                     onClose={() => setShowImmediateRecurrences(false)}

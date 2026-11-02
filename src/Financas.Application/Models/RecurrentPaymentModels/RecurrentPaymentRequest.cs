@@ -2,9 +2,9 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Financeiro.Business.Shared;
 
-namespace Financeiro.Application.Models.SubscriptionModels
+namespace Financeiro.Application.Models.RecurrentPaymentModels
 {
-	public class SubscriptionRequest
+	public class RecurrentPaymentRequest
 	{
 		[Required(ErrorMessage = "A descrição é obrigatória.")]
 		[MaxLength(150, ErrorMessage = "A descrição deve ter no máximo 150 caracteres.")]

@@ -146,7 +146,7 @@ namespace Financeiro.Infra.Migrations
                     b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Subscription", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.RecurrentPayment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -188,7 +188,7 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasIndex("CreditCardId");
 
-                    b.ToTable("Subscriptions", (string)null);
+                    b.ToTable("RecurrentPayments", (string)null);
                 });
 
             modelBuilder.Entity("Financeiro.Business.Aggregates.Receivable.Receivable", b =>
@@ -287,7 +287,7 @@ namespace Financeiro.Infra.Migrations
                     b.Navigation("EffectiveDate");
                 });
 
-            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.Subscription", b =>
+            modelBuilder.Entity("Financeiro.Business.Aggregates.Payable.RecurrentPayment", b =>
                 {
                     b.HasOne("Financeiro.Business.Aggregates.Category.Category", "Category")
                         .WithMany()

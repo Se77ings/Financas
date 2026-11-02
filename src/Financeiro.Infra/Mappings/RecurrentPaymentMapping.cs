@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Financeiro.Infra.Mappings
 {
-	public class SubscriptionMapping : IEntityTypeConfiguration<Subscription>
+	public class RecurrentPaymentMapping : IEntityTypeConfiguration<RecurrentPayment>
 	{
-		public void Configure(EntityTypeBuilder<Subscription> builder)
+		public void Configure(EntityTypeBuilder<RecurrentPayment> builder)
 		{
 			builder.HasKey(x => x.Id);
 			builder.Property(x => x.Description).IsRequired().HasMaxLength(150);
@@ -26,7 +26,7 @@ namespace Financeiro.Infra.Mappings
 				.HasForeignKey(x => x.CategoryId)
 				.IsRequired(false);
 
-			builder.ToTable("Subscriptions");
+			builder.ToTable("RecurrentPayments");
 		}
 	}
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import CreditCardView from "@/models/CreditCard/CreditCardView";
 import { getCreditCardsAsync, addCreditCardAsync, updateCreditCardAsync, deleteCreditCardAsync, activateCreditCardAsync, deactivateCreditCardAsync, CreditCardRequest } from "@/services/creditCardServices";
-import { getSubscriptionsByCreditCardAsync } from "@/services/subscriptionServices";
+import { getRecurrentPaymentsByCreditCardAsync } from "@/services/recurrentPaymentServices";
 import CreditCardForm from "@/forms/CreditCardForm";
-import SubscriptionListModal from "@/public/components/SubscriptionListModal";
+import RecurrentPaymentListModal from "@/public/components/RecurrentPaymentListModal";
 
 interface CreditCardListModalProps {
     onClose: () => void;
@@ -18,7 +18,7 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
     const [showForm, setShowForm] = useState(false);
     const [editingCard, setEditingCard] = useState<CreditCardView | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [subscriptionsCardId, setSubscriptionsCardId] = useState<string | null>(null);
+    const [recurrentPaymentsCardId, setRecurrentPaymentsCardId] = useState<string | null>(null);
 
     const loadCards = async () => {
         setIsLoading(true);
@@ -73,8 +73,8 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                 if (!confirm(message)) return;
                 await activateCreditCardAsync(card.id);
             } else {
-                const subscriptions = await getSubscriptionsByCreditCardAsync(card.id);
-                const active = subscriptions.filter(s => s.isActive);
+                const recurrentPayments = await getRecurrentPaymentsByCreditCardAsync(card.id);
+                const active = recurrentPayments.filter(s => s.isActive);
                 const details = active.length > 0
                     ? 'As assinaturas ativas abaixo também serão desativadas:\n' + active.map(s => '- ' + s.description).join('\n') + '\n\nAo reativar o cartão, elas continuarão inativas e podem ser reativadas no modal de assinaturas (🔁).'
                     : 'O cartão não possui assinaturas ativas.';
@@ -165,7 +165,7 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex gap-2 justify-center">
                                                     <button
-                                                        onClick={() => setSubscriptionsCardId(card.id)}
+                                                        onClick={() => setRecurrentPaymentsCardId(card.id)}
                                                         className="text-blue-400 hover:text-blue-300 transition text-sm cursor-pointer"
                                                         title="Assinaturas"
                                                     >
@@ -208,10 +208,10 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                     </button>
                 </div>
 
-                {subscriptionsCardId && (
-                    <SubscriptionListModal
-                        creditCardId={subscriptionsCardId}
-                        onClose={() => setSubscriptionsCardId(null)}
+                {recurrentPaymentsCardId && (
+                    <RecurrentPaymentListModal
+                        creditCardId={recurrentPaymentsCardId}
+                        onClose={() => setRecurrentPaymentsCardId(null)}
                     />
                 )}
 

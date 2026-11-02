@@ -1,25 +1,25 @@
 import { useState } from 'react';
-import SubscriptionView from '@/models/Subscription/SubscriptionView';
-import { FrequencyType, FREQUENCY_LABELS, SubscriptionRequest } from '@/services/subscriptionServices';
+import RecurrentPaymentView from '@/models/RecurrentPayment/RecurrentPaymentView';
+import { FrequencyType, FREQUENCY_LABELS, RecurrentPaymentRequest } from '@/services/recurrentPaymentServices';
 import { ValueComponent } from '@/public/components/ValueComponent';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
 
-interface SubscriptionFormProps {
-    subscription: SubscriptionView;
-    onSubmit: (data: SubscriptionRequest) => Promise<void>;
+interface RecurrentPaymentFormProps {
+    recurrentPayment: RecurrentPaymentView;
+    onSubmit: (data: RecurrentPaymentRequest) => Promise<void>;
     onClose: () => void;
 }
 
-export default function SubscriptionForm({ subscription, onSubmit, onClose }: SubscriptionFormProps) {
+export default function RecurrentPaymentForm({ recurrentPayment, onSubmit, onClose }: RecurrentPaymentFormProps) {
     const [formData, setFormData] = useState({
-        description: subscription.description,
-        value: subscription.value,
-        frequencyType: subscription.frequencyType,
-        startDate: toInputDate(subscription.startDate),
-        endDate: toInputDate(subscription.endDate),
-        isActive: subscription.isActive,
-        categoryId: subscription.categoryId,
+        description: recurrentPayment.description,
+        value: recurrentPayment.value,
+        frequencyType: recurrentPayment.frequencyType,
+        startDate: toInputDate(recurrentPayment.startDate),
+        endDate: toInputDate(recurrentPayment.endDate),
+        isActive: recurrentPayment.isActive,
+        categoryId: recurrentPayment.categoryId,
     });
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +49,7 @@ export default function SubscriptionForm({ subscription, onSubmit, onClose }: Su
                 description: formData.description,
                 value: formData.value,
                 frequencyType: formData.frequencyType,
-                creditCardId: subscription.creditCardId,
+                creditCardId: recurrentPayment.creditCardId,
                 startDate: formData.startDate,
                 endDate: formData.endDate || null,
                 isActive: formData.isActive,

@@ -7,8 +7,8 @@ namespace Financeiro.Application.Models.DashboardModels
         public CalendarMonth Month { get; set; }
         public int Year { get; set; }
         public List<InstallmentCommitmentView> InstallmentsByCreditCard { get; set; } = new();
-        public decimal CardSubscriptions { get; set; }
-        public decimal ImmediateRecurrences { get; set; }
+        public decimal CardRecurrentPayments { get; set; }
+        public decimal ImmediateRecurrentPayments { get; set; }
         public decimal Total { get; set; }
     }
 }

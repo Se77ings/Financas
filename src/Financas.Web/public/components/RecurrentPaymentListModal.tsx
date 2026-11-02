@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
-import SubscriptionView from "@/models/Subscription/SubscriptionView";
+import RecurrentPaymentView from "@/models/RecurrentPayment/RecurrentPaymentView";
 import CategoryView from "@/models/Category/CategoryView";
 import {
-    getSubscriptionsByCreditCardAsync,
-    getImmediateExpenseSubscriptionsAsync,
-    updateSubscriptionAsync,
-    deleteSubscriptionAsync,
-    addSubscriptionAsync,
+    getRecurrentPaymentsByCreditCardAsync,
+    getImmediateExpenseRecurrentPaymentsAsync,
+    updateRecurrentPaymentAsync,
+    deleteRecurrentPaymentAsync,
+    addRecurrentPaymentAsync,
     FREQUENCY_LABELS,
-    SubscriptionRequest,
-} from "@/services/subscriptionServices";
+    RecurrentPaymentRequest,
+} from "@/services/recurrentPaymentServices";
 import { getCategoriesAsync } from "@/services/categoryServices";
 import { getCreditCardByIdAsync } from "@/services/creditCardServices";
-import SubscriptionForm from "@/forms/SubscriptionForm";
+import RecurrentPaymentForm from "@/forms/RecurrentPaymentForm";
 import CardExpenseItemForm from "@/forms/CardExpenseItemForm";
 import { addCardExpenseItemAsync, CardExpenseItemRequest } from "@/services/cardExpenseServices";
 import ImmediateExpenseForm from "@/forms/ImmediateExpenseForm";
 import { addImmediateExpenseAsync, ImmediateExpenseRequest } from "@/services/immediateExpenseServices";
 import { formatDateBR } from "@/utils/dateFormat";
 
-interface SubscriptionListModalProps {
+interface RecurrentPaymentListModalProps {
     /** Sem cartão, o modal gerencia as recorrências à vista. */
     creditCardId?: string;
     /**
@@ -32,34 +32,34 @@ interface SubscriptionListModalProps {
     onClose: () => void;
 }
 
-function toRequest(subscription: SubscriptionView): SubscriptionRequest {
+function toRequest(recurrentPayment: RecurrentPaymentView): RecurrentPaymentRequest {
     return {
-        description: subscription.description,
-        value: subscription.value,
-        frequencyType: subscription.frequencyType,
-        creditCardId: subscription.creditCardId,
-        startDate: subscription.startDate,
-        endDate: subscription.endDate,
-        isActive: subscription.isActive,
-        categoryId: subscription.categoryId,
+        description: recurrentPayment.description,
+        value: recurrentPayment.value,
+        frequencyType: recurrentPayment.frequencyType,
+        creditCardId: recurrentPayment.creditCardId,
+        startDate: recurrentPayment.startDate,
+        endDate: recurrentPayment.endDate,
+        isActive: recurrentPayment.isActive,
+        categoryId: recurrentPayment.categoryId,
     };
 }
 
-export default function SubscriptionListModal({ creditCardId, cardExpenseId, effectiveDateId, onItemAdded, onClose }: SubscriptionListModalProps) {
-    const [subscriptions, setSubscriptions] = useState<SubscriptionView[]>([]);
+export default function RecurrentPaymentListModal({ creditCardId, cardExpenseId, effectiveDateId, onItemAdded, onClose }: RecurrentPaymentListModalProps) {
+    const [recurrentPayments, setRecurrentPayments] = useState<RecurrentPaymentView[]>([]);
     const [categories, setCategories] = useState<CategoryView[]>([]);
     const [creditCardName, setCreditCardName] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [editingSubscription, setEditingSubscription] = useState<SubscriptionView | null>(null);
+    const [editingRecurrentPayment, setEditingRecurrentPayment] = useState<RecurrentPaymentView | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
 
-    const loadSubscriptions = async () => {
+    const loadRecurrentPayments = async () => {
         setError(null);
         try {
-            setSubscriptions(await (creditCardId
-                ? getSubscriptionsByCreditCardAsync(creditCardId)
-                : getImmediateExpenseSubscriptionsAsync()));
+            setRecurrentPayments(await (creditCardId
+                ? getRecurrentPaymentsByCreditCardAsync(creditCardId)
+                : getImmediateExpenseRecurrentPaymentsAsync()));
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erro ao carregar assinaturas");
         } finally {
@@ -68,7 +68,7 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
     };
 
     useEffect(() => {
-        loadSubscriptions();
+        loadRecurrentPayments();
         getCategoriesAsync().then(setCategories).catch(err => console.error('Erro ao carregar categorias:', err));
         if (creditCardId)
             getCreditCardByIdAsync(creditCardId).then(card => setCreditCardName(card.name)).catch(err => console.error('Erro ao carregar cartão:', err));
@@ -77,30 +77,30 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
     const categoryName = (categoryId: string | null) =>
         categories.find(c => c.id === categoryId)?.name ?? "—";
 
-    const handleToggleActive = async (subscription: SubscriptionView) => {
+    const handleToggleActive = async (recurrentPayment: RecurrentPaymentView) => {
         try {
-            await updateSubscriptionAsync(subscription.id, { ...toRequest(subscription), isActive: !subscription.isActive });
-            await loadSubscriptions();
+            await updateRecurrentPaymentAsync(recurrentPayment.id, { ...toRequest(recurrentPayment), isActive: !recurrentPayment.isActive });
+            await loadRecurrentPayments();
         } catch (err) {
             alert(err instanceof Error ? err.message : "Erro ao alterar assinatura");
         }
     };
 
-    const handleDelete = async (subscription: SubscriptionView) => {
-        if (!confirm(`Remover a assinatura "${subscription.description}"? Os lançamentos já feitos continuam.`)) return;
+    const handleDelete = async (recurrentPayment: RecurrentPaymentView) => {
+        if (!confirm(`Remover a assinatura "${recurrentPayment.description}"? Os lançamentos já feitos continuam.`)) return;
         try {
-            await deleteSubscriptionAsync(subscription.id);
-            await loadSubscriptions();
+            await deleteRecurrentPaymentAsync(recurrentPayment.id);
+            await loadRecurrentPayments();
         } catch (err) {
             alert(err instanceof Error ? err.message : "Erro ao remover assinatura");
         }
     };
 
-    const handleSave = async (data: SubscriptionRequest) => {
-        if (!editingSubscription) return;
-        await updateSubscriptionAsync(editingSubscription.id, data);
-        setEditingSubscription(null);
-        await loadSubscriptions();
+    const handleSave = async (data: RecurrentPaymentRequest) => {
+        if (!editingRecurrentPayment) return;
+        await updateRecurrentPaymentAsync(editingRecurrentPayment.id, data);
+        setEditingRecurrentPayment(null);
+        await loadRecurrentPayments();
     };
 
     const handleCreateImmediate = async (data: ImmediateExpenseRequest) => {
@@ -108,18 +108,18 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
             await addImmediateExpenseAsync(data);
             onItemAdded?.();
         } else {
-            await addSubscriptionAsync({
+            await addRecurrentPaymentAsync({
                 description: data.description,
                 value: data.subTotal,
-                frequencyType: data.subscriptionFrequencyType!,
+                frequencyType: data.recurrenceFrequencyType!,
                 creditCardId: null,
-                startDate: data.subscriptionStartDate!,
-                endDate: data.subscriptionEndDate ?? null,
+                startDate: data.recurrenceStartDate!,
+                endDate: data.recurrenceEndDate ?? null,
                 isActive: true,
                 categoryId: data.categoryId,
             });
         }
-        await loadSubscriptions();
+        await loadRecurrentPayments();
     };
 
     const handleCreate = async (data: CardExpenseItemRequest) => {
@@ -127,18 +127,18 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
             await addCardExpenseItemAsync(cardExpenseId, data);
             onItemAdded?.();
         } else {
-            await addSubscriptionAsync({
+            await addRecurrentPaymentAsync({
                 description: data.description,
                 value: data.subTotal,
-                frequencyType: data.subscriptionFrequencyType!,
+                frequencyType: data.recurrenceFrequencyType!,
                 creditCardId,
-                startDate: data.subscriptionStartDate!,
-                endDate: data.subscriptionEndDate ?? null,
+                startDate: data.recurrenceStartDate!,
+                endDate: data.recurrenceEndDate ?? null,
                 isActive: true,
                 categoryId: data.categoryId,
             });
         }
-        await loadSubscriptions();
+        await loadRecurrentPayments();
     };
 
     return (
@@ -182,7 +182,7 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
 
                     {isLoading ? (
                         <div className="text-center py-12 text-gray-500 text-sm">Carregando assinaturas...</div>
-                    ) : subscriptions.length === 0 ? (
+                    ) : recurrentPayments.length === 0 ? (
                         <div className="m-5 text-center py-16 border-2 border-dashed border-white/5 rounded-lg text-gray-500 text-sm italic">
                             {creditCardId ? "Nenhuma assinatura neste cartão." : "Nenhuma recorrência à vista cadastrada."}
                         </div>
@@ -200,39 +200,39 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5 text-xs">
-                                {subscriptions.map((subscription) => (
-                                    <tr key={subscription.id} className={`hover:bg-white/5 ${subscription.isActive ? '' : 'opacity-50'}`}>
-                                        <td className="px-4 py-3 font-semibold text-gray-200">{subscription.description}</td>
-                                        <td className="px-4 py-3 text-gray-400">{categoryName(subscription.categoryId)}</td>
-                                        <td className="px-4 py-3 text-gray-400">{FREQUENCY_LABELS[subscription.frequencyType]}</td>
+                                {recurrentPayments.map((recurrentPayment) => (
+                                    <tr key={recurrentPayment.id} className={`hover:bg-white/5 ${recurrentPayment.isActive ? '' : 'opacity-50'}`}>
+                                        <td className="px-4 py-3 font-semibold text-gray-200">{recurrentPayment.description}</td>
+                                        <td className="px-4 py-3 text-gray-400">{categoryName(recurrentPayment.categoryId)}</td>
+                                        <td className="px-4 py-3 text-gray-400">{FREQUENCY_LABELS[recurrentPayment.frequencyType]}</td>
                                         <td className="px-4 py-3 text-gray-400">
-                                            {formatDateBR(subscription.startDate)} até {subscription.endDate ? formatDateBR(subscription.endDate) : "sem fim"}
+                                            {formatDateBR(recurrentPayment.startDate)} até {recurrentPayment.endDate ? formatDateBR(recurrentPayment.endDate) : "sem fim"}
                                         </td>
                                         <td className="px-4 py-3 text-right font-mono font-bold text-gray-200">
-                                            R$ {subscription.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            R$ {recurrentPayment.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             <button
-                                                onClick={() => handleToggleActive(subscription)}
-                                                title={subscription.isActive ? "Desativar" : "Ativar"}
-                                                className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-bold border cursor-pointer transition ${subscription.isActive
+                                                onClick={() => handleToggleActive(recurrentPayment)}
+                                                title={recurrentPayment.isActive ? "Desativar" : "Ativar"}
+                                                className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-bold border cursor-pointer transition ${recurrentPayment.isActive
                                                     ? 'bg-green-900/30 text-green-400 border-green-500/20 hover:bg-green-900/50'
                                                     : 'bg-red-900/30 text-red-400 border-red-500/20 hover:bg-red-900/50'}`}
                                             >
-                                                {subscription.isActive ? "Ativa" : "Inativa"}
+                                                {recurrentPayment.isActive ? "Ativa" : "Inativa"}
                                             </button>
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex gap-2 justify-center">
                                                 <button
-                                                    onClick={() => setEditingSubscription(subscription)}
+                                                    onClick={() => setEditingRecurrentPayment(recurrentPayment)}
                                                     className="text-blue-400 hover:text-blue-300 transition text-sm cursor-pointer"
                                                     title="Editar"
                                                 >
                                                     ✏️
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(subscription)}
+                                                    onClick={() => handleDelete(recurrentPayment)}
                                                     className="text-red-400 hover:text-red-300 transition text-sm cursor-pointer"
                                                     title="Remover"
                                                 >
@@ -275,11 +275,11 @@ export default function SubscriptionListModal({ creditCardId, cardExpenseId, eff
                     />
                 )}
 
-                {editingSubscription && (
-                    <SubscriptionForm
-                        subscription={editingSubscription}
+                {editingRecurrentPayment && (
+                    <RecurrentPaymentForm
+                        recurrentPayment={editingRecurrentPayment}
                         onSubmit={handleSave}
-                        onClose={() => setEditingSubscription(null)}
+                        onClose={() => setEditingRecurrentPayment(null)}
                     />
                 )}
             </div>

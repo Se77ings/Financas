@@ -62,9 +62,9 @@ namespace Financas.Application.Services.CategoryServices
             if (linkedEntries > 0)
                 return Result<bool>.Failure(new Error($"Não é possível excluir a categoria pois existem {linkedEntries} lançamento(s) vinculado(s). Remova o vínculo antes de prosseguir."));
 
-            var linkedSubscriptions = await _categoryRepository.CountLinkedSubscriptionsAsync(id);
-            if (linkedSubscriptions > 0)
-                return Result<bool>.Failure(new Error($"Não é possível excluir a categoria pois existem {linkedSubscriptions} assinatura(s) vinculada(s). Altere a categoria delas antes de prosseguir."));
+            var linkedRecurrentPayments = await _categoryRepository.CountLinkedRecurrentPaymentsAsync(id);
+            if (linkedRecurrentPayments > 0)
+                return Result<bool>.Failure(new Error($"Não é possível excluir a categoria pois existem {linkedRecurrentPayments} assinatura(s) vinculada(s). Altere a categoria delas antes de prosseguir."));
 
             await _categoryRepository.RemoveAsync(category);
             return Result<bool>.Success(true);

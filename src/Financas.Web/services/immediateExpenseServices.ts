@@ -10,10 +10,10 @@ export interface ImmediateExpenseRequest {
     observation: string;
     effectiveDateId: string;
     categoryId: string | null;
-    subscriptionFrequencyType?: number;
-    subscriptionStartDate?: string;
-    subscriptionEndDate?: string | null;
-    isSubscription?: boolean;
+    recurrenceFrequencyType?: number;
+    recurrenceStartDate?: string;
+    recurrenceEndDate?: string | null;
+    isRecurrent?: boolean;
 }
 
 export async function getImmediateExpensesAsync(): Promise<ImmediateExpenseSummary[]> {

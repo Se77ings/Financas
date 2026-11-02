@@ -3,7 +3,7 @@ using Financeiro.Business.Shared;
 
 namespace Financeiro.Business.Aggregates.Payable
 {
-	public class Subscription : Entity
+	public class RecurrentPayment : Entity
 	{
 		public string Description { get; private set; }
 		public decimal Value { get; private set; }
@@ -16,9 +16,9 @@ namespace Financeiro.Business.Aggregates.Payable
 		public Guid? CategoryId { get; private set; }
 		public Category.Category? Category { get; private set; }
 
-		protected Subscription() { }
+		protected RecurrentPayment() { }
 
-		public Subscription(string description, decimal value, FrequencyType frequencyType, Guid? creditCardId, DateOnly startDate, DateOnly? endDate, Guid? categoryId, bool isActive = true)
+		public RecurrentPayment(string description, decimal value, FrequencyType frequencyType, Guid? creditCardId, DateOnly startDate, DateOnly? endDate, Guid? categoryId, bool isActive = true)
 		{
 			Description = description;
 			Value = value;

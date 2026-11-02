@@ -11,7 +11,7 @@ namespace Financas.Domain.Validations
         /// <summary>
         /// Torna o campo obrigatório se outra propriedade tiver o valor esperado.
         /// </summary>
-        /// <param name="propertyName">Nome da propriedade dependente (ex: "isSubscription")</param>
+        /// <param name="propertyName">Nome da propriedade dependente (ex: "IsRecurrent")</param>
         /// <param name="desiredValue">Valor que ativa a obrigatoriedade (padrão é true)</param>
         public RequiredIfAttribute(string propertyName, object desiredValue)
         {

@@ -10,20 +10,20 @@ namespace Financas.Application.Services.CompetenciaServices
     {
         private readonly IEffectiveDateRepository _effectiveDateRepository;
         private readonly ICreditCardRepository _creditCardRepository;
-        private readonly ISubscriptionRepository _subscriptionRepository;
+        private readonly IRecurrentPaymentRepository _recurrentPaymentRepository;
         private readonly ICardExpenseRepository _cardExpenseRepository;
         private readonly IPayableRepository _payableRepository;
 
         public EffectiveDateGeneratorService(
             IEffectiveDateRepository effectiveDateRepository,
             ICreditCardRepository creditCardRepository,
-            ISubscriptionRepository subscriptionRepository,
+            IRecurrentPaymentRepository recurrentPaymentRepository,
             ICardExpenseRepository cardExpenseRepository,
             IPayableRepository payableRepository)
         {
             _effectiveDateRepository = effectiveDateRepository;
             _creditCardRepository = creditCardRepository;
-            _subscriptionRepository = subscriptionRepository;
+            _recurrentPaymentRepository = recurrentPaymentRepository;
             _cardExpenseRepository = cardExpenseRepository;
             _payableRepository = payableRepository;
         }
@@ -35,10 +35,10 @@ namespace Financas.Application.Services.CompetenciaServices
                 var allCards = await _creditCardRepository.GetListAsync();
                 var activeCards = allCards.Where(c => c.IsActive).ToList();
 
-                var activeSubscriptions = await _subscriptionRepository.GetActiveSubscriptionsAsync();
+                var activeRecurrentPayments = await _recurrentPaymentRepository.GetActiveRecurrentPaymentsAsync();
 
-                await ProcessCardInvoicesAsync(activeCards, activeSubscriptions, effectiveDate, month, year);
-                await ProcessRecurrentImmediateExpenseAsync(activeSubscriptions, effectiveDate.Id, month, year);
+                await ProcessCardInvoicesAsync(activeCards, activeRecurrentPayments, effectiveDate, month, year);
+                await ProcessRecurrentImmediateExpenseAsync(activeRecurrentPayments, effectiveDate.Id, month, year);
 
 
                 return Result<bool>.Success(true);
@@ -82,44 +82,53 @@ namespace Financas.Application.Services.CompetenciaServices
             }
         }
 
-        private async Task ProcessCardInvoicesAsync(List<CreditCard> activeCards, IEnumerable<Subscription> activeSubscriptions, EffectiveDate effectiveDate, CalendarMonth month, int year)
+        private async Task ProcessCardInvoicesAsync(List<CreditCard> activeCards, IEnumerable<RecurrentPayment> activeRecurrentPayments, EffectiveDate effectiveDate, CalendarMonth month, int year)
         {
+            // Não existe na primeira competência nem quando há um mês faltando; aí não há parcelas a levar.
+            (var previousMonth, var previousYear) = effectiveDate.GetPreviousPeriod();
+            var previousEffectiveDate = await _effectiveDateRepository.GetByMonthYearAsync(previousMonth, previousYear);
+
             foreach (var card in activeCards)
             {
                 var cardExpense = CreateCardExpense(card, effectiveDate.Id, month, year);
-                var cardSubscriptions = activeSubscriptions.Where(s => s.CreditCardId == card.Id).ToList();
+                var cardRecurrentPayments = activeRecurrentPayments.Where(s => s.CreditCardId == card.Id).ToList();
 
-                foreach (var sub in cardSubscriptions)
+                foreach (var sub in cardRecurrentPayments)
                 {
                     if (sub.IsDueIn(month, year))
                     {
-                        var expenseItem = CreateSubscriptionExpenseItem(sub, cardExpense.Id, effectiveDate.Id, month, year);
+                        var expenseItem = CreateRecurrentPaymentCardItem(sub, cardExpense.Id, effectiveDate.Id, month, year);
                         cardExpense.AddExpense(expenseItem);
                     }
                 }
 
-                (var previousMonth, var previousYear) = effectiveDate.GetPreviousPeriod();
+                // Um cartão criado depois da competência anterior não tem fatura nela.
+                var previousInvoice = previousEffectiveDate?.GetCardExpenseByCreditCardId(card.Id);
+                var pendingInstallments = previousInvoice?.Expenses
+                    .Where(x => x.CurrentInstallment < x.QuantityInstallments)
+                    ?? Enumerable.Empty<CardExpense.Expense>();
 
-                var previousEffectiveDate = await _effectiveDateRepository.GetByMonthYearAsync(previousMonth, previousYear);
-
-                var previousCreditCard = previousEffectiveDate.GetCardExpenseByCreditCardId(card.Id);
-
-                foreach (var previousExpense in previousCreditCard.Expenses)
+                foreach (var previousExpense in pendingInstallments)
                 {
-                    if (previousExpense.QuantityInstallments != 1 && previousExpense.CurrentInstallment < previousExpense.QuantityInstallments)
-                    {
-                        cardExpense.AddExpense(new CardExpense.Expense(previousExpense.Description, previousExpense.SubTotal, previousExpense.DueDate, previousExpense.Discount, previousExpense.Observation, previousExpense.CurrentInstallment + 1, previousExpense.QuantityInstallments, effectiveDate.Id, card.Id, previousExpense.CategoryId));
-                    }
+                    cardExpense.AddExpense(new CardExpense.Expense(
+                        previousExpense.Description,
+                        previousExpense.SubTotal,
+                        previousExpense.DueDate.AddMonths(1),
+                        previousExpense.Discount,
+                        previousExpense.Observation,
+                        previousExpense.CurrentInstallment + 1,
+                        previousExpense.QuantityInstallments,
+                        effectiveDate.Id,
+                        cardExpense.Id,
+                        previousExpense.CategoryId));
                 }
 
                 await _cardExpenseRepository.AddAsync(cardExpense);
             }
         }
-        // TODO: Isso ainda não funcionará como esperado, mas serviirá futuramente para criar pagamentos à vista que são recorrentes (Ex: Conta de Água, Luz)... #Fn-1
-        // Quando for implementar, renomear tudo que for Subscription, para RecurrentPayment.
-        private async Task ProcessRecurrentImmediateExpenseAsync(IEnumerable<Subscription> activeSubscriptions, Guid effectiveDateId, CalendarMonth month, int year)
+        private async Task ProcessRecurrentImmediateExpenseAsync(IEnumerable<RecurrentPayment> activeRecurrentPayments, Guid effectiveDateId, CalendarMonth month, int year)
         {
-            var standaloneSubs = activeSubscriptions.Where(s => !s.CreditCardId.HasValue).ToList();
+            var standaloneSubs = activeRecurrentPayments.Where(s => !s.CreditCardId.HasValue).ToList();
 
             foreach (var sub in standaloneSubs)
             {
@@ -141,7 +150,7 @@ namespace Financas.Application.Services.CompetenciaServices
             return new CardExpense(invoiceDescription, 0, dueDate, 0, null, effectiveDateId, card.Id, null);
         }
 
-        private CardExpense.Expense CreateSubscriptionExpenseItem(Subscription sub, Guid cardExpenseId, Guid effectiveDateId, CalendarMonth month, int year)
+        private CardExpense.Expense CreateRecurrentPaymentCardItem(RecurrentPayment sub, Guid cardExpenseId, Guid effectiveDateId, CalendarMonth month, int year)
         {
             var itemDueDay = Math.Min(sub.StartDate.Day, DateTime.DaysInMonth(year, (int)month));
             var itemDueDate = new DateOnly(year, (int)month, itemDueDay);
@@ -160,7 +169,7 @@ namespace Financas.Application.Services.CompetenciaServices
             );
         }
 
-        private ImmediateExpense CreateStandaloneExpense(Subscription sub, Guid effectiveDateId, CalendarMonth month, int year)
+        private ImmediateExpense CreateStandaloneExpense(RecurrentPayment sub, Guid effectiveDateId, CalendarMonth month, int year)
         {
             var subDay = Math.Min(sub.StartDate.Day, DateTime.DaysInMonth(year, (int)month));
             var itemDueDate = new DateOnly(year, (int)month, subDay);

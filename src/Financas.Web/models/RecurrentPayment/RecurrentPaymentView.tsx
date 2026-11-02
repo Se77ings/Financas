@@ -1,6 +1,6 @@
-import type { FrequencyType } from "@/services/subscriptionServices";
+import type { FrequencyType } from "@/services/recurrentPaymentServices";
 
-export default class SubscriptionView {
+export default class RecurrentPaymentView {
     id: string;
     description: string;
     value: number;
@@ -25,8 +25,8 @@ export default class SubscriptionView {
         this.categoryId = categoryId;
     }
 
-    static fromJSON(data: any): SubscriptionView {
-        return new SubscriptionView(
+    static fromJSON(data: any): RecurrentPaymentView {
+        return new RecurrentPaymentView(
             data.id,
             data.description,
             data.value,

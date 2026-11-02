@@ -26,17 +26,17 @@ namespace Financeiro.Application.Models.PayableModels
 		public Guid? EffectiveDateId { get; set; }
         public Guid? CategoryId { get; set; }
 
-        #region Subscription Info
+        #region RecurrentPayment Info
 
-        [RequiredIf(nameof(isSubscription), ErrorMessage = "O tipo de frequência é obrigatório.")]
-        public FrequencyType SubscriptionFrequencyType { get; set; }
+        [RequiredIf(nameof(IsRecurrent), ErrorMessage = "O tipo de frequência é obrigatório.")]
+        public FrequencyType RecurrenceFrequencyType { get; set; }
 
-        [RequiredIf(nameof(isSubscription), ErrorMessage = "A data de início é obrigatória.")]
-        public DateOnly SubscriptionStartDate { get; set; }
+        [RequiredIf(nameof(IsRecurrent), ErrorMessage = "A data de início é obrigatória.")]
+        public DateOnly RecurrenceStartDate { get; set; }
 
-        public DateOnly? SubscriptionEndDate { get; set; }
+        public DateOnly? RecurrenceEndDate { get; set; }
 
-        public bool isSubscription { get; set; } = false;
+        public bool IsRecurrent { get; set; } = false;
         #endregion
     }
 }

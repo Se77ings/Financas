@@ -141,11 +141,11 @@ export default function CardExpenseItemForm({
         try {
             const submitData: CardExpenseItemRequest = {
                 ...formData,
-                isSubscription: isRecurring,
+                isRecurrent: isRecurring,
                 ...(isRecurring ? {
-                    subscriptionFrequencyType: parseInt(recurrenceData.frequencyType, 10),
-                    subscriptionStartDate: recurrenceData.startDate,
-                    subscriptionEndDate: recurrenceData.endDate || null,
+                    recurrenceFrequencyType: parseInt(recurrenceData.frequencyType, 10),
+                    recurrenceStartDate: recurrenceData.startDate,
+                    recurrenceEndDate: recurrenceData.endDate || null,
                 } : {})
             };
 

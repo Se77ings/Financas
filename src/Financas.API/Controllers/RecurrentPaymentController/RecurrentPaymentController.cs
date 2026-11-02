@@ -1,16 +1,16 @@
-using Financas.Application.Services.SubscriptionServices;
-using Financeiro.Application.Models.SubscriptionModels;
+using Financas.Application.Services.RecurrentPaymentServices;
+using Financeiro.Application.Models.RecurrentPaymentModels;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Financas.API.Controllers.SubscriptionController
+namespace Financas.API.Controllers.RecurrentPaymentController
 {
 	[ApiController]
 	[Route("/api/[controller]")]
-	public class SubscriptionController : Controller
+	public class RecurrentPaymentController : Controller
 	{
-		private readonly ISubscriptionServices _services;
+		private readonly IRecurrentPaymentServices _services;
 
-		public SubscriptionController(ISubscriptionServices services)
+		public RecurrentPaymentController(IRecurrentPaymentServices services)
 		{
 			_services = services;
 		}
@@ -36,9 +36,9 @@ namespace Financas.API.Controllers.SubscriptionController
 		}
 
 		[HttpGet("immediate-expense")]
-		public async Task<IActionResult> GetImmediateExpenseSubscriptionsAsync()
+		public async Task<IActionResult> GetImmediateExpenseRecurrentPaymentsAsync()
 		{
-			var (result, lista) = await _services.GetImmediateExpenseSubscriptionsAsync();
+			var (result, lista) = await _services.GetImmediateExpenseRecurrentPaymentsAsync();
 			if (!result.IsSuccess)
 				return BadRequest(result.Error.Message);
 
@@ -56,7 +56,7 @@ namespace Financas.API.Controllers.SubscriptionController
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> AddAsync([FromBody] SubscriptionRequest request)
+		public async Task<IActionResult> AddAsync([FromBody] RecurrentPaymentRequest request)
 		{
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
@@ -69,7 +69,7 @@ namespace Financas.API.Controllers.SubscriptionController
 		}
 
 		[HttpPut("{id}")]
-		public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] SubscriptionRequest request)
+		public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] RecurrentPaymentRequest request)
 		{
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);

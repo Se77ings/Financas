@@ -45,9 +45,9 @@ namespace Financeiro.Infra.Repository
             return payables + receivables;
         }
 
-        public async Task<int> CountLinkedSubscriptionsAsync(Guid id)
+        public async Task<int> CountLinkedRecurrentPaymentsAsync(Guid id)
         {
-            return await _context.Subscription.CountAsync(x => x.CategoryId == id);
+            return await _context.RecurrentPayment.CountAsync(x => x.CategoryId == id);
         }
 
         public async Task<Dictionary<Guid, int>> CountLinkedEntriesByCategoryAsync()

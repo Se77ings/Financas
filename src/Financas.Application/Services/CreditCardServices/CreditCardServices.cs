@@ -15,13 +15,13 @@ namespace Financas.Application.Services.CreditCardServices
 	{
 		private readonly ICreditCardRepository _repository;
 		private readonly ICardExpenseRepository _cardExpenseRepository;
-		private readonly ISubscriptionRepository _subscriptionRepository;
+		private readonly IRecurrentPaymentRepository _recurrentPaymentRepository;
 
-		public CreditCardServices(ICreditCardRepository repository, ICardExpenseRepository cardExpenseRepository, ISubscriptionRepository subscriptionRepository)
+		public CreditCardServices(ICreditCardRepository repository, ICardExpenseRepository cardExpenseRepository, IRecurrentPaymentRepository recurrentPaymentRepository)
 		{
 			_repository = repository;
 			_cardExpenseRepository = cardExpenseRepository;
-			_subscriptionRepository = subscriptionRepository;
+			_recurrentPaymentRepository = recurrentPaymentRepository;
 		}
 
 		public async Task<Result<bool>> AddAsync(CreditCardRequest request)
@@ -90,7 +90,7 @@ namespace Financas.Application.Services.CreditCardServices
 			if (pending.Count > 0)
 				return Result<bool>.Failure(new Error($"Não é possível desativar o cartão: há compras parceladas com parcelas a lançar: {string.Join(", ", pending)}."));
 
-			await _subscriptionRepository.DeactivateByCreditCardAsync(id);
+			await _recurrentPaymentRepository.DeactivateByCreditCardAsync(id);
 
 			creditCard.Deactivate();
 			await _repository.UpdateAsync(creditCard);

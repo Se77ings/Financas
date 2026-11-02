@@ -6,7 +6,7 @@ import { SaveButton } from '@/public/components/SaveButton';
 import { useSaveMode } from '@/public/components/useSaveMode';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
-import { FREQUENCY_LABELS } from '@/services/subscriptionServices';
+import { FREQUENCY_LABELS } from '@/services/recurrentPaymentServices';
 
 interface ImmediateExpenseFormProps {
     effectiveDateId?: string;
@@ -105,11 +105,11 @@ export default function ImmediateExpenseForm({
             await onSubmit({
                 ...formData,
                 effectiveDateId: effectiveDateId ?? '',
-                isSubscription: isRecurring,
+                isRecurrent: isRecurring,
                 ...(isRecurring ? {
-                    subscriptionFrequencyType: parseInt(recurrenceData.frequencyType, 10),
-                    subscriptionStartDate: recurrenceData.startDate,
-                    subscriptionEndDate: recurrenceData.endDate || null,
+                    recurrenceFrequencyType: parseInt(recurrenceData.frequencyType, 10),
+                    recurrenceStartDate: recurrenceData.startDate,
+                    recurrenceEndDate: recurrenceData.endDate || null,
                 } : {})
             });
 

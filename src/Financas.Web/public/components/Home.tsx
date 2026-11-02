@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from 'react';
 import CreditCardListModal from "@/public/components/CreditCardListModal";
-import SubscriptionListModal from "@/public/components/SubscriptionListModal";
+import RecurrentPaymentListModal from "@/public/components/RecurrentPaymentListModal";
 import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
 import DashboardView from "@/models/Dashboard/DashboardView";
 import { getEffectiveDateListAsync } from "@/services/effectiveDateServices";
@@ -192,7 +192,7 @@ export default function Home() {
             )}
 
             {showImmediateRecurrences && (
-                <SubscriptionListModal onClose={() => setShowImmediateRecurrences(false)} />
+                <RecurrentPaymentListModal onClose={() => setShowImmediateRecurrences(false)} />
             )}        </div>
 
     );
