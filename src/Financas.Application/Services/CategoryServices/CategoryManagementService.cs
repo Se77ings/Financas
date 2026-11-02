@@ -58,6 +58,15 @@ namespace Financas.Application.Services.CategoryServices
             return Result<bool>.Success(true);
         }
 
+        public async Task<(Result<bool> result, List<CategorizedDescriptionView> data)> GetCategorizedDescriptionsAsync()
+        {
+            var descriptions = await _repository.GetCategorizedDescriptionsAsync();
+
+            return (Result<bool>.Success(true), descriptions
+                .Select(x => new CategorizedDescriptionView { Description = x.Description, CategoryId = x.CategoryId, Count = x.Count })
+                .ToList());
+        }
+
         private async Task<List<EntriesByDescriptionView>> GetEntriesGroupedByDescriptionAsync(Guid? categoryId)
         {
             var entries = new List<EntryView>();

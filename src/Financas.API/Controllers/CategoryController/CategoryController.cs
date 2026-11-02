@@ -126,6 +126,18 @@ namespace Financas.API.Controllers
             return Ok(data);
         }
 
+        [HttpGet("entries/categorized-descriptions")]
+        public async Task<IActionResult> GetCategorizedDescriptionsAsync()
+        {
+            var (result, data) = await _managementServices.GetCategorizedDescriptionsAsync();
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error.Message);
+            }
+            return Ok(data);
+        }
+
         [HttpPut("entries/description")]
         public async Task<IActionResult> RenameEntriesAsync([FromBody] RenameEntriesRequest request)
         {

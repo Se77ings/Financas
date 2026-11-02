@@ -9,6 +9,9 @@ namespace Financeiro.Business.Interfaces
         Task<List<CardExpense.Expense>> GetCardExpenseItemsByCategoryAsync(Guid? categoryId);
         Task<List<Receivable>> GetReceivablesByCategoryAsync(Guid? categoryId);
 
+        /// <summary>Descrições dos lançamentos categorizados, com quantas vezes aparecem em cada categoria.</summary>
+        Task<List<(string Description, Guid CategoryId, int Count)>> GetCategorizedDescriptionsAsync();
+
         Task<int> CountExistingPayablesAsync(IReadOnlyCollection<Guid> payableIds);
         Task<int> CountExistingReceivablesAsync(IReadOnlyCollection<Guid> receivableIds);
         Task SetPayablesDescriptionAsync(IReadOnlyCollection<Guid> payableIds, string description);

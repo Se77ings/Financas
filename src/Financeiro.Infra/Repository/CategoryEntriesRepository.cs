@@ -40,6 +40,26 @@ namespace Financeiro.Infra.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<(string Description, Guid CategoryId, int Count)>> GetCategorizedDescriptionsAsync()
+        {
+            var payables = await _context.Payable
+                .Where(x => x.CategoryId != null && !(x is CardExpense))
+                .GroupBy(x => new { x.Description, CategoryId = x.CategoryId!.Value })
+                .Select(g => new { g.Key.Description, g.Key.CategoryId, Count = g.Count() })
+                .ToListAsync();
+
+            var receivables = await _context.Receivable
+                .Where(x => x.CategoryId != null)
+                .GroupBy(x => new { x.Description, CategoryId = x.CategoryId!.Value })
+                .Select(g => new { g.Key.Description, g.Key.CategoryId, Count = g.Count() })
+                .ToListAsync();
+
+            return payables.Concat(receivables)
+                .GroupBy(x => (x.Description, x.CategoryId))
+                .Select(g => (g.Key.Description, g.Key.CategoryId, g.Sum(x => x.Count)))
+                .ToList();
+        }
+
         public async Task<int> CountExistingPayablesAsync(IReadOnlyCollection<Guid> payableIds)
         {
             return await _context.Payable.CountAsync(x => payableIds.Contains(x.Id));

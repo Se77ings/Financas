@@ -19,6 +19,22 @@ export interface CategoryLinkRequest {
     categoryId: string;
 }
 
+export interface CategorizedDescription {
+    description: string;
+    categoryId: string;
+    count: number;
+}
+
+export async function getCategorizedDescriptionsAsync(): Promise<CategorizedDescription[]> {
+    const response = await getAsync(`api/Category/entries/categorized-descriptions`);
+
+    if (!response.ok) {
+        throw new Error(await readErrorAsync(response, 'Failed to fetch categorized descriptions'));
+    }
+
+    return await response.json();
+}
+
 export async function getCategoriesAsync(): Promise<CategoryView[]> {
     const response = await getAsync(`api/Category`);
 

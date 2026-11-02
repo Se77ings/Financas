@@ -5,6 +5,8 @@ import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton } from '@/public/components/SaveButton';
 import { useSaveMode } from '@/public/components/useSaveMode';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
+import { useCategorySuggestion } from '@/public/components/useCategorySuggestion';
+import { rememberCategorizedDescription } from '@/services/categorySuggestionServices';
 import { toInputDate } from '@/utils/dateFormat';
 import { FREQUENCY_LABELS } from '@/services/recurrentPaymentServices';
 
@@ -57,6 +59,11 @@ export default function ImmediateExpenseForm({
     const formRef = useRef<HTMLFormElement>(null);
 
     const isNew = !initialData;
+    const categorySuggestion = useCategorySuggestion(
+        formData.description,
+        formData.categoryId,
+        (categoryId) => setFormData(prev => ({ ...prev, categoryId })),
+    );
 
     const getEmptyForm = (currentDate: string) => ({
         description: '',
@@ -113,8 +120,11 @@ export default function ImmediateExpenseForm({
                 } : {})
             });
 
+            rememberCategorizedDescription(formData.description, formData.categoryId);
+
             if (saveMode === 'continue' && isNew) {
                 setFormData(getEmptyForm(formData.dueDate));
+                categorySuggestion.reset();
                 setIsRecurring(lockRecurring);
             } else {
                 onClose();
@@ -273,10 +283,13 @@ export default function ImmediateExpenseForm({
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 mb-2">
                             Categoria
+                            {categorySuggestion.isSuggested && (
+                                <span className="ml-2 font-normal text-amber-400" title="Sugerida pelas palavras da descrição. Você pode trocar.">✨ sugerida</span>
+                            )}
                         </label>
                         <CategoryComboBox
                             value={formData.categoryId}
-                            onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
+                            onChange={categorySuggestion.selectManually}
                             tabIndex={7}
                         />
                     </div>
