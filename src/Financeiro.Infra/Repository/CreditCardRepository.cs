@@ -61,9 +61,15 @@ namespace Financeiro.Infra.Repository
 			return await _context.CreditCard.AnyAsync(x => x.Name.ToLower() == name.ToLower() && x.Id != id);
 		}
 
-		public void Dispose()
+		public async Task<int> CountInvoicesAsync(Guid creditCardId)
 		{
-			_context?.Dispose();
+			return await _context.Payable.OfType<CardExpense>().CountAsync(x => x.CreditCardId == creditCardId);
 		}
+
+		public async Task<int> CountRecurrentPaymentsAsync(Guid creditCardId)
+		{
+			return await _context.RecurrentPayment.CountAsync(x => x.CreditCardId == creditCardId);
+		}
+
 	}
 }

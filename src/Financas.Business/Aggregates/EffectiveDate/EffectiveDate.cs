@@ -41,18 +41,6 @@ namespace Financeiro.Business.Aggregates.EffectiveDate
             _receivable.Add(receivable);
         }
 
-        public decimal CalculateTotal()
-        {
-            var pay = _payable.Sum(a => a.Total);
-            var receive = _receivable.Sum(a => a.Total);
-
-            return receive - pay;
-        }
-
-        public void GenerateFinancialStatement()
-        {
-            throw new NotImplementedException();
-        }
         public CardExpense? GetCardExpenseByCreditCardId(Guid creditCardId)
         {
             return Payable

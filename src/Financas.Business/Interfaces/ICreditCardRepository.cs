@@ -6,5 +6,7 @@ namespace Financeiro.Business.Interfaces
 	{
 		Task<bool> ExistsAsync(string name);
 		Task<bool> ExistsOtherAsync(Guid id, string name);
+		Task<int> CountInvoicesAsync(Guid creditCardId);
+		Task<int> CountRecurrentPaymentsAsync(Guid creditCardId);
 	}
 }

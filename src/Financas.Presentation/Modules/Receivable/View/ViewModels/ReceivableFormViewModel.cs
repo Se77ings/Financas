@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Financas.Application.Services.CompetenciaServices;
-using Financas.Application.Services.DireitoServices;
+using Financas.Application.Services.EffectiveDateServices;
+using Financas.Application.Services.ReceivableServices;
 using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Application.Models.ReceivableModels;
 using System.Collections.ObjectModel;
@@ -10,7 +10,7 @@ namespace Financas.Presentation.Modules.Receivable.ViewModels
 {
     public partial class ReceivableFormViewModel : ObservableObject
     {
-        private readonly ReceivableServices _receivableServices;
+        private readonly IReceivableServices _receivableServices;
         private readonly IEffectiveDateServices _effectiveDateServices;
 
         [ObservableProperty]
@@ -40,7 +40,7 @@ namespace Financas.Presentation.Modules.Receivable.ViewModels
         [ObservableProperty]
         private DateTime _date = DateTime.Now;
 
-        public ReceivableFormViewModel(ReceivableServices receivableServices, IEffectiveDateServices effectiveDateServices)
+        public ReceivableFormViewModel(IReceivableServices receivableServices, IEffectiveDateServices effectiveDateServices)
         {
             _receivableServices = receivableServices;
             _effectiveDateServices = effectiveDateServices;
@@ -60,7 +60,8 @@ namespace Financas.Presentation.Modules.Receivable.ViewModels
             IsBusy = true;
             try
             {
-                var (result, view) = await _receivableServices.GetByIdAsync(id);
+                var result = await _receivableServices.GetByIdAsync(id);
+                var view = result.Value;
                 if (result.IsSuccess && view != null)
                 {
                     Description = view.Description;

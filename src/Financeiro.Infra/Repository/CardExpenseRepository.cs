@@ -68,10 +68,6 @@ namespace Financeiro.Infra.Repository
             await SaveChangesAsync();
         }
 
-        public void Dispose()
-        {
-            _context?.Dispose();
-        }
 
         public async Task<bool> ExistsAsync(string description, DateOnly date)
         {
@@ -80,7 +76,7 @@ namespace Financeiro.Infra.Repository
 
         public async Task<bool> ExistsOtherAsync(Guid id, string description, DateOnly date)
         {
-            return await _context.Payable.AnyAsync(x => x.Description == description && x.DueDate == date && x.Id == id);
+            return await _context.Payable.AnyAsync(x => x.Description == description && x.DueDate == date && x.Id != id);
         }
 
         public async Task<bool> ExistsItemAsync(string description, DateOnly date)
@@ -90,7 +86,7 @@ namespace Financeiro.Infra.Repository
 
         public async Task<bool> ExistsOtherItemAsync(Guid id, string description, DateOnly date)
         {
-            return await _context.CardExpenseItem.AnyAsync(x => x.Description == description && x.DueDate == date && x.Id == id);
+            return await _context.CardExpenseItem.AnyAsync(x => x.Description == description && x.DueDate == date && x.Id != id);
         }
 
         public async Task<CardExpense?> GetByCardAndEffectiveDateAsync(Guid creditCardId, Guid effectiveDateId)

@@ -17,17 +17,17 @@ namespace Financas.Application.Services.CategoryServices
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<(Result<bool> result, List<EntriesByDescriptionView> data)> GetUncategorizedEntriesAsync()
+        public async Task<Result<List<EntriesByDescriptionView>>> GetUncategorizedEntriesAsync()
         {
-            return (Result<bool>.Success(true), await GetEntriesGroupedByDescriptionAsync(null));
+            return Result<List<EntriesByDescriptionView>>.Success(await GetEntriesGroupedByDescriptionAsync(null));
         }
 
-        public async Task<(Result<bool> result, List<EntriesByDescriptionView> data)> GetEntriesByCategoryAsync(Guid categoryId)
+        public async Task<Result<List<EntriesByDescriptionView>>> GetEntriesByCategoryAsync(Guid categoryId)
         {
             if (await _categoryRepository.GetByIdAsync(categoryId) is null)
-                return (Result<bool>.Failure(new Error("Categoria não encontrada.")), null);
+                return Result<List<EntriesByDescriptionView>>.Failure(Error.NotFound("Categoria não encontrada."));
 
-            return (Result<bool>.Success(true), await GetEntriesGroupedByDescriptionAsync(categoryId));
+            return Result<List<EntriesByDescriptionView>>.Success(await GetEntriesGroupedByDescriptionAsync(categoryId));
         }
 
         public async Task<Result<bool>> RenameEntriesAsync(RenameEntriesRequest request)
@@ -47,7 +47,7 @@ namespace Financas.Application.Services.CategoryServices
 
             if (await _repository.CountExistingPayablesAsync(payableIds) != payableIds.Count
                 || await _repository.CountExistingReceivablesAsync(receivableIds) != receivableIds.Count)
-                return Result<bool>.Failure(new Error("Um ou mais lançamentos não foram encontrados."));
+                return Result<bool>.Failure(Error.NotFound("Um ou mais lançamentos não foram encontrados."));
 
             if (payableIds.Count > 0)
                 await _repository.SetPayablesDescriptionAsync(payableIds, description);
@@ -58,11 +58,11 @@ namespace Financas.Application.Services.CategoryServices
             return Result<bool>.Success(true);
         }
 
-        public async Task<(Result<bool> result, List<CategorizedDescriptionView> data)> GetCategorizedDescriptionsAsync()
+        public async Task<Result<List<CategorizedDescriptionView>>> GetCategorizedDescriptionsAsync()
         {
             var descriptions = await _repository.GetCategorizedDescriptionsAsync();
 
-            return (Result<bool>.Success(true), descriptions
+            return Result<List<CategorizedDescriptionView>>.Success(descriptions
                 .Select(x => new CategorizedDescriptionView { Description = x.Description, CategoryId = x.CategoryId, Count = x.Count })
                 .ToList());
         }

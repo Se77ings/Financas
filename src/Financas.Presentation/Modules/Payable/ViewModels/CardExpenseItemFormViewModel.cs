@@ -64,7 +64,8 @@ namespace Financas.Presentation.Modules.Payable.ViewModels
             IsBusy = true;
             try
             {
-                var (result, view) = await _cardExpenseServices.GetByIdAsync(CardExpenseId);
+                var result = await _cardExpenseServices.GetByIdAsync(CardExpenseId);
+                var view = result.Value;
                 if (result.IsSuccess && view != null)
                 {
                     var item = view.Items.FirstOrDefault(i => i.Id == ItemId.Value);

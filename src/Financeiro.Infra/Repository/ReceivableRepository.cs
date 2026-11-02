@@ -45,10 +45,6 @@ namespace Financeiro.Infra.Repository
 		{
 			return await _context.SaveChangesAsync();
 		}
-		public void Dispose()
-		{
-			_context?.Dispose();
-		}
 
 		public async Task<bool> ExistsAsync(string description, DateOnly date)
 		{
@@ -57,7 +53,7 @@ namespace Financeiro.Infra.Repository
 
 		public async Task<bool> ExistsOtherAsync(Guid id, string description, DateOnly date)
 		{
-			return await _context.Receivable.AnyAsync(x => x.Description == description && x.Date == date && id != id);
+			return await _context.Receivable.AnyAsync(x => x.Description == description && x.Date == date && x.Id != id);
 
 		}
 	}

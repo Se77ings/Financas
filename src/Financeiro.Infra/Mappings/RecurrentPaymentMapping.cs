@@ -18,8 +18,7 @@ namespace Financeiro.Infra.Mappings
 
 			builder.HasOne(x => x.CreditCard)
 				.WithMany()
-				.HasForeignKey(x => x.CreditCardId)
-				.OnDelete(DeleteBehavior.Restrict);
+				.HasForeignKey(x => x.CreditCardId);
 
 			builder.HasOne(x => x.Category)
 				.WithMany()

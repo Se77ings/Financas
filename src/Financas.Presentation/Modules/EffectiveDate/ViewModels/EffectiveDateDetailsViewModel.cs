@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Financas.Application.Services.CompetenciaServices;
+using Financas.Application.Services.EffectiveDateServices;
 using Financas.Presentation.Models;
 using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Application.Models.PayableModels;
@@ -75,14 +75,14 @@ namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
             {
                 var result = await _effectiveDateServices.GetByIdAsync(id);
 
-                if (result.result.IsSuccess)
+                if (result.IsSuccess)
                 {
-                    View = result.view;
+                    View = result.Value;
                     LoadTransactions();
                 }
                 else
                 {
-                    await Shell.Current.DisplayAlert("Erro", result.result.Error?.Message ?? "Erro ao carregar", "OK");
+                    await Shell.Current.DisplayAlert("Erro", result.Error?.Message ?? "Erro ao carregar", "OK");
                 }
             }
             finally

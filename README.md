@@ -1,36 +1,38 @@
-# Sistema Financeiro
+# Financeiro
 
-Sistema de controle financeiro desenvolvido em .NET com arquitetura em camadas, seguindo princípios de Domain Driven Design (DDD) e Clean Architecture.
+Controle financeiro pessoal organizado por **competência** (mês/ano): recebimentos, gastos à vista, faturas de cartão com itens parcelados, assinaturas e recorrências, categorias e um dashboard.
 
 ## Arquitetura
 
-A solução está organizada em 4 projetos principais:
+| Projeto | Pasta | Papel |
+|---|---|---|
+| `Financeiro.Business` | `src/Financas.Business` | Domínio: agregados, validações (FluentValidation) e interfaces de repositório |
+| `Financas.Application` | `src/Financas.Application` | Services, models (requests/views), Result pattern e registro de DI |
+| `Financeiro.Infra` | `src/Financeiro.Infra` | EF Core 9 (SQL Server): DbContext, mappings, migrations e repositórios |
+| `Financas.API` | `src/Financas.API` | API ASP.NET Core (.NET 9), executada como serviço do Windows |
+| `Financas.Web` | `src/Financas.Web` | Front em Next.js 16 / React 19, executado com PM2 |
+| `Financas.Tests` | `src/Financas.Tests` | Testes xUnit: domínio e integração com SQLite em memória |
+| `WageHistory.*` | `src/WageHistory` | API e banco separados do histórico de salários |
+| `Financas.Presentation` | `src/Financas.Presentation` | Cliente .NET MAUI legado |
 
-- **Financeiro.Business** - Camada de domínio com entidades e regras de negócio
-- **Financeiro.Infra** - Camada de infraestrutura com acesso a dados
-- **Financas.Application** - Camada de aplicação com serviços e DTOs
-- **Financas.Presentation** - Interface do usuário em .NET MAUI
+## Conceitos do domínio
 
-## Conceitos do Domínio
+- **Competência (`EffectiveDate`)**: mês/ano a que os lançamentos pertencem. Ao ser criada, gera as faturas dos cartões ativos, as parcelas que continuam do mês anterior e as recorrências vigentes.
+- **Recebimento (`Receivable`)** e **gasto à vista (`ImmediateExpense`)**.
+- **Fatura de cartão (`CardExpense`)**: soma dos seus itens (`CardExpense.Expense`), que podem ser parcelados (parcela x/y).
+- **Recorrência (`RecurrentPayment`)**: assinatura de cartão ou gasto à vista recorrente (aluguel, internet...), com frequência e vigência.
+- **Categoria (`Category`)**: obrigatória nos lançamentos novos; lançamentos antigos sem categoria são resolvidos em *Gerenciar Categorias*.
 
-- **Competência (EffectiveDate)** - Período de referência (mês/ano)
-- **Contas a Receber (Receivable)** - Valores a receber
-- **Contas a Pagar (Payable)** - Valores a pagar
-- **Despesa à Vista (ImmediateExpense)** - Gastos imediatos
-- **Despesa Cartão (CardExpense)** - Gastos no cartão de crédito
+## Como executar (desenvolvimento)
 
-## Tecnologias
+1. **Banco:** SQL Server com o banco `FinancasHML`. Aplique as migrations:
+   ```
+   dotnet ef database update --project src/Financeiro.Infra --startup-project src/Financas.API --connection "<connection string do FinancasHML>"
+   ```
+2. **API:** `dotnet run --project src/Financas.API` (perfil de desenvolvimento em `http://localhost:5125`, Swagger habilitado).
+3. **Front:** em `src/Financas.Web`, `npm install` e `npm run dev`. `NEXT_PUBLIC_API_URL` aponta para a API.
+4. **Testes:** `dotnet test src/Financas.Tests`.
 
-- .NET 8
-- Entity Framework Core
-- .NET MAUI
-- SQLite/SQL Server
-- MVVM Pattern
+## Deploy (local)
 
-## Como Executar
-
-1. Clone o repositório
-2. Restaure os pacotes NuGet
-3. Execute as migrations do Entity Framework
-4. Defina o projeto Financas.Presentation como startup
-5. Execute a aplicação
+A API roda como serviço do Windows e o front sob PM2 na mesma máquina. Veja `Update-Deploy.MD`. Em produção o Swagger fica desabilitado e as origens do CORS vêm de `AllowedOrigins`.

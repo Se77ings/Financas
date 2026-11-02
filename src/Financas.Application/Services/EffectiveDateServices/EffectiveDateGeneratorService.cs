@@ -3,29 +3,35 @@ using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Interfaces;
 using Financeiro.Business.Shared;
 using Financeiro.Business.Shared.ResultPattern;
+using Microsoft.Extensions.Logging;
 
-namespace Financas.Application.Services.CompetenciaServices
+namespace Financas.Application.Services.EffectiveDateServices
 {
     public class EffectiveDateGeneratorService : IEffectiveDateGeneratorService
     {
+        private const string GenerationErrorMessage = "Erro ao gerar as faturas e recorrências da competência.";
+
         private readonly IEffectiveDateRepository _effectiveDateRepository;
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly IRecurrentPaymentRepository _recurrentPaymentRepository;
         private readonly ICardExpenseRepository _cardExpenseRepository;
-        private readonly IPayableRepository _payableRepository;
+        private readonly IImmediateExpenseRepository _payableRepository;
+        private readonly ILogger<EffectiveDateGeneratorService> _logger;
 
         public EffectiveDateGeneratorService(
             IEffectiveDateRepository effectiveDateRepository,
             ICreditCardRepository creditCardRepository,
             IRecurrentPaymentRepository recurrentPaymentRepository,
             ICardExpenseRepository cardExpenseRepository,
-            IPayableRepository payableRepository)
+            IImmediateExpenseRepository payableRepository,
+            ILogger<EffectiveDateGeneratorService> logger)
         {
             _effectiveDateRepository = effectiveDateRepository;
             _creditCardRepository = creditCardRepository;
             _recurrentPaymentRepository = recurrentPaymentRepository;
             _cardExpenseRepository = cardExpenseRepository;
             _payableRepository = payableRepository;
+            _logger = logger;
         }
 
         public async Task<Result<bool>> GenerateAutomaticExpensesAsync(EffectiveDate effectiveDate, CalendarMonth month, int year)
@@ -37,7 +43,7 @@ namespace Financas.Application.Services.CompetenciaServices
 
                 var activeRecurrentPayments = await _recurrentPaymentRepository.GetActiveRecurrentPaymentsAsync();
 
-                await ProcessCardInvoicesAsync(activeCards, activeRecurrentPayments, effectiveDate, month, year);
+                await ProcessCardInvoicesAsync(activeCards, activeRecurrentPayments, effectiveDate);
                 await ProcessRecurrentImmediateExpenseAsync(activeRecurrentPayments, effectiveDate.Id, month, year);
 
 
@@ -45,7 +51,8 @@ namespace Financas.Application.Services.CompetenciaServices
             }
             catch (Exception ex)
             {
-                return Result<bool>.Failure(new Error($"Erro ao gerar faturas e recorrências automáticas: {ex.Message}"));
+                _logger.LogError(ex, "Erro ao gerar as faturas e recorrências da competência {Month}/{Year}.", month, year);
+                return Result<bool>.Failure(new Error(GenerationErrorMessage));
             }
         }
 
@@ -55,7 +62,7 @@ namespace Financas.Application.Services.CompetenciaServices
             {
                 var effectiveDate = await _effectiveDateRepository.GetByIdAsync(effectiveDateId);
                 if (effectiveDate == null)
-                    return Result<bool>.Failure(new Error("Competência não encontrada."));
+                    return Result<bool>.Failure(Error.NotFound("Competência não encontrada."));
 
                 var allCards = await _creditCardRepository.GetListAsync();
                 var activeCards = allCards.Where(c => c.IsActive).ToList();
@@ -67,10 +74,16 @@ namespace Financas.Application.Services.CompetenciaServices
                     .ToList();
 
                 var missingCards = activeCards.Where(c => !existingCardIds.Contains(c.Id)).ToList();
+                if (missingCards.Count == 0)
+                    return Result<bool>.Success(true);
+
+                var activeRecurrentPayments = await _recurrentPaymentRepository.GetActiveRecurrentPaymentsAsync();
+                var dueRecurrentPayments = DueIn(activeRecurrentPayments, effectiveDate);
+                var previousEffectiveDate = await GetPreviousEffectiveDateAsync(effectiveDate);
 
                 foreach (var card in missingCards)
                 {
-                    var cardExpense = CreateCardExpense(card, effectiveDateId, (CalendarMonth)effectiveDate.Month, effectiveDate.Year);
+                    var cardExpense = BuildCardInvoice(card, effectiveDate, dueRecurrentPayments, previousEffectiveDate);
                     await _cardExpenseRepository.AddAsync(cardExpense);
                 }
 
@@ -78,53 +91,71 @@ namespace Financas.Application.Services.CompetenciaServices
             }
             catch (Exception ex)
             {
-                return Result<bool>.Failure(new Error($"Erro ao sincronizar faturas de novos cartões: {ex.Message}"));
+                _logger.LogError(ex, "Erro ao sincronizar as faturas dos cartões da competência {EffectiveDateId}.", effectiveDateId);
+                return Result<bool>.Failure(new Error(GenerationErrorMessage));
             }
         }
 
-        private async Task ProcessCardInvoicesAsync(List<CreditCard> activeCards, IEnumerable<RecurrentPayment> activeRecurrentPayments, EffectiveDate effectiveDate, CalendarMonth month, int year)
+        private async Task ProcessCardInvoicesAsync(List<CreditCard> activeCards, IEnumerable<RecurrentPayment> activeRecurrentPayments, EffectiveDate effectiveDate)
         {
-            // Não existe na primeira competência nem quando há um mês faltando; aí não há parcelas a levar.
-            (var previousMonth, var previousYear) = effectiveDate.GetPreviousPeriod();
-            var previousEffectiveDate = await _effectiveDateRepository.GetByMonthYearAsync(previousMonth, previousYear);
+            var dueRecurrentPayments = DueIn(activeRecurrentPayments, effectiveDate);
+            var previousEffectiveDate = await GetPreviousEffectiveDateAsync(effectiveDate);
 
             foreach (var card in activeCards)
             {
-                var cardExpense = CreateCardExpense(card, effectiveDate.Id, month, year);
-                var cardRecurrentPayments = activeRecurrentPayments.Where(s => s.CreditCardId == card.Id).ToList();
-
-                foreach (var sub in cardRecurrentPayments)
-                {
-                    if (sub.IsDueIn(month, year))
-                    {
-                        var expenseItem = CreateRecurrentPaymentCardItem(sub, cardExpense.Id, effectiveDate.Id, month, year);
-                        cardExpense.AddExpense(expenseItem);
-                    }
-                }
-
-                // Um cartão criado depois da competência anterior não tem fatura nela.
-                var previousInvoice = previousEffectiveDate?.GetCardExpenseByCreditCardId(card.Id);
-                var pendingInstallments = previousInvoice?.Expenses
-                    .Where(x => x.CurrentInstallment < x.QuantityInstallments)
-                    ?? Enumerable.Empty<CardExpense.Expense>();
-
-                foreach (var previousExpense in pendingInstallments)
-                {
-                    cardExpense.AddExpense(new CardExpense.Expense(
-                        previousExpense.Description,
-                        previousExpense.SubTotal,
-                        previousExpense.DueDate.AddMonths(1),
-                        previousExpense.Discount,
-                        previousExpense.Observation,
-                        previousExpense.CurrentInstallment + 1,
-                        previousExpense.QuantityInstallments,
-                        effectiveDate.Id,
-                        cardExpense.Id,
-                        previousExpense.CategoryId));
-                }
-
+                var cardExpense = BuildCardInvoice(card, effectiveDate, dueRecurrentPayments, previousEffectiveDate);
                 await _cardExpenseRepository.AddAsync(cardExpense);
             }
+        }
+
+        // Não existe na primeira competência nem quando há um mês faltando; aí não há parcelas a levar.
+        private async Task<EffectiveDate?> GetPreviousEffectiveDateAsync(EffectiveDate effectiveDate)
+        {
+            (var previousMonth, var previousYear) = effectiveDate.GetPreviousPeriod();
+            return await _effectiveDateRepository.GetByMonthYearAsync(previousMonth, previousYear);
+        }
+
+        private static List<RecurrentPayment> DueIn(IEnumerable<RecurrentPayment> recurrentPayments, EffectiveDate effectiveDate)
+        {
+            return recurrentPayments.Where(s => s.IsDueIn(effectiveDate.Month, effectiveDate.Year)).ToList();
+        }
+
+        // A fatura nasce com as assinaturas do cartão que vencem na competência e com a parcela seguinte
+        // de cada compra parcelada que ainda não terminou na fatura anterior.
+        private CardExpense BuildCardInvoice(CreditCard card, EffectiveDate effectiveDate, IEnumerable<RecurrentPayment> dueRecurrentPayments, EffectiveDate? previousEffectiveDate)
+        {
+            var month = effectiveDate.Month;
+            var year = effectiveDate.Year;
+            var cardExpense = CreateCardExpense(card, effectiveDate.Id, month, year);
+
+            foreach (var sub in dueRecurrentPayments.Where(s => s.CreditCardId == card.Id))
+            {
+                var expenseItem = CreateRecurrentPaymentCardItem(sub, cardExpense.Id, effectiveDate.Id, month, year);
+                cardExpense.AddExpense(expenseItem);
+            }
+
+            // Um cartão criado depois da competência anterior não tem fatura nela.
+            var previousInvoice = previousEffectiveDate?.GetCardExpenseByCreditCardId(card.Id);
+            var pendingInstallments = previousInvoice?.Expenses
+                .Where(x => x.CurrentInstallment < x.QuantityInstallments)
+                ?? Enumerable.Empty<CardExpense.Expense>();
+
+            foreach (var previousExpense in pendingInstallments)
+            {
+                cardExpense.AddExpense(new CardExpense.Expense(
+                    previousExpense.Description,
+                    previousExpense.SubTotal,
+                    previousExpense.DueDate.AddMonths(1),
+                    previousExpense.Discount,
+                    previousExpense.Observation,
+                    previousExpense.CurrentInstallment + 1,
+                    previousExpense.QuantityInstallments,
+                    effectiveDate.Id,
+                    cardExpense.Id,
+                    previousExpense.CategoryId));
+            }
+
+            return cardExpense;
         }
         private async Task ProcessRecurrentImmediateExpenseAsync(IEnumerable<RecurrentPayment> activeRecurrentPayments, Guid effectiveDateId, CalendarMonth month, int year)
         {

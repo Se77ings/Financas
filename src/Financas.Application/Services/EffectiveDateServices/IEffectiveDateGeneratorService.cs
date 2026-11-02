@@ -4,7 +4,7 @@ using Financeiro.Business.Aggregates.EffectiveDate;
 using Financeiro.Business.Shared;
 using Financeiro.Business.Shared.ResultPattern;
 
-namespace Financas.Application.Services.CompetenciaServices
+namespace Financas.Application.Services.EffectiveDateServices
 {
 	public interface IEffectiveDateGeneratorService
 	{

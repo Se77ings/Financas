@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Financas.Application.Services.DireitoServices;
+using Financas.Application.Services.ReceivableServices;
 using Financeiro.Application.Models.ReceivableModels;
 using System.Collections.ObjectModel;
 
@@ -8,7 +8,7 @@ namespace Financas.Presentation.Modules.Receivable.ViewModels
 {
     public partial class ReceivableViewModel : ObservableObject
     {
-        private readonly ReceivableServices _receivableServices;
+        private readonly IReceivableServices _receivableServices;
 
         [ObservableProperty]
         private ObservableCollection<ReceivableSummary> _items = new();
@@ -16,7 +16,7 @@ namespace Financas.Presentation.Modules.Receivable.ViewModels
         [ObservableProperty]
         private bool _isBusy;
 
-        public ReceivableViewModel(ReceivableServices receivableServices)
+        public ReceivableViewModel(IReceivableServices receivableServices)
         {
             _receivableServices = receivableServices;
         }
@@ -26,7 +26,8 @@ namespace Financas.Presentation.Modules.Receivable.ViewModels
             IsBusy = true;
             try
             {
-                var (result, lista) = await _receivableServices.GetListAsync();
+                var result = await _receivableServices.GetListAsync();
+                var lista = result.Value;
 
                 if (result != null && result.IsSuccess && lista != null)
                 {

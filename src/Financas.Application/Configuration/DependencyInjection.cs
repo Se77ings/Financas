@@ -1,15 +1,14 @@
-using Financas.Application.Services.CompetenciaServices;
-using Financas.Application.Services.DireitoServices;
-using Financas.Application.Services.ObrigaçãoServices;
+using Financas.Application.Services.CategoryServices;
+using Financas.Application.Services.CreditCardServices;
+using Financas.Application.Services.DashboardServices;
+using Financas.Application.Services.EffectiveDateServices;
 using Financas.Application.Services.PayableServices;
 using Financas.Application.Services.PayableServices.Interfaces;
-using Financas.Application.Services.CreditCardServices;
+using Financas.Application.Services.ReceivableServices;
 using Financas.Application.Services.RecurrentPaymentServices;
+using Financeiro.Business.Interfaces;
 using Financeiro.Infra.Repository;
 using Microsoft.Extensions.DependencyInjection;
-using Financeiro.Business.Interfaces;
-using Financas.Application.Services.CategoryServices;
-using Financas.Application.Services.DashboardServices;
 
 namespace Financas.Application.Configuration
 {
@@ -22,9 +21,9 @@ namespace Financas.Application.Configuration
             services.AddScoped<IEffectiveDateGeneratorService, EffectiveDateGeneratorService>();
 
             services.AddScoped<IReceivableRepository, ReceivableRepository>();
-            services.AddScoped<ReceivableServices, RececivableServices>();
+            services.AddScoped<IReceivableServices, ReceivableServices>();
 
-            services.AddScoped<IPayableRepository, PayableRepository>();
+            services.AddScoped<IImmediateExpenseRepository, ImmediateExpenseRepository>();
             services.AddScoped<IImmediateExpenseServices, ImmediateExpenseServices>();
 
             services.AddScoped<ICardExpenseRepository, CardExpenseRepository>();

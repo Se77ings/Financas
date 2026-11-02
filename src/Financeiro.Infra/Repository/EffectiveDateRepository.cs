@@ -65,10 +65,6 @@ namespace Financeiro.Infra.Repository
             return await _context.SaveChangesAsync();
         }
 
-        public void Dispose()
-        {
-            _context?.Dispose();
-        }
 
         public async Task<EffectiveDate?> GetByMonthYearAsync(CalendarMonth month, int year)
         {

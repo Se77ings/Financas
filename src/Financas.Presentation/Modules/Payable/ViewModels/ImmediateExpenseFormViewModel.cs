@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Financas.Application.Services.CompetenciaServices;
+using Financas.Application.Services.EffectiveDateServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Application.Models.PayableModels;
@@ -63,7 +63,8 @@ namespace Financas.Presentation.Modules.Payable.ViewModels
             IsBusy = true;
             try
             {
-                var (result, view) = await _immediateExpenseServices.GetByIdAsync(id);
+                var result = await _immediateExpenseServices.GetByIdAsync(id);
+                var view = result.Value;
                 if (result.IsSuccess && view != null)
                 {
                     Description = view.Description;

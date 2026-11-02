@@ -5,8 +5,8 @@ namespace Financas.Application.Services.PayableServices.Interfaces
 {
 	public interface ICardExpenseServices
 	{
-		Task<(Result<bool> result, List<CardExpenseView> lista)> GetListAsync();
-		Task<(Result<bool> result, CardExpenseView view)> GetByIdAsync(Guid id);
+		Task<Result<List<CardExpenseView>>> GetListAsync();
+		Task<Result<CardExpenseView>> GetByIdAsync(Guid id);
 		Task<Result<bool>> AddAsync(CardExpenseRequest request);
 		Task<Result<bool>> UpdateAsync(Guid id, CardExpenseRequest request);
 		Task<Result<bool>> DeleteAsync(Guid id);

@@ -41,22 +41,7 @@ namespace Financas.Application.Services.RecurrentPaymentServices
 		{
 			var recurrentPayment = await _repository.GetByIdAsync(id);
 			if (recurrentPayment == null)
-				return Result<bool>.Failure(new Error("Assinatura não encontrada."));
-
-			var updatedRecurrentPayment = new RecurrentPayment(
-				request.Description,
-				request.Value,
-				request.FrequencyType,
-				request.CreditCardId,
-				request.StartDate,
-				request.EndDate,
-				request.CategoryId,
-				request.IsActive
-			);
-
-			var validation = await ValidateEntityAsync<RecurrentPayment, RecurrentPaymentValidator>(updatedRecurrentPayment);
-			if (!validation.Success)
-				return Result<bool>.Failure(validation.Error);
+				return Result<bool>.Failure(Error.NotFound("Assinatura não encontrada."));
 
 			recurrentPayment.Update(
 				request.Description,
@@ -69,6 +54,10 @@ namespace Financas.Application.Services.RecurrentPaymentServices
 				request.IsActive
 			);
 
+			var validation = await ValidateEntityAsync<RecurrentPayment, RecurrentPaymentValidator>(recurrentPayment);
+			if (!validation.Success)
+				return Result<bool>.Failure(validation.Error);
+
 			await _repository.UpdateAsync(recurrentPayment);
 			return Result<bool>.Success(true);
 		}
@@ -77,37 +66,37 @@ namespace Financas.Application.Services.RecurrentPaymentServices
 		{
 			var recurrentPayment = await _repository.GetByIdAsync(id);
 			if (recurrentPayment == null)
-				return Result<bool>.Failure(new Error("Assinatura não encontrada."));
+				return Result<bool>.Failure(Error.NotFound("Assinatura não encontrada."));
 
 			await _repository.RemoveAsync(recurrentPayment);
 			return Result<bool>.Success(true);
 		}
 
-		public async Task<(Result<bool> result, RecurrentPaymentView view)> GetByIdAsync(Guid id)
+		public async Task<Result<RecurrentPaymentView>> GetByIdAsync(Guid id)
 		{
 			var recurrentPayment = await _repository.GetByIdAsync(id);
 			if (recurrentPayment == null)
-				return (Result<bool>.Failure(new Error("Assinatura não encontrada.")), null);
+				return Result<RecurrentPaymentView>.Failure(Error.NotFound("Assinatura não encontrada."));
 
-			return (Result<bool>.Success(true), recurrentPayment);
+			return Result<RecurrentPaymentView>.Success(recurrentPayment);
 		}
 
-		public async Task<(Result<bool> result, List<RecurrentPaymentView> lista)> GetByCreditCardAsync(Guid creditCardId)
+		public async Task<Result<List<RecurrentPaymentView>>> GetByCreditCardAsync(Guid creditCardId)
 		{
 			var list = await _repository.GetByCreditCardAsync(creditCardId);
-			return (Result<bool>.Success(true), list.Select(x => (RecurrentPaymentView)x).ToList());
+			return Result<List<RecurrentPaymentView>>.Success(list.Select(x => (RecurrentPaymentView)x).ToList());
 		}
 
-		public async Task<(Result<bool> result, List<RecurrentPaymentView> lista)> GetImmediateExpenseRecurrentPaymentsAsync()
+		public async Task<Result<List<RecurrentPaymentView>>> GetImmediateExpenseRecurrentPaymentsAsync()
 		{
 			var list = await _repository.GetWithoutCreditCardAsync();
-			return (Result<bool>.Success(true), list.Select(x => (RecurrentPaymentView)x).ToList());
+			return Result<List<RecurrentPaymentView>>.Success(list.Select(x => (RecurrentPaymentView)x).ToList());
 		}
 
-		public async Task<(Result<bool> result, List<RecurrentPaymentView> lista)> GetListAsync()
+		public async Task<Result<List<RecurrentPaymentView>>> GetListAsync()
 		{
 			var list = await _repository.GetListAsync();
-			return (Result<bool>.Success(true), list.Select(x => (RecurrentPaymentView)x).ToList());
+			return Result<List<RecurrentPaymentView>>.Success(list.Select(x => (RecurrentPaymentView)x).ToList());
 		}
 	}
 }

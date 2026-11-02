@@ -31,7 +31,7 @@ namespace Financas.Application.Services.DashboardServices
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<(Result<bool> result, DashboardView view)> GetAsync(Guid effectiveDateId, DateOnly today)
+        public async Task<Result<DashboardView>> GetAsync(Guid effectiveDateId, DateOnly today)
         {
             var effectiveDates = (await _effectiveDateRepository.GetListAsync())
                 .OrderBy(x => x.Year)
@@ -40,7 +40,7 @@ namespace Financas.Application.Services.DashboardServices
 
             var selected = effectiveDates.FirstOrDefault(x => x.Id == effectiveDateId);
             if (selected is null)
-                return (Result<bool>.Failure(new Error("Competência não encontrada.")), null);
+                return Result<DashboardView>.Failure(Error.NotFound("Competência não encontrada."));
 
             var creditCards = await _creditCardRepository.GetListAsync();
             var recurrentPayments = await _recurrentPaymentRepository.GetActiveRecurrentPaymentsAsync();
@@ -59,7 +59,7 @@ namespace Financas.Application.Services.DashboardServices
                 MonthlyHistory = BuildMonthlyHistory(context, selected)
             };
 
-            return (Result<bool>.Success(true), view);
+            return Result<DashboardView>.Success(view);
         }
 
         private static DashboardTotalsView BuildTotals(DashboardContext context)

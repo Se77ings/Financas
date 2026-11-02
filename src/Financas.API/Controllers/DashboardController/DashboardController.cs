@@ -5,7 +5,7 @@ namespace Financas.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class DashboardController : Controller
+    public class DashboardController : ApiControllerBase
     {
         private readonly IDashboardService _services;
 
@@ -17,13 +17,8 @@ namespace Financas.API.Controllers
         [HttpGet("{effectiveDateId:guid}")]
         public async Task<IActionResult> GetAsync([FromRoute] Guid effectiveDateId)
         {
-            var (result, data) = await _services.GetAsync(effectiveDateId, DateOnly.FromDateTime(DateTime.Now));
-
-            if (!result.IsSuccess)
-            {
-                return BadRequest(result.Error.Message);
-            }
-            return Ok(data);
+            var result = await _services.GetAsync(effectiveDateId, DateOnly.FromDateTime(DateTime.Now));
+            return QueryResult(result);
         }
     }
 }

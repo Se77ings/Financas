@@ -6,7 +6,7 @@ namespace Financas.API.Controllers.RecurrentPaymentController
 {
 	[ApiController]
 	[Route("/api/[controller]")]
-	public class RecurrentPaymentController : Controller
+	public class RecurrentPaymentController : ApiControllerBase
 	{
 		private readonly IRecurrentPaymentServices _services;
 
@@ -18,77 +18,50 @@ namespace Financas.API.Controllers.RecurrentPaymentController
 		[HttpGet]
 		public async Task<IActionResult> GetListAsync()
 		{
-			var (result, lista) = await _services.GetListAsync();
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok(lista);
+			var result = await _services.GetListAsync();
+			return QueryResult(result);
 		}
 
 		[HttpGet("credit-card/{creditCardId:guid}")]
 		public async Task<IActionResult> GetByCreditCardAsync([FromRoute] Guid creditCardId)
 		{
-			var (result, lista) = await _services.GetByCreditCardAsync(creditCardId);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok(lista);
+			var result = await _services.GetByCreditCardAsync(creditCardId);
+			return QueryResult(result);
 		}
 
 		[HttpGet("immediate-expense")]
 		public async Task<IActionResult> GetImmediateExpenseRecurrentPaymentsAsync()
 		{
-			var (result, lista) = await _services.GetImmediateExpenseRecurrentPaymentsAsync();
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok(lista);
+			var result = await _services.GetImmediateExpenseRecurrentPaymentsAsync();
+			return QueryResult(result);
 		}
 
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
 		{
-			var (result, data) = await _services.GetByIdAsync(id);
-			if (!result.IsSuccess)
-				return NotFound(result.Error.Message);
-
-			return Ok(data);
+			var result = await _services.GetByIdAsync(id);
+			return QueryResult(result);
 		}
 
 		[HttpPost]
 		public async Task<IActionResult> AddAsync([FromBody] RecurrentPaymentRequest request)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
 			var result = await _services.AddAsync(request);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] RecurrentPaymentRequest request)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
 			var result = await _services.UpdateAsync(id, request);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
 		{
 			var result = await _services.DeleteAsync(id);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 	}
 }

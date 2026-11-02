@@ -29,6 +29,9 @@ namespace Financeiro.Infra.Context
 
         public FinanceiroDBContext(DbContextOptions<FinanceiroDBContext> options) : base(options)
         {
+            // Nada é rastreado nem detectado sozinho: toda gravação é explícita (Add, Update, Entry().State,
+            // ExecuteUpdate). Update percorre o grafo e marca um filho novo como Modified, porque o Id já vem do
+            // construtor; para incluir filhos use Add neles (veja ICardExpenseRepository.AddItem).
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             ChangeTracker.AutoDetectChangesEnabled = false;
 
@@ -53,6 +56,9 @@ namespace Financeiro.Infra.Context
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinanceiroDBContext).Assembly);
 
+            // Sem exclusão em cascata no modelo: excluir dados financeiros em efeito dominó é arriscado, então os
+            // services bloqueiam a exclusão quando há dependentes. Exceção só no banco: Payable → EffectiveDate
+            // tem cascade, ajustado à mão na migration CascadeDeleteOnFKs.
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys())) relationship.DeleteBehavior = DeleteBehavior.ClientSetNull;
 
             base.OnModelCreating(modelBuilder);

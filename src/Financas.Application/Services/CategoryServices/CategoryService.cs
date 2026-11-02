@@ -16,37 +16,36 @@ namespace Financas.Application.Services.CategoryServices
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<(Result<bool> result, CategoryView view)> AddAsync(CategoryRequest request)
+        public async Task<Result<CategoryView>> AddAsync(CategoryRequest request)
         {
             if (await _categoryRepository.ExistsAsync(request.Name))
-                return (Result<bool>.Failure(new Error("Já existe uma categoria com esse nome.")), null);
+                return Result<CategoryView>.Failure(new Error("Já existe uma categoria com esse nome."));
 
             var category = new CategoryEntity(request.Name, request.Description);
             var validation = await ValidateEntityAsync<CategoryEntity, CategoryValidator>(category);
 
             if (!validation.Success)
-                return (Result<bool>.Failure(validation.Error), null);
+                return Result<CategoryView>.Failure(validation.Error);
 
             await _categoryRepository.AddAsync(category);
-            return (Result<bool>.Success(true), (CategoryView)category);
+            return Result<CategoryView>.Success(category);
         }
 
         public async Task<Result<bool>> UpdateAsync(Guid id, CategoryRequest request)
         {
             var category = await GetCategoryByIdAsync(id);
             if (category is null)
-                return Result<bool>.Failure(new Error("Categoria não encontrada."));
+                return Result<bool>.Failure(Error.NotFound("Categoria não encontrada."));
 
             if (await _categoryRepository.ExistsOtherAsync(id, request.Name))
                 return Result<bool>.Failure(new Error("Já existe uma categoria com esse nome."));
 
-            var updatedCategory = new CategoryEntity(request.Name, request.Description);
-            var validation = await ValidateEntityAsync<CategoryEntity, CategoryValidator>(updatedCategory);
+            category.Update(request.Name, request.Description);
+            var validation = await ValidateEntityAsync<CategoryEntity, CategoryValidator>(category);
 
             if (!validation.Success)
                 return Result<bool>.Failure(validation.Error);
 
-            category.Update(request.Name, request.Description);
             await _categoryRepository.UpdateAsync(category);
 
             return Result<bool>.Success(true);
@@ -56,7 +55,7 @@ namespace Financas.Application.Services.CategoryServices
         {
             var category = await GetCategoryByIdAsync(id);
             if (category is null)
-                return Result<bool>.Failure(new Error("Categoria não encontrada."));
+                return Result<bool>.Failure(Error.NotFound("Categoria não encontrada."));
 
             var linkedEntries = await _categoryRepository.CountLinkedEntriesAsync(id);
             if (linkedEntries > 0)
@@ -70,16 +69,16 @@ namespace Financas.Application.Services.CategoryServices
             return Result<bool>.Success(true);
         }
 
-        public async Task<(Result<bool> result, CategoryView view)> GetByIdAsync(Guid id)
+        public async Task<Result<CategoryView>> GetByIdAsync(Guid id)
         {
             var category = await GetCategoryByIdAsync(id);
             if (category is null)
-                return (Result<bool>.Failure(new Error("Categoria não encontrada.")), null);
+                return Result<CategoryView>.Failure(Error.NotFound("Categoria não encontrada."));
 
-            return (Result<bool>.Success(true), (CategoryView)category);
+            return Result<CategoryView>.Success(category);
         }
 
-        public async Task<(Result<bool> result, List<CategoryView> data)> GetListAsync()
+        public async Task<Result<List<CategoryView>>> GetListAsync()
         {
             var categories = await _categoryRepository.GetListAsync();
             var counts = await _categoryRepository.CountLinkedEntriesByCategoryAsync();
@@ -91,7 +90,7 @@ namespace Financas.Application.Services.CategoryServices
                 return view;
             }).ToList();
 
-            return (Result<bool>.Success(true), data);
+            return Result<List<CategoryView>>.Success(data);
         }
 
 
@@ -106,7 +105,7 @@ namespace Financas.Application.Services.CategoryServices
                 return categoryResult;
 
             if (await _categoryRepository.CountExistingPayablesAsync(ids) != ids.Count)
-                return Result<bool>.Failure(new Error("Uma ou mais contas a pagar não foram encontradas."));
+                return Result<bool>.Failure(Error.NotFound("Uma ou mais contas a pagar não foram encontradas."));
 
             await _categoryRepository.SetPayablesCategoryAsync(ids, categoryId);
             return Result<bool>.Success(true);
@@ -123,7 +122,7 @@ namespace Financas.Application.Services.CategoryServices
                 return categoryResult;
 
             if (await _categoryRepository.CountExistingReceivablesAsync(ids) != ids.Count)
-                return Result<bool>.Failure(new Error("Uma ou mais contas a receber não foram encontradas."));
+                return Result<bool>.Failure(Error.NotFound("Uma ou mais contas a receber não foram encontradas."));
 
             await _categoryRepository.SetReceivablesCategoryAsync(ids, categoryId);
             return Result<bool>.Success(true);
@@ -138,7 +137,7 @@ namespace Financas.Application.Services.CategoryServices
         {
             var category = await GetCategoryByIdAsync(categoryId);
             return category is null
-                ? Result<bool>.Failure(new Error("Categoria não encontrada."))
+                ? Result<bool>.Failure(Error.NotFound("Categoria não encontrada."))
                 : Result<bool>.Success(true);
         }
     }

@@ -1,4 +1,4 @@
-using Financas.Application.Services.CompetenciaServices;
+using Financas.Application.Services.EffectiveDateServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Application.Services.RecurrentPaymentServices;
 using Financas.Business.Shared.ServiceBase;
@@ -7,10 +7,11 @@ using Financeiro.Application.Models.RecurrentPaymentModels;
 using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Aggregates.Payable.Validations;
 using Financeiro.Business.Interfaces;
+using Financeiro.Business.Shared;
 using Financeiro.Business.Shared.ResultPattern;
 using static Financeiro.Business.Aggregates.Payable.CardExpense;
 
-namespace Financas.Application.Services.ObrigaçãoServices
+namespace Financas.Application.Services.PayableServices
 {
     public class CardExpenseServices : ServiceBase, ICardExpenseServices
     {
@@ -18,15 +19,17 @@ namespace Financas.Application.Services.ObrigaçãoServices
         private readonly IEffectiveDateServices _effectiveDateServices;
         private readonly IRecurrentPaymentServices _recurrentPaymentServices;
         private readonly IEffectiveDateRepository _effectiveDateRepository;
+        private readonly ICreditCardRepository _creditCardRepository;
         private readonly ITransactionRunner _transactionRunner;
 
-        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices, IEffectiveDateRepository effectiveDateRepository, ITransactionRunner transactionRunner)
+        public CardExpenseServices(ICardExpenseRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices, IEffectiveDateRepository effectiveDateRepository, ICreditCardRepository creditCardRepository, ITransactionRunner transactionRunner)
         {
             _transactionRunner = transactionRunner;
             _repository = repository;
             _effectiveDateServices = effectiveDateServices;
             _recurrentPaymentServices = recurrentPaymentServices;
             _effectiveDateRepository = effectiveDateRepository;
+            _creditCardRepository = creditCardRepository;
         }
 
         public async Task<Result<bool>> AddAsync(CardExpenseRequest request)
@@ -58,55 +61,59 @@ namespace Financas.Application.Services.ObrigaçãoServices
 
             var effectiveDateId = effectiveDateResult.Value!;
 
-            var result = await GetCardExpenseById(id);
+            var cardInvoice = await GetCardExpenseById(id);
+            if (cardInvoice == null)
+                return Result<bool>.Failure(Error.NotFound("Fatura de cartão não encontrada."));
 
-            var novaEntidade = new CardExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId, request.CategoryId);
+            cardInvoice.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId, request.CategoryId);
 
-            var validation = await ValidateEntityAsync<CardExpense, CardExpenseValidator>(novaEntidade);
+            var validation = await ValidateEntityAsync<CardExpense, CardExpenseValidator>(cardInvoice);
 
             if (!validation.Success)
                 return Result<bool>.Failure(validation.Error);
 
-            result.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CreditCardId, request.CategoryId);
-
-            await _repository.UpdateAsync(result);
+            await _repository.UpdateAsync(cardInvoice);
             return Result<bool>.Success(true);
         }
 
         public async Task<Result<bool>> DeleteAsync(Guid id)
         {
             var result = await GetCardExpenseById(id);
+            if (result == null)
+                return Result<bool>.Failure(Error.NotFound("Fatura de cartão não encontrada."));
 
             if (result.Expenses.Any())
-                return Result<bool>.Failure(new Error("Não é possível excluir o cartão pois existem despesas vinculadas. Remova as despesas antes de prosseguir.", "500"));
+                return Result<bool>.Failure(new Error("Não é possível excluir o cartão pois existem despesas vinculadas. Remova as despesas antes de prosseguir."));
 
             await _repository.RemoveAsync(result);
             return Result<bool>.Success(true);
         }
 
-        public async Task<(Result<bool> result, List<CardExpenseView> lista)> GetListAsync()
+        public async Task<Result<List<CardExpenseView>>> GetListAsync()
         {
             var list = await _repository.GetListAsync();
 
-            return (Result<bool>.Success(true), list.Select(x => (CardExpenseView)x).ToList());
+            return Result<List<CardExpenseView>>.Success(list.Select(x => (CardExpenseView)x).ToList());
         }
 
-        public async Task<(Result<bool> result, CardExpenseView view)> GetByIdAsync(Guid id)
+        public async Task<Result<CardExpenseView>> GetByIdAsync(Guid id)
         {
-            var despesaResult = await GetCardExpenseById(id);
+            var cardInvoice = await GetCardExpenseById(id);
+            if (cardInvoice == null)
+                return Result<CardExpenseView>.Failure(Error.NotFound("Fatura de cartão não encontrada."));
 
-            return (Result<bool>.Success(true), (CardExpenseView)despesaResult);
+            return Result<CardExpenseView>.Success((CardExpenseView)cardInvoice);
         }
 
         public async Task<Result<bool>> AddItemAsync(Guid id, CardExpenseItemRequest request)
         {
             var cardInvoice = await _repository.GetByIdAsync(id);
             if (cardInvoice == null)
-                return Result<bool>.Failure(new Error("Fatura de cartão não encontrada."));
+                return Result<bool>.Failure(Error.NotFound("Fatura de cartão não encontrada."));
 
             var initialEffectiveDate = await _effectiveDateRepository.GetByIdAsync(cardInvoice.EffectiveDateId);
             if (initialEffectiveDate == null)
-                return Result<bool>.Failure(new Error("Competência inicial não encontrada."));
+                return Result<bool>.Failure(Error.NotFound("Competência inicial não encontrada."));
 
             var requestedItem = new Expense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, cardInvoice.EffectiveDateId, cardInvoice.Id, request.CategoryId);
             var itemValidation = await ValidateEntityAsync<Expense, CardExpenseItemValidator>(requestedItem);
@@ -196,35 +203,37 @@ namespace Financas.Application.Services.ObrigaçãoServices
 
         public async Task<Result<bool>> UpdateItemAsync(Guid id, Guid itemId, CardExpenseItemRequest request)
         {
-            var result = await GetCardExpenseById(id);
-            if (result == null)
-                return Result<bool>.Failure(new Error("Fatura de cartão não encontrada."));
+            var cardInvoice = await GetCardExpenseById(id);
+            if (cardInvoice == null)
+                return Result<bool>.Failure(Error.NotFound("Fatura de cartão não encontrada."));
 
-            var item = result.Expenses.FirstOrDefault(x => x.Id == itemId);
+            var item = cardInvoice.Expenses.FirstOrDefault(x => x.Id == itemId);
             if (item == null)
-                return Result<bool>.Failure(new Error("Item da fatura não encontrado."));
+                return Result<bool>.Failure(Error.NotFound("Item da fatura não encontrado."));
 
-            var updatedItem = new Expense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, item.EffectiveDateId, result.Id, request.CategoryId);
-            var validation = await ValidateEntityAsync<Expense, CardExpenseItemValidator>(updatedItem);
+            cardInvoice.UpdateExpense(itemId, request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, request.CategoryId);
+
+            var validation = await ValidateEntityAsync<Expense, CardExpenseItemValidator>(item);
             if (!validation.Success)
                 return Result<bool>.Failure(validation.Error);
 
-            result.UpdateExpense(itemId, request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, request.CurrentInstallment, request.QuantityInstallments, request.CategoryId);
-
-            await _repository.UpdateAsync(result);
+            await _repository.UpdateAsync(cardInvoice);
             return Result<bool>.Success(true);
         }
 
         public async Task<Result<bool>> RemoveItemAsync(Guid id, Guid itemId)
         {
-            var result = await GetCardExpenseById(id);
-            var expense = result.Expenses.FirstOrDefault(x => x.Id == itemId);
+            var cardInvoice = await GetCardExpenseById(id);
+            if (cardInvoice == null)
+                return Result<bool>.Failure(Error.NotFound("Fatura de cartão não encontrada."));
+
+            var expense = cardInvoice.Expenses.FirstOrDefault(x => x.Id == itemId);
 
             if (expense != null)
             {
-                result.RemoveExpense(itemId);
+                cardInvoice.RemoveExpense(itemId);
                 await _repository.RemoveItemAsync(expense);
-                await _repository.UpdateAsync(result);
+                await _repository.UpdateAsync(cardInvoice);
             }
 
             return Result<bool>.Success(true);
@@ -233,75 +242,83 @@ namespace Financas.Application.Services.ObrigaçãoServices
         public async Task<Result<bool>> TransferItemsAsync(CardExpenseItemTransferRequest request)
         {
             if (request == null || request.CardExpenseItemIds == null || !request.CardExpenseItemIds.Any())
-                return Result<bool>.Failure(new Error("Nenhum item selecionado para transferência.", "400"));
+                return Result<bool>.Failure(new Error("Nenhum item selecionado para transferência."));
 
             var sourceCardExpenses = await _repository.GetCardExpensesByItemIdsAsync(request.CardExpenseItemIds);
             if (!sourceCardExpenses.Any())
-                return Result<bool>.Failure(new Error("Fatura(s) de origem não encontrada(s).", "404"));
+                return Result<bool>.Failure(Error.NotFound("Fatura(s) de origem não encontrada(s)."));
 
-            var targetCompetenciaResult = await _effectiveDateServices.GetByIdAsync(request.TargetEffectiveDateId);
-            if (!targetCompetenciaResult.result.IsSuccess || targetCompetenciaResult.view == null)
-                return Result<bool>.Failure(new Error("Competência de destino não encontrada.", "404"));
+            var targetEffectiveDate = await _effectiveDateRepository.GetByIdAsync(request.TargetEffectiveDateId);
+            if (targetEffectiveDate == null)
+                return Result<bool>.Failure(Error.NotFound("Competência de destino não encontrada."));
 
-            var targetCardExpensesCache = new Dictionary<Guid, CardExpense>();
-            var updatedCardExpenses = new HashSet<CardExpense>();
-
-            foreach (var itemId in request.CardExpenseItemIds)
+            var outcome = Result<bool>.Success(true);
+            await _transactionRunner.RunAsync(async () =>
             {
-                var sourceCard = sourceCardExpenses.FirstOrDefault(c => c.Expenses.Any(e => e.Id == itemId));
-                if (sourceCard == null) continue;
+                var targetCardExpensesCache = new Dictionary<Guid, CardExpense>();
+                var updatedCardExpenses = new HashSet<CardExpense>();
 
-                var item = sourceCard.Expenses.First(e => e.Id == itemId);
-                var creditCardId = sourceCard.CreditCardId;
-
-                if (!targetCardExpensesCache.TryGetValue(creditCardId, out var targetCard))
+                foreach (var itemId in request.CardExpenseItemIds)
                 {
-                    targetCard = await _repository.GetByCardAndEffectiveDateAsync(creditCardId, request.TargetEffectiveDateId);
-                    if (targetCard == null)
+                    var sourceCard = sourceCardExpenses.FirstOrDefault(c => c.Expenses.Any(e => e.Id == itemId));
+                    if (sourceCard == null) continue;
+
+                    var item = sourceCard.Expenses.First(e => e.Id == itemId);
+                    var creditCardId = sourceCard.CreditCardId;
+
+                    if (!targetCardExpensesCache.TryGetValue(creditCardId, out var targetCard))
                     {
-                        int year = targetCompetenciaResult.view.Year;
-                        int month = (int)targetCompetenciaResult.view.Month;
-                        int day = Math.Min(sourceCard.DueDate.Day, DateTime.DaysInMonth(year, month));
-                        DateOnly targetDueDate = new DateOnly(year, month, day);
+                        targetCard = await _repository.GetByCardAndEffectiveDateAsync(creditCardId, request.TargetEffectiveDateId);
+                        if (targetCard == null)
+                        {
+                            var creditCard = await _creditCardRepository.GetByIdAsync(creditCardId);
+                            if (creditCard == null)
+                            {
+                                outcome = Result<bool>.Failure(Error.NotFound("Cartão de crédito não encontrado."));
+                                return false;
+                            }
 
-                        targetCard = new CardExpense(
-                            sourceCard.Description,
-                            0,
-                            targetDueDate,
-                            0,
-                            sourceCard.Observation,
-                            request.TargetEffectiveDateId,
-                            creditCardId,
-                            sourceCard.CategoryId
-                        );
-
-                        await _repository.AddAsync(targetCard);
+                            targetCard = CreateInvoice(creditCard, targetEffectiveDate.Id, targetEffectiveDate.Month, targetEffectiveDate.Year);
+                            await _repository.AddAsync(targetCard);
+                        }
+                        targetCardExpensesCache[creditCardId] = targetCard;
                     }
-                    targetCardExpensesCache[creditCardId] = targetCard;
+
+                    sourceCard.RemoveExpense(itemId);
+                    targetCard.AddExpense(item);
+                    item.TransferTo(targetCard, request.TargetEffectiveDateId);
+                    await _repository.UpdateItemAsync(item);
+
+                    updatedCardExpenses.Add(sourceCard);
+                    updatedCardExpenses.Add(targetCard);
                 }
 
-                sourceCard.RemoveExpense(itemId);
-                targetCard.AddExpense(item);
-                item.TransferTo(targetCard.Id, request.TargetEffectiveDateId);
-                await _repository.UpdateItemAsync(item);
+                foreach (var card in updatedCardExpenses)
+                {
+                    await _repository.UpdateAsync(card);
+                }
 
-                updatedCardExpenses.Add(sourceCard);
-                updatedCardExpenses.Add(targetCard);
-            }
+                return true;
+            });
 
-            foreach (var card in updatedCardExpenses)
-            {
-                await _repository.UpdateAsync(card);
-            }
-
-            return Result<bool>.Success(true);
+            return outcome;
         }
 
         #region Métodos internos
 
-        private async Task<CardExpense> GetCardExpenseById(Guid id)
+        private async Task<CardExpense?> GetCardExpenseById(Guid id)
         {
             return await _repository.GetByIdAsync(id);
+        }
+
+        // Mesma descrição e vencimento das faturas criadas pelo gerador de competências.
+        private static CardExpense CreateInvoice(CreditCard card, Guid effectiveDateId, CalendarMonth month, int year)
+        {
+            var invoiceDescription = $"Fatura {card.Name} - {month}/{year}";
+            var dueDay = Math.Min(card.DueDay, DateTime.DaysInMonth(year, (int)month));
+            var dueDate = new DateOnly(year, (int)month, dueDay);
+
+            return new CardExpense(invoiceDescription, 0, dueDate, 0, null, effectiveDateId, card.Id, null);
         }
 
         #endregion

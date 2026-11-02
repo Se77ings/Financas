@@ -5,6 +5,6 @@ namespace Financas.Application.Services.DashboardServices
 {
     public interface IDashboardService
     {
-        Task<(Result<bool> result, DashboardView view)> GetAsync(Guid effectiveDateId, DateOnly today);
+        Task<Result<DashboardView>> GetAsync(Guid effectiveDateId, DateOnly today);
     }
 }

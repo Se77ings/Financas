@@ -26,7 +26,8 @@ namespace Financas.Presentation.Modules.Payable.ViewModels
             IsBusy = true;
             try
             {
-                var (result, lista) = await _immediateExpenseServices.GetListAsync();
+                var result = await _immediateExpenseServices.GetListAsync();
+                var lista = result.Value;
 
                 if (result != null && result.IsSuccess && lista != null)
                 {

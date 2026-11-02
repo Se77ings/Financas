@@ -6,7 +6,7 @@ namespace Financas.API.Controllers
 {
 	[ApiController]
 	[Route("api/[controller]")]
-	public class ImmediateExpenseController : Controller
+	public class ImmediateExpenseController : ApiControllerBase
 	{
 		private readonly IImmediateExpenseServices _services;
 
@@ -19,60 +19,35 @@ namespace Financas.API.Controllers
 		public async Task<IActionResult> AddAsync([FromBody] ImmediateExpenseRequest request)
 		{
 			var result = await _services.AddAsync(request);
-
-			if (!result.IsSuccess)
-			{
-				return BadRequest(result.Error.Message);
-			}
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] ImmediateExpenseRequest request)
 		{
 			var result = await _services.UpdateAsync(id, request);
-
-			if (!result.IsSuccess)
-			{
-				return BadRequest(result.Error.Message);
-			}
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
 		{
 			var result = await _services.DeleteAsync(id);
-
-			if (!result.IsSuccess)
-			{
-				return BadRequest(result.Error.Message);
-			}
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
 		{
-			var (result, data) = await _services.GetByIdAsync(id);
-
-			if (!result.IsSuccess)
-			{
-				return BadRequest(result.Error.Message);
-			}
-			return Ok(data);
+			var result = await _services.GetByIdAsync(id);
+			return QueryResult(result);
 		}
 
 		[HttpGet]
 		public async Task<IActionResult> GetListAsync()
 		{
-			var (result, lista) = await _services.GetListAsync();
-
-			if (!result.IsSuccess)
-			{
-				return BadRequest(result.Error.Message);
-			}
-			return Ok(lista);
+			var result = await _services.GetListAsync();
+			return QueryResult(result);
 		}
 	}
 }

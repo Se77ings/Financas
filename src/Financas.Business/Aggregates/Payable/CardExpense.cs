@@ -79,9 +79,12 @@ namespace Financeiro.Business.Aggregates.Payable
                 this.Update(descriptions, subtotal, dueDate, discounts, observation, EffectiveDateId, categoryId);
             }
 
-            public void TransferTo(Guid cardExpenseId, Guid effectiveDateId)
+            // A navegação também muda: o item vem com a fatura de origem carregada, e ao anexar o grafo o EF
+            // devolveria a FK para ela.
+            public void TransferTo(CardExpense target, Guid effectiveDateId)
             {
-                CardExpenseId = cardExpenseId;
+                CardExpense = target;
+                CardExpenseId = target.Id;
                 this.Update(Description, SubTotal, DueDate, Discount, Observation, effectiveDateId, CategoryId);
             }
 

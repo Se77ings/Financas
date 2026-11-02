@@ -97,9 +97,5 @@ namespace Financeiro.Infra.Repository
             return await _context.SaveChangesAsync();
         }
 
-        public void Dispose()
-        {
-            _context?.Dispose();
-        }
     }
 }

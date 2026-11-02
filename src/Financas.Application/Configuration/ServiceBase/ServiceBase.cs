@@ -18,7 +18,7 @@ namespace Financas.Business.Shared.ServiceBase
                 Error error = new(result.ToString("\n"));
                 return (false, error);
             }
-            return (true, new Error());
+            return (true, null!);
         }
 
     }

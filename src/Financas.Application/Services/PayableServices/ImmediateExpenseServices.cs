@@ -1,4 +1,4 @@
-﻿using Financas.Application.Services.CompetenciaServices;
+﻿using Financas.Application.Services.EffectiveDateServices;
 using Financas.Application.Services.PayableServices.Interfaces;
 using Financas.Business.Shared.ServiceBase;
 using Financeiro.Business.Aggregates.Payable;
@@ -13,11 +13,13 @@ namespace Financas.Application.Services.PayableServices
 {
 	public class ImmediateExpenseServices : ServiceBase, IImmediateExpenseServices
 	{
-		private readonly IPayableRepository _repository;
+		private const string ExpenseNotFoundMessage = "Gasto não encontrado.";
+
+		private readonly IImmediateExpenseRepository _repository;
 		private readonly IEffectiveDateServices _effectiveDateServices;
 		private readonly IRecurrentPaymentServices _recurrentPaymentServices;
 
-		public ImmediateExpenseServices(IPayableRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices)
+		public ImmediateExpenseServices(IImmediateExpenseRepository repository, IEffectiveDateServices effectiveDateServices, IRecurrentPaymentServices recurrentPaymentServices)
 		{
 			_repository = repository;
 			_effectiveDateServices = effectiveDateServices;
@@ -70,44 +72,47 @@ namespace Financas.Application.Services.PayableServices
 
 			var effectiveDateId = effectiveDateResult.Value!;
 
-			var expenseResult = await GetImmediateExpenseById(id);
+			var expense = await GetImmediateExpenseById(id);
+			if (expense == null)
+				return Result<bool>.Failure(Error.NotFound(ExpenseNotFoundMessage));
 
-			var novaEntidade = new ImmediateExpense(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CategoryId);
 			// TODO: Verificar se já existe a nova entidade ou homônima.
+			expense.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CategoryId);
 
-			var validation = await ValidateEntityAsync<ImmediateExpense, ImmediateExpenseValidator>(novaEntidade);
-			
+			var validation = await ValidateEntityAsync<ImmediateExpense, ImmediateExpenseValidator>(expense);
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
-			expenseResult.Update(request.Description, request.SubTotal, request.DueDate, request.Discounts, request.Observation, effectiveDateId, request.CategoryId);
-
-			await _repository.UpdateAsync(expenseResult);
+			await _repository.UpdateAsync(expense);
 
 			return Result<bool>.Success(true);
 		}
 
 		public async Task<Result<bool>> DeleteAsync(Guid id)
 		{
-			var expenseResult = await GetImmediateExpenseById(id);
+			var expense = await GetImmediateExpenseById(id);
+			if (expense == null)
+				return Result<bool>.Failure(Error.NotFound(ExpenseNotFoundMessage));
 
-			await _repository.RemoveAsync(expenseResult);
+			await _repository.RemoveAsync(expense);
 
 			return Result<bool>.Success(true);
 		}
 
-		public async Task<(Result<bool> result, ImmediateExpenseView view)> GetByIdAsync(Guid id)
+		public async Task<Result<ImmediateExpenseView>> GetByIdAsync(Guid id)
 		{
-			var expenseResult = await GetImmediateExpenseById(id);
+			var expense = await GetImmediateExpenseById(id);
+			if (expense == null)
+				return Result<ImmediateExpenseView>.Failure(Error.NotFound(ExpenseNotFoundMessage));
 
-			return (Result<bool>.Success(true), (ImmediateExpenseView)expenseResult);
+			return Result<ImmediateExpenseView>.Success((ImmediateExpenseView)expense);
 		}
 
-		public async Task<(Result<bool> result, List<ImmediateExpenseView> data)> GetListAsync()
+		public async Task<Result<List<ImmediateExpenseView>>> GetListAsync()
 		{
 			var list = await _repository.GetListAsync();
 
-			return (Result<bool>.Success(true), list.Select(x => (ImmediateExpenseView)x).ToList());
+			return Result<List<ImmediateExpenseView>>.Success(list.Select(x => (ImmediateExpenseView)x).ToList());
 		}
 
 		#region Métodos internos

@@ -5,9 +5,9 @@ namespace Financas.Application.Services.CategoryServices
 {
     public interface ICategoryService
     {
-        Task<(Result<bool> result, CategoryView view)> GetByIdAsync(Guid id);
-        Task<(Result<bool> result, List<CategoryView> data)> GetListAsync();
-        Task<(Result<bool> result, CategoryView view)> AddAsync(CategoryRequest request);
+        Task<Result<CategoryView>> GetByIdAsync(Guid id);
+        Task<Result<List<CategoryView>>> GetListAsync();
+        Task<Result<CategoryView>> AddAsync(CategoryRequest request);
         Task<Result<bool>> UpdateAsync(Guid id, CategoryRequest request);
         Task<Result<bool>> DeleteAsync(Guid id);
         Task<Result<bool>> LinkPayablesAsync(IEnumerable<Guid> payableIds, Guid categoryId);

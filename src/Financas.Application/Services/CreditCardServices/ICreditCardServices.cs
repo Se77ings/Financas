@@ -8,8 +8,8 @@ namespace Financas.Application.Services.CreditCardServices
 {
 	public interface ICreditCardServices
 	{
-		Task<(Result<bool> result, List<CreditCardView> lista)> GetListAsync();
-		Task<(Result<bool> result, CreditCardView view)> GetByIdAsync(Guid id);
+		Task<Result<List<CreditCardView>>> GetListAsync();
+		Task<Result<CreditCardView>> GetByIdAsync(Guid id);
 		Task<Result<bool>> AddAsync(CreditCardRequest request);
 		Task<Result<bool>> UpdateAsync(Guid id, CreditCardRequest request);
 		Task<Result<bool>> ActivateAsync(Guid id);

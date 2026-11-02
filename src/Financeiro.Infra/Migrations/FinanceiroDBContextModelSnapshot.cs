@@ -62,6 +62,9 @@ namespace Financeiro.Infra.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Month", "Year")
+                        .IsUnique();
+
                     b.ToTable("EffectiveDate");
                 });
 

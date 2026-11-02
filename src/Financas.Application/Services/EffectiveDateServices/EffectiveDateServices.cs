@@ -5,9 +5,10 @@ using Financeiro.Business.Shared.ResultPattern;
 using static Financeiro.Business.Shared.Localization.ErrorMessages;
 using Financeiro.Business.Interfaces;
 using Financeiro.Business.Aggregates.EffectiveDate;
+using Financeiro.Business.Aggregates.Payable;
 using Financeiro.Business.Aggregates.EffectiveDate.Validations;
 
-namespace Financas.Application.Services.CompetenciaServices
+namespace Financas.Application.Services.EffectiveDateServices
 {
     public class EffectiveDateServices : ServiceBase, IEffectiveDateServices
     {
@@ -76,7 +77,7 @@ namespace Financas.Application.Services.CompetenciaServices
 
             return generation.IsSuccess
                 ? Result<Guid>.Success(effectiveDate.Id)
-                : Result<Guid>.Failure(generation.Error);
+                : Result<Guid>.Failure(generation.Error!);
         }
 
         public async Task<Result<Guid>> ResolveForOperationAsync(DateOnly operationDate, Guid? explicitEffectiveDateId = null)
@@ -85,7 +86,7 @@ namespace Financas.Application.Services.CompetenciaServices
             {
                 var effectiveDate = await GetEffectiveDate(id);
                 if (effectiveDate == null)
-                    return Result<Guid>.Failure(new Error(RecordNotFoundFormat(nameof(EffectiveDate))));
+                    return Result<Guid>.Failure(Error.NotFound(RecordNotFoundFormat(nameof(EffectiveDate))));
 
                 return Result<Guid>.Success(id);
             }
@@ -98,17 +99,19 @@ namespace Financas.Application.Services.CompetenciaServices
         {
 
             var effectiveDate = await GetEffectiveDate(id);
-            //TODO: Verificar se já existe a nova entidade ou homônima.
 
             if (effectiveDate == null)
-                return Result<bool>.Failure(new Error(RecordNotFoundFormat(nameof(EffectiveDate))));
+                return Result<bool>.Failure(Error.NotFound(RecordNotFoundFormat(nameof(EffectiveDate))));
+
+            if (await _repository.ExistsOtherAsync(id, request.Month, request.Year))
+                return Result<bool>.Failure(new Error("Já existe uma competência para esse mês/ano."));
+
+            effectiveDate.Update(request.Month, request.Year);
 
             var validation = await ValidateEntityAsync<EffectiveDate, EffectiveDateValidator>(effectiveDate);
 
             if (!validation.Success)
                 return Result<bool>.Failure(validation.Error);
-
-            effectiveDate.Update(request.Month, request.Year);
 
             await _repository.UpdateAsync(effectiveDate);
 
@@ -120,7 +123,7 @@ namespace Financas.Application.Services.CompetenciaServices
             var effectiveDate = await GetEffectiveDate(id);
 
             if (effectiveDate == null)
-                return Result<bool>.Failure(new Error(RecordNotFoundFormat(nameof(EffectiveDate))));
+                return Result<bool>.Failure(Error.NotFound(RecordNotFoundFormat(nameof(EffectiveDate))));
 
             // Impedir remoção se existirem valores/itens filhos
             if ((effectiveDate.Receivable != null && effectiveDate.Receivable.Any()) || (effectiveDate.Payable != null && effectiveDate.Payable.Any(x=> x.HasValue())))
@@ -133,51 +136,45 @@ namespace Financas.Application.Services.CompetenciaServices
             return Result<bool>.Success(true);
         }
 
-        public async Task<(Result<bool> result, EffectiveDateView view)> GetByIdAsync(Guid id)
+        public async Task<Result<EffectiveDateView>> GetByIdAsync(Guid id)
         {
             var effectiveDate = await GetEffectiveDate(id);
 
             if(effectiveDate == null)
-            {
-                return (Result<bool>.Failure(new Error("Não há registros.")), null);
-            }
+                return Result<EffectiveDateView>.Failure(Error.NotFound("Não há registros."));
 
-            return (Result<bool>.Success(true), (EffectiveDateView)effectiveDate);
+            return Result<EffectiveDateView>.Success((EffectiveDateView)effectiveDate);
         }
 
-        public async Task<(Result<bool> result, List<EffectiveDateSummary> lista)> GetListAsync()
+        public async Task<Result<List<EffectiveDateSummary>>> GetListAsync()
         {
-
             var list = await _repository.GetListAsync();
-            if (list == null)
-                return (Result<bool>.Failure(new Error("Nenhuma competência encontrada.")), null);
 
-            // Mapear para summary com informações úteis para exibição
             var summaries = list.Select(x => new EffectiveDateSummary
             {
                 Id = x.Id,
                 Month = x.Month,
                 Year = x.Year,
                 ReceivableCount = x.Receivable?.Count() ?? 0,
-                PayableCount = x.Payable?.Count() ?? 0,
-                Balance = (x.Receivable?.Sum(r => r.Total) ?? 0) - (x.Payable?.Sum(p => p.Total) ?? 0)
+                PayableCount = Entries(x).Count(),
+                Balance = (x.Receivable?.Sum(r => r.Total) ?? 0) - Entries(x).Sum(p => p.Total)
             }).OrderBy(x => x.Year)
               .ThenBy(x => x.Month)
               .ToList();
 
-            return (Result<bool>.Success(true), summaries);
+            return Result<List<EffectiveDateSummary>>.Success(summaries);
         }
 
         public async Task<Result<bool>> SyncMissingCardInvoicesAsync(Guid id)
         {
             var effectiveDate = await GetEffectiveDate(id);
             if (effectiveDate == null)
-                return Result<bool>.Failure(new Error("Competência não encontrada."));
+                return Result<bool>.Failure(Error.NotFound("Competência não encontrada."));
 
             return await _generatorService.SyncMissingCardInvoicesAsync(id);
         }
 
-        public async Task<(Result<bool> result, List<EffectiveDateSummary> lista)> GetEligibleForTransferAsync()
+        public async Task<Result<List<EffectiveDateSummary>>> GetEligibleForTransferAsync()
         {
             //TODO: Atualmente todas as competências cadastradas são elegíveis. (futuramente alterar, quando houver opção de "quitar" as competencias
             return await GetListAsync();
@@ -188,6 +185,13 @@ namespace Financas.Application.Services.CompetenciaServices
         {
             return await _repository.GetByIdAsync(id);
 
+        }
+
+        // A fatura (CardExpense) é a soma dos próprios itens: contam os itens, nunca a fatura, para não somar o cartão em dobro.
+        private static IEnumerable<Payable> Entries(EffectiveDate effectiveDate)
+        {
+            return effectiveDate.Payable?.Where(x => x is ImmediateExpense || x is CardExpense.Expense)
+                ?? Enumerable.Empty<Payable>();
         }
 
         #endregion

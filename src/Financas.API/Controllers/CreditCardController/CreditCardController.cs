@@ -8,7 +8,7 @@ namespace Financas.API.Controllers.CreditCardController
 {
 	[ApiController]
 	[Route("/api/[controller]")]
-	public class CreditCardController : Controller
+	public class CreditCardController : ApiControllerBase
 	{
 		private readonly ICreditCardServices _services;
 
@@ -20,77 +20,50 @@ namespace Financas.API.Controllers.CreditCardController
 		[HttpGet]
 		public async Task<IActionResult> GetListAsync()
 		{
-			var (result, lista) = await _services.GetListAsync();
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok(lista);
+			var result = await _services.GetListAsync();
+			return QueryResult(result);
 		}
 
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
 		{
-			var (result, data) = await _services.GetByIdAsync(id);
-			if (!result.IsSuccess)
-				return NotFound(result.Error.Message);
-
-			return Ok(data);
+			var result = await _services.GetByIdAsync(id);
+			return QueryResult(result);
 		}
 
 		[HttpPost]
 		public async Task<IActionResult> AddAsync([FromBody] CreditCardRequest request)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
 			var result = await _services.AddAsync(request);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] CreditCardRequest request)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
 			var result = await _services.UpdateAsync(id, request);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpPut("{id}/activate")]
 		public async Task<IActionResult> ActivateAsync([FromRoute] Guid id)
 		{
 			var result = await _services.ActivateAsync(id);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpPut("{id}/deactivate")]
 		public async Task<IActionResult> DeactivateAsync([FromRoute] Guid id)
 		{
 			var result = await _services.DeactivateAsync(id);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
 		{
 			var result = await _services.DeleteAsync(id);
-			if (!result.IsSuccess)
-				return BadRequest(result.Error.Message);
-
-			return Ok();
+			return CommandResult(result);
 		}
 	}
 }

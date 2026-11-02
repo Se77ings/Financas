@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
-if(allowedOrigins.Count() <= 0)
+if (allowedOrigins is null || allowedOrigins.Length == 0)
 {
     throw new Exception("Allowed Origins not configured.");
 }
@@ -41,13 +41,11 @@ builder.Host.UseWindowsService();
 
 var app = builder.Build();
 
-//Temporariamente fora do ambiente de desenvolvimento.
-app.MapOpenApi();
-app.UseSwagger();
-app.UseSwaggerUI();
-
 if (app.Environment.IsDevelopment())
 {
+    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.UseHttpsRedirection();
 }
 

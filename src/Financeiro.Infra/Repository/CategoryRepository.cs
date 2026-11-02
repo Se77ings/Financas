@@ -20,10 +20,6 @@ namespace Financeiro.Infra.Repository
             await SaveChangesAsync();
         }
 
-        public void Dispose()
-        {
-            _context.Dispose();
-        }
 
         public async Task<bool> ExistsAsync(string name)
         {

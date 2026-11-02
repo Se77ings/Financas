@@ -15,7 +15,7 @@ namespace Financeiro.Infra.Mappings
 			builder.Property(x => x.Limit).IsRequired().HasPrecision(18, 2);
 			builder.Property(x => x.IsActive).IsRequired();
             
-			builder.HasMany(x => x.CardExpenses).WithOne(x => x.CreditCard).HasForeignKey(x => x.CreditCardId).OnDelete(DeleteBehavior.Cascade);
+			builder.HasMany(x => x.CardExpenses).WithOne(x => x.CreditCard).HasForeignKey(x => x.CreditCardId);
 
             builder.ToTable("CreditCards");
 		}

@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Financas.Application.Services.CompetenciaServices; 
+using Financas.Application.Services.EffectiveDateServices; 
 using Financeiro.Application.Models.EffectiveDateModels;
 using Financeiro.Business.Shared;
 using System.Collections.ObjectModel;
@@ -97,7 +97,8 @@ namespace Financas.Presentation.Modules.EffectiveDate.ViewModels
                     // ignorar falhas nessa etapa para não impedir a listagem
                 }
 
-                var (result, lista) = await _effectiveDateServices.GetListAsync();
+                var result = await _effectiveDateServices.GetListAsync();
+                var lista = result.Value;
 
                 if (result != null && result.IsSuccess && lista != null)
                 {

@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Infra.Repository
 {
-	public class PayableRepository : IPayableRepository
+	public class ImmediateExpenseRepository : IImmediateExpenseRepository
 	{
 		private readonly FinanceiroDBContext _context;
-		public PayableRepository(FinanceiroDBContext context)
+		public ImmediateExpenseRepository(FinanceiroDBContext context)
 		{
 			_context = context;
 		}
@@ -44,10 +44,6 @@ namespace Financeiro.Infra.Repository
 			return await _context.SaveChangesAsync();
 		}
 
-		public void Dispose()
-		{
-			_context?.Dispose();
-		}
 
 		public async Task<bool> ExistsAsync(string description, DateOnly date)
 		{

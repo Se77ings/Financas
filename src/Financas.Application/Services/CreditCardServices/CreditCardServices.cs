@@ -45,19 +45,18 @@ namespace Financas.Application.Services.CreditCardServices
 		{
 			var creditCard = await _repository.GetByIdAsync(id);
 			if (creditCard == null)
-				return Result<bool>.Failure(new Error("Cartão não encontrado."));
+				return Result<bool>.Failure(Error.NotFound("Cartão não encontrado."));
 
 			if (await _repository.ExistsOtherAsync(id, request.Name))
 			{
 				return Result<bool>.Failure(new Error("Já existe outro cartão cadastrado com este nome."));
 			}
 
-			var updatedCard = new CreditCard(request.Name, request.ClosingDay, request.DueDay, request.Limit);
-			var validation = await ValidateEntityAsync<CreditCard, CreditCardValidator>(updatedCard);
+			creditCard.Update(request.Name, request.ClosingDay, request.DueDay, request.Limit);
+			var validation = await ValidateEntityAsync<CreditCard, CreditCardValidator>(creditCard);
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
-			creditCard.Update(request.Name, request.ClosingDay, request.DueDay, request.Limit);
 			await _repository.UpdateAsync(creditCard);
 
 			return Result<bool>.Success(true);
@@ -67,7 +66,7 @@ namespace Financas.Application.Services.CreditCardServices
 		{
 			var creditCard = await _repository.GetByIdAsync(id);
 			if (creditCard == null)
-				return Result<bool>.Failure(new Error("Cartão não encontrado."));
+				return Result<bool>.Failure(Error.NotFound("Cartão não encontrado."));
 
 			creditCard.Activate();
 			await _repository.UpdateAsync(creditCard);
@@ -79,7 +78,7 @@ namespace Financas.Application.Services.CreditCardServices
 		{
 			var creditCard = await _repository.GetByIdAsync(id);
 			if (creditCard == null)
-				return Result<bool>.Failure(new Error("Cartão não encontrado."));
+				return Result<bool>.Failure(Error.NotFound("Cartão não encontrado."));
 
 			var latestInvoice = await _cardExpenseRepository.GetLatestByCreditCardAsync(id);
 			var pending = (latestInvoice?.Expenses ?? Enumerable.Empty<CardExpense.Expense>())
@@ -102,25 +101,38 @@ namespace Financas.Application.Services.CreditCardServices
 		{
 			var creditCard = await _repository.GetByIdAsync(id);
 			if (creditCard == null)
-				return Result<bool>.Failure(new Error("Cartão não encontrado."));
+				return Result<bool>.Failure(Error.NotFound("Cartão não encontrado."));
+
+			var invoiceCount = await _repository.CountInvoicesAsync(id);
+			var recurrentPaymentCount = await _repository.CountRecurrentPaymentsAsync(id);
+			if (invoiceCount > 0 || recurrentPaymentCount > 0)
+			{
+				var links = new List<string>();
+				if (invoiceCount > 0)
+					links.Add($"{invoiceCount} fatura(s)");
+				if (recurrentPaymentCount > 0)
+					links.Add($"{recurrentPaymentCount} recorrência(s)");
+
+				return Result<bool>.Failure(new Error($"Não é possível excluir o cartão: há {string.Join(" e ", links)} vinculadas. Desative o cartão em vez de excluí-lo."));
+			}
 
 			await _repository.RemoveAsync(creditCard);
 			return Result<bool>.Success(true);
 		}
 
-		public async Task<(Result<bool> result, CreditCardView view)> GetByIdAsync(Guid id)
+		public async Task<Result<CreditCardView>> GetByIdAsync(Guid id)
 		{
 			var creditCard = await _repository.GetByIdAsync(id);
 			if (creditCard == null)
-				return (Result<bool>.Failure(new Error("Cartão não encontrado.")), null);
+				return Result<CreditCardView>.Failure(Error.NotFound("Cartão não encontrado."));
 
-			return (Result<bool>.Success(true), creditCard);
+			return Result<CreditCardView>.Success(creditCard);
 		}
 
-		public async Task<(Result<bool> result, List<CreditCardView> lista)> GetListAsync()
+		public async Task<Result<List<CreditCardView>>> GetListAsync()
 		{
 			var list = await _repository.GetListAsync();
-			return (Result<bool>.Success(true), list.Select(x => (CreditCardView)x).ToList());
+			return Result<List<CreditCardView>>.Success(list.Select(x => (CreditCardView)x).ToList());
 		}
 	}
 }
