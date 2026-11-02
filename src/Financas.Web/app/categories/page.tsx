@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import CategoryView from "@/models/Category/CategoryView";
 import { getCategoriesAsync, addCategoryAsync, updateCategoryAsync, deleteCategoryAsync, CategoryRequest } from "@/services/categoryServices";
 import CategoryForm from "@/forms/CategoryForm";
@@ -12,7 +12,16 @@ type Tab = 'categories' | 'uncategorized';
 
 export default function CategoriesPage() {
     const router = useRouter();
-    const [tab, setTab] = useState<Tab>('categories');
+    const searchParams = useSearchParams();
+    // Preenchido pelo "Resolver" do dashboard: a aba "Sem categoria" abre filtrada pela competência de lá.
+    const resolverEffectiveDateId = searchParams?.get("effectiveDateId") ?? null;
+    const [tab, setTab] = useState<Tab>(searchParams?.get("tab") === 'uncategorized' ? 'uncategorized' : 'categories');
+
+    const selectTab = (value: Tab) => {
+        setTab(value);
+        // Ao trocar de aba manualmente, o filtro deixa de vir do dashboard.
+        if (resolverEffectiveDateId) router.replace("/categories");
+    };
 
     const [categories, setCategories] = useState<CategoryView[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -93,16 +102,16 @@ export default function CategoriesPage() {
             </header>
 
             <nav className="px-5 border-b border-white/10 shrink-0 flex gap-1">
-                <button className={tabClass('categories')} onClick={() => { setTab('categories'); loadCategories(); }}>
+                <button className={tabClass('categories')} onClick={() => { selectTab('categories'); loadCategories(); }}>
                     Categorias
                 </button>
-                <button className={tabClass('uncategorized')} onClick={() => setTab('uncategorized')}>
+                <button className={tabClass('uncategorized')} onClick={() => selectTab('uncategorized')}>
                     Sem categoria
                 </button>
             </nav>
 
             {tab === 'uncategorized' ? (
-                <CategoryEntriesPanel categoryId={null} onChanged={loadCategories} />
+                <CategoryEntriesPanel categoryId={null} initialEffectiveDateId={resolverEffectiveDateId} onChanged={loadCategories} />
             ) : (
                 <main className="flex-1 overflow-auto p-6 max-w-5xl w-full mx-auto">
                     {errorMsg && (

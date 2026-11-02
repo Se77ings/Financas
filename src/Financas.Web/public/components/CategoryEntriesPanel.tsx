@@ -1,7 +1,9 @@
 import { Fragment, useEffect, useState } from "react";
 import EntriesByDescriptionView from "@/models/Entry/EntriesByDescriptionView";
 import EntryView, { EntryType } from "@/models/Entry/EntryView";
+import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
 import { getEntriesByCategoryAsync, getUncategorizedEntriesAsync, linkPayablesToCategoryAsync, linkReceivablesToCategoryAsync, renameEntriesAsync } from "@/services/categoryServices";
+import { getEffectiveDateListAsync } from "@/services/effectiveDateServices";
 import { CategoryComboBox } from "@/public/components/CategoryComboBox";
 import { formatDateBR } from "@/utils/dateFormat";
 import { formatEffectiveDateLabel } from "@/utils/calendarMonth";
@@ -27,6 +29,17 @@ function splitByType(entries: EntryView[]) {
     };
 }
 
+// O filtro roda sobre os lançamentos já carregados: cada EntryView traz o mês/ano da sua competência.
+function filterByEffectiveDate(groups: EntriesByDescriptionView[], effectiveDate: EffectiveDateSummary | undefined) {
+    if (!effectiveDate) return groups;
+    return groups
+        .map(g => {
+            const entries = g.entries.filter(e => e.month === effectiveDate.month && e.year === effectiveDate.year);
+            return new EntriesByDescriptionView(g.description, entries.length, entries.reduce((sum, e) => sum + e.total, 0), entries);
+        })
+        .filter(g => g.entries.length > 0);
+}
+
 function GroupCheckbox({ checked, indeterminate, onChange }: { checked: boolean; indeterminate: boolean; onChange: () => void }) {
     return (
         <input
@@ -41,14 +54,19 @@ function GroupCheckbox({ checked, indeterminate, onChange }: { checked: boolean;
 
 interface CategoryEntriesPanelProps {
     categoryId: string | null;
+    initialEffectiveDateId?: string | null;
     onChanged?: () => void;
+    /** Recebe o total de lançamentos da lista, sem o filtro de competência. */
     onLoaded?: (entriesCount: number) => void;
 }
 
-export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }: CategoryEntriesPanelProps) {
-    const [groups, setGroups] = useState<EntriesByDescriptionView[]>([]);
+export default function CategoryEntriesPanel({ categoryId, initialEffectiveDateId, onChanged, onLoaded }: CategoryEntriesPanelProps) {
+    const [loadedGroups, setLoadedGroups] = useState<EntriesByDescriptionView[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState("");
+
+    const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[] | null>(null);
+    const [effectiveDateId, setEffectiveDateId] = useState(initialEffectiveDateId ?? "");
 
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -65,7 +83,7 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
         setErrorMsg("");
         try {
             const data = await (categoryId ? getEntriesByCategoryAsync(categoryId) : getUncategorizedEntriesAsync());
-            setGroups(data);
+            setLoadedGroups(data);
             onLoaded?.(data.reduce((sum, g) => sum + g.count, 0));
             // Mantém só a seleção de lançamentos que continuam nesta lista.
             const remaining = new Set(data.flatMap(g => g.entries.map(e => e.id)));
@@ -80,6 +98,17 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
     useEffect(() => {
         loadGroups();
     }, []);
+
+    useEffect(() => {
+        getEffectiveDateListAsync()
+            .then(setEffectiveDates)
+            .catch(() => setEffectiveDates([]));
+    }, []);
+
+    const selectedEffectiveDate = effectiveDates?.find(d => d.id === effectiveDateId);
+    // Um filtro vindo da URL só tem mês/ano para comparar depois que a lista de competências chega.
+    const isResolvingFilter = effectiveDateId !== "" && effectiveDates === null;
+    const groups = filterByEffectiveDate(loadedGroups, selectedEffectiveDate);
 
     const allEntries = groups.flatMap(g => g.entries);
     const selectedEntries = allEntries.filter(e => selectedIds.has(e.id));
@@ -146,9 +175,12 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
             return;
         }
 
+        // O filtro por competência só restringe a exibição: renomear vale para o grupo em todas as competências.
+        const fullGroup = loadedGroups.find(g => g.description === group.description) ?? group;
+
         setIsRenaming(true);
         try {
-            await renameEntriesAsync({ ...splitByType(group.entries), description });
+            await renameEntriesAsync({ ...splitByType(fullGroup.entries), description });
             cancelRename();
             await loadGroups();
             onChanged?.();
@@ -161,6 +193,31 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
 
     return (
         <div className="flex flex-col flex-1 min-h-0 w-full">
+            <div className="px-4 py-2.5 border-b border-white/10 shrink-0 flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs text-gray-400">
+                    Competência
+                    <select
+                        value={effectiveDateId}
+                        onChange={(e) => setEffectiveDateId(e.target.value)}
+                        disabled={effectiveDates === null}
+                        className="px-2 py-1 bg-[#0f0e0c] border border-white/10 rounded text-white text-xs uppercase font-mono focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="">Todas</option>
+                        {effectiveDates?.map(d => (
+                            <option key={d.id} value={d.id}>{formatEffectiveDateLabel(d.month, d.year)}</option>
+                        ))}
+                    </select>
+                </label>
+                {effectiveDateId !== "" && (
+                    <button
+                        onClick={() => setEffectiveDateId("")}
+                        className="text-xs text-gray-400 hover:text-white transition cursor-pointer"
+                    >
+                        Limpar filtro
+                    </button>
+                )}
+            </div>
+
             {selectedEntries.length > 0 && (
                 <div className="px-4 py-3 border-b border-white/10 bg-[#1a1917] shrink-0 flex flex-wrap items-center gap-3">
                     <span className="text-sm font-semibold text-blue-300">
@@ -198,14 +255,16 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
                     </div>
                 )}
 
-                {isLoading ? (
+                {isLoading || isResolvingFilter ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
                     </div>
                 ) : groups.length === 0 ? (
                     <div className="m-6 flex flex-col items-center justify-center py-20 gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-white/5">
                         <p className="text-gray-400 text-sm">
-                            {categoryId ? "Nenhum lançamento nesta categoria." : "Todos os lançamentos já têm categoria."}
+                            {selectedEffectiveDate
+                                ? `Nenhum lançamento ${categoryId ? "nesta categoria" : "sem categoria"} em ${formatEffectiveDateLabel(selectedEffectiveDate.month, selectedEffectiveDate.year).toUpperCase()}.`
+                                : categoryId ? "Nenhum lançamento nesta categoria." : "Todos os lançamentos já têm categoria."}
                         </p>
                     </div>
                 ) : (

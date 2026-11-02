@@ -11,9 +11,10 @@ const keyOf = (item: CategorySpending) => item.categoryId ?? 'uncategorized';
 interface CategorySpendingChartProps {
     data: CategorySpending[];
     monthLabel: string;
+    effectiveDateId: string | null;
 }
 
-export default function CategorySpendingChart({ data, monthLabel }: CategorySpendingChartProps) {
+export default function CategorySpendingChart({ data, monthLabel, effectiveDateId }: CategorySpendingChartProps) {
     const router = useRouter();
     // A seleção guarda a lista de origem: ao trocar de competência, ela deixa de valer sozinha.
     const [selection, setSelection] = useState<{ source: CategorySpending[]; key: string } | null>(null);
@@ -80,7 +81,9 @@ export default function CategorySpendingChart({ data, monthLabel }: CategorySpen
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                router.push('/categories');
+                                                const params = new URLSearchParams({ tab: 'uncategorized' });
+                                                if (effectiveDateId) params.set('effectiveDateId', effectiveDateId);
+                                                router.push(`/categories?${params}`);
                                             }}
                                             className="text-[10px] font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
                                         >
