@@ -117,6 +117,19 @@ namespace Financeiro.Infra.Repository
                 .FirstOrDefaultAsync(x => x.CreditCardId == creditCardId && x.EffectiveDateId == effectiveDateId);
         }
 
+        public async Task<CardExpense?> GetLatestByCreditCardAsync(Guid creditCardId)
+        {
+            return await _context.Payable
+                .AsSplitQuery()
+                .AsNoTracking()
+                .OfType<CardExpense>()
+                .Include(x => x.Expenses)
+                .Where(x => x.CreditCardId == creditCardId)
+                .OrderByDescending(x => x.EffectiveDate.Year)
+                .ThenByDescending(x => x.EffectiveDate.Month)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<List<CardExpense>> GetCardExpensesByItemIdsAsync(List<Guid> itemIds)
         {
             return await _context.Payable

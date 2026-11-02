@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import CreditCardView from "@/models/CreditCard/CreditCardView";
-import { getCreditCardsAsync, addCreditCardAsync, updateCreditCardAsync, deleteCreditCardAsync, CreditCardRequest } from "@/services/creditCardServices";
+import { getCreditCardsAsync, addCreditCardAsync, updateCreditCardAsync, deleteCreditCardAsync, activateCreditCardAsync, deactivateCreditCardAsync, CreditCardRequest } from "@/services/creditCardServices";
+import { getSubscriptionsByCreditCardAsync } from "@/services/subscriptionServices";
 import CreditCardForm from "@/forms/CreditCardForm";
 import SubscriptionListModal from "@/public/components/SubscriptionListModal";
 
@@ -62,6 +63,27 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
             } catch (err) {
                 alert(err instanceof Error ? err.message : "Erro ao remover cartão");
             }
+        }
+    };
+
+    const handleToggleActive = async (card: CreditCardView) => {
+        try {
+            if (!card.isActive) {
+                const message = 'Deseja ativar o cartão "' + card.name + '"?\n\nAs assinaturas do cartão não serão reativadas; reative-as no modal de assinaturas (🔁), se necessário.';
+                if (!confirm(message)) return;
+                await activateCreditCardAsync(card.id);
+            } else {
+                const subscriptions = await getSubscriptionsByCreditCardAsync(card.id);
+                const active = subscriptions.filter(s => s.isActive);
+                const details = active.length > 0
+                    ? 'As assinaturas ativas abaixo também serão desativadas:\n' + active.map(s => '- ' + s.description).join('\n') + '\n\nAo reativar o cartão, elas continuarão inativas e podem ser reativadas no modal de assinaturas (🔁).'
+                    : 'O cartão não possui assinaturas ativas.';
+                if (!confirm('Deseja desativar o cartão "' + card.name + '"?\n\n' + details)) return;
+                await deactivateCreditCardAsync(card.id);
+            }
+            await loadCards();
+        } catch (err) {
+            alert(err instanceof Error ? err.message : "Erro ao alterar o status do cartão");
         }
     };
 
@@ -130,11 +152,15 @@ export default function CreditCardListModal({ onClose }: CreditCardListModalProp
                                             <td className="px-4 py-3 text-center text-gray-400">Dia {card.closingDay} / Dia {card.dueDay}</td>
                                             <td className="px-4 py-3 text-right text-gray-200 font-bold">R$ {card.limit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                             <td className="px-4 py-3 text-center">
-                                                {card.isActive ? (
-                                                    <span className="px-2 py-0.5 rounded-full text-[9px] bg-green-900/30 text-green-400 border border-green-500/20 uppercase font-sans font-bold">Ativo</span>
-                                                ) : (
-                                                    <span className="px-2 py-0.5 rounded-full text-[9px] bg-red-900/30 text-red-400 border border-red-500/20 uppercase font-sans font-bold">Inativo</span>
-                                                )}
+                                                <button
+                                                    onClick={() => handleToggleActive(card)}
+                                                    title={card.isActive ? "Desativar" : "Ativar"}
+                                                    className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-sans font-bold border cursor-pointer transition ${card.isActive
+                                                        ? 'bg-green-900/30 text-green-400 border-green-500/20 hover:bg-green-900/50'
+                                                        : 'bg-red-900/30 text-red-400 border-red-500/20 hover:bg-red-900/50'}`}
+                                                >
+                                                    {card.isActive ? "Ativo" : "Inativo"}
+                                                </button>
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex gap-2 justify-center">

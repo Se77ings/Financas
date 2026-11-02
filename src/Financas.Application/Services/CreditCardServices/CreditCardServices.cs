@@ -14,15 +14,19 @@ namespace Financas.Application.Services.CreditCardServices
 	public class CreditCardServices : ServiceBase, ICreditCardServices
 	{
 		private readonly ICreditCardRepository _repository;
+		private readonly ICardExpenseRepository _cardExpenseRepository;
+		private readonly ISubscriptionRepository _subscriptionRepository;
 
-		public CreditCardServices(ICreditCardRepository repository)
+		public CreditCardServices(ICreditCardRepository repository, ICardExpenseRepository cardExpenseRepository, ISubscriptionRepository subscriptionRepository)
 		{
 			_repository = repository;
+			_cardExpenseRepository = cardExpenseRepository;
+			_subscriptionRepository = subscriptionRepository;
 		}
 
 		public async Task<Result<bool>> AddAsync(CreditCardRequest request)
 		{
-			var creditCard = new CreditCard(request.Name, request.ClosingDay, request.DueDay, request.Limit, request.IsActive);
+			var creditCard = new CreditCard(request.Name, request.ClosingDay, request.DueDay, request.Limit);
 
 			if (await _repository.ExistsAsync(request.Name))
 			{
@@ -48,12 +52,47 @@ namespace Financas.Application.Services.CreditCardServices
 				return Result<bool>.Failure(new Error("Já existe outro cartão cadastrado com este nome."));
 			}
 
-			var updatedCard = new CreditCard(request.Name, request.ClosingDay, request.DueDay, request.Limit, request.IsActive);
+			var updatedCard = new CreditCard(request.Name, request.ClosingDay, request.DueDay, request.Limit);
 			var validation = await ValidateEntityAsync<CreditCard, CreditCardValidator>(updatedCard);
 			if (!validation.Success)
 				return Result<bool>.Failure(validation.Error);
 
-			creditCard.Update(request.Name, request.ClosingDay, request.DueDay, request.Limit, request.IsActive);
+			creditCard.Update(request.Name, request.ClosingDay, request.DueDay, request.Limit);
+			await _repository.UpdateAsync(creditCard);
+
+			return Result<bool>.Success(true);
+		}
+
+		public async Task<Result<bool>> ActivateAsync(Guid id)
+		{
+			var creditCard = await _repository.GetByIdAsync(id);
+			if (creditCard == null)
+				return Result<bool>.Failure(new Error("Cartão não encontrado."));
+
+			creditCard.Activate();
+			await _repository.UpdateAsync(creditCard);
+
+			return Result<bool>.Success(true);
+		}
+
+		public async Task<Result<bool>> DeactivateAsync(Guid id)
+		{
+			var creditCard = await _repository.GetByIdAsync(id);
+			if (creditCard == null)
+				return Result<bool>.Failure(new Error("Cartão não encontrado."));
+
+			var latestInvoice = await _cardExpenseRepository.GetLatestByCreditCardAsync(id);
+			var pending = (latestInvoice?.Expenses ?? Enumerable.Empty<CardExpense.Expense>())
+				.Where(x => x.CurrentInstallment < x.QuantityInstallments)
+				.Select(x => $"{x.Description} (faltam {x.QuantityInstallments - x.CurrentInstallment})")
+				.ToList();
+
+			if (pending.Count > 0)
+				return Result<bool>.Failure(new Error($"Não é possível desativar o cartão: há compras parceladas com parcelas a lançar: {string.Join(", ", pending)}."));
+
+			await _subscriptionRepository.DeactivateByCreditCardAsync(id);
+
+			creditCard.Deactivate();
 			await _repository.UpdateAsync(creditCard);
 
 			return Result<bool>.Success(true);

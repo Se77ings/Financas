@@ -7,7 +7,6 @@ export interface CreditCardRequest {
     closingDay: number;
     dueDay: number;
     limit: number;
-    isActive: boolean;
 }
 
 export async function getCreditCardsAsync(): Promise<CreditCardView[]> {
@@ -45,6 +44,22 @@ export async function updateCreditCardAsync(id: string, request: CreditCardReque
 
     if (!response.ok) {
         throw new Error(await readErrorAsync(response, 'Failed to update credit card'));
+    }
+}
+
+export async function activateCreditCardAsync(id: string): Promise<void> {
+    const response = await putAsync(`api/CreditCard/${id}/activate`, {});
+
+    if (!response.ok) {
+        throw new Error(await readErrorAsync(response, 'Failed to activate credit card'));
+    }
+}
+
+export async function deactivateCreditCardAsync(id: string): Promise<void> {
+    const response = await putAsync(`api/CreditCard/${id}/deactivate`, {});
+
+    if (!response.ok) {
+        throw new Error(await readErrorAsync(response, 'Failed to deactivate credit card'));
     }
 }
 

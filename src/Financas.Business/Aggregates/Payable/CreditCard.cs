@@ -24,13 +24,16 @@ namespace Financeiro.Business.Aggregates.Payable
 			IsActive = isActive;
 		}
 
-		public void Update(string name, int closingDay, int dueDay, decimal limit, bool isActive)
+		public void Update(string name, int closingDay, int dueDay, decimal limit)
 		{
 			Name = name;
 			ClosingDay = closingDay;
 			DueDay = dueDay;
 			Limit = limit;
-			IsActive = isActive;
 		}
+
+		public void Activate() => IsActive = true;
+
+		public void Deactivate() => IsActive = false;
 	}
 }

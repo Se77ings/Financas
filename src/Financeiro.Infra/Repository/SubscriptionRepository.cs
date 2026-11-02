@@ -71,6 +71,15 @@ namespace Financeiro.Infra.Repository
                 .ToListAsync();
         }
 
+        // ExecuteUpdate grava direto no banco, sem anexar as assinaturas (e o cartão incluído nelas) ao contexto,
+        // que entraria em conflito com o cartão salvo logo em seguida pelo mesmo serviço.
+        public async Task DeactivateByCreditCardAsync(Guid creditCardId)
+        {
+            await _context.Subscription
+                .Where(x => x.CreditCardId == creditCardId && x.IsActive)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, false));
+        }
+
         public async Task UpdateAsync(Subscription entity)
         {
             _context.Subscription.Update(entity);

@@ -9,7 +9,6 @@ interface CreditCardFormProps {
         closingDay: number;
         dueDay: number;
         limit: number;
-        isActive: boolean;
     } | null;
     onSubmit: (data: CreditCardRequest) => Promise<void>;
     onClose: () => void;
@@ -27,7 +26,6 @@ export default function CreditCardForm({
         closingDay: initialData?.closingDay || 10,
         dueDay: initialData?.dueDay || 20,
         limit: initialData?.limit || 0,
-        isActive: initialData ? initialData.isActive : true,
     });
 
     const [error, setError] = useState<string | null>(null);
@@ -35,10 +33,10 @@ export default function CreditCardForm({
     const formRef = useRef<HTMLFormElement>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value, type } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) || 0 : value,
+            [name]: type === 'number' ? parseInt(value) || 0 : value,
         }));
     };
 
@@ -152,27 +150,12 @@ export default function CreditCardForm({
                         />
                     </div>
 
-                    <div className="flex items-center gap-3 py-2">
-                        <input
-                            type="checkbox"
-                            name="isActive"
-                            id="isActive"
-                            checked={formData.isActive}
-                            onChange={handleChange}
-                            className="w-4 h-4 rounded border-white/10 text-blue-500 focus:ring-0 focus:ring-offset-0 bg-[#0f0e0c]"
-                            tabIndex={5}
-                        />
-                        <label htmlFor="isActive" className="text-xs font-semibold text-gray-300 cursor-pointer">
-                            Cartão Ativo (Pronto para gerar faturas)
-                        </label>
-                    </div>
-
                     <div className="flex gap-2 pt-4">
                         <button
                             type="button"
                             onClick={onClose}
                             className="flex-1 px-4 py-2 rounded border border-white/10 text-white hover:bg-white/5 transition text-sm font-medium cursor-pointer"
-                            tabIndex={6}
+                            tabIndex={5}
                         >
                             Cancelar
                         </button>
@@ -180,7 +163,7 @@ export default function CreditCardForm({
                             type="submit"
                             disabled={isSubmitting || isLoading}
                             className="flex-1 px-4 py-2 rounded bg-blue-700 hover:bg-blue-600 disabled:bg-blue-900/50 disabled:cursor-not-allowed text-white transition text-sm font-medium cursor-pointer"
-                            tabIndex={7}
+                            tabIndex={6}
                         >
                             {isSubmitting ? 'Salvando...' : 'Salvar'}
                         </button>

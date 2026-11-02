@@ -63,6 +63,26 @@ namespace Financas.API.Controllers.CreditCardController
 			return Ok();
 		}
 
+		[HttpPut("{id}/activate")]
+		public async Task<IActionResult> ActivateAsync([FromRoute] Guid id)
+		{
+			var result = await _services.ActivateAsync(id);
+			if (!result.IsSuccess)
+				return BadRequest(result.Error.Message);
+
+			return Ok();
+		}
+
+		[HttpPut("{id}/deactivate")]
+		public async Task<IActionResult> DeactivateAsync([FromRoute] Guid id)
+		{
+			var result = await _services.DeactivateAsync(id);
+			if (!result.IsSuccess)
+				return BadRequest(result.Error.Message);
+
+			return Ok();
+		}
+
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
 		{

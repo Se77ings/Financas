@@ -19,7 +19,5 @@ namespace Financeiro.Application.Models.CreditCardModels
 		[Required(ErrorMessage = "O limite é obrigatório.")]
 		[Range(0, double.MaxValue, ErrorMessage = "O limite não pode ser negativo.")]
 		public decimal Limit { get; set; }
-
-		public bool IsActive { get; set; } = true;
 	}
 }

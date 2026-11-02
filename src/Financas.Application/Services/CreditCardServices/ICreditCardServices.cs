@@ -12,6 +12,8 @@ namespace Financas.Application.Services.CreditCardServices
 		Task<(Result<bool> result, CreditCardView view)> GetByIdAsync(Guid id);
 		Task<Result<bool>> AddAsync(CreditCardRequest request);
 		Task<Result<bool>> UpdateAsync(Guid id, CreditCardRequest request);
+		Task<Result<bool>> ActivateAsync(Guid id);
+		Task<Result<bool>> DeactivateAsync(Guid id);
 		Task<Result<bool>> DeleteAsync(Guid id);
 	}
 }

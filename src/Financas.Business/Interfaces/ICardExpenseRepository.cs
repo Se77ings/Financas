@@ -14,6 +14,7 @@ namespace Financeiro.Business.Interfaces
 		Task<bool> ExistsOtherItemAsync(Guid id, string description, DateOnly date);
 		Task<CardExpense?> GetByCardAndEffectiveDateAsync(Guid creditCardId, Guid effectiveDateId);
 		Task<List<CardExpense>> GetCardExpensesByItemIdsAsync(List<Guid> itemIds);
+		Task<CardExpense?> GetLatestByCreditCardAsync(Guid creditCardId);
 		Task UpdateItemAsync(CardExpense.Expense item);
 	}
 }
