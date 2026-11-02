@@ -79,7 +79,8 @@ namespace Financas.Application.Services.CategoryServices
                 Total = x.Total,
                 Date = x.DueDate,
                 Month = x.EffectiveDate.Month,
-                Year = x.EffectiveDate.Year
+                Year = x.EffectiveDate.Year,
+                Observation = x.Observation
             }));
 
             entries.AddRange((await _repository.GetCardExpenseItemsByCategoryAsync(categoryId)).Select(x => new EntryView
@@ -93,7 +94,8 @@ namespace Financas.Application.Services.CategoryServices
                 Year = x.EffectiveDate.Year,
                 CreditCardName = x.CardExpense?.CreditCard?.Name,
                 CurrentInstallment = x.CurrentInstallment,
-                QuantityInstallments = x.QuantityInstallments
+                QuantityInstallments = x.QuantityInstallments,
+                Observation = x.Observation
             }));
 
             entries.AddRange((await _repository.GetReceivablesByCategoryAsync(categoryId)).Select(x => new EntryView

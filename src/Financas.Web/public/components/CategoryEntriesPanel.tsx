@@ -15,6 +15,10 @@ const TYPE_LABELS: Record<EntryType, string> = {
     Receivable: "Recebimento",
 };
 
+function distinctObservations(entries: EntryView[]) {
+    return [...new Set(entries.map(e => e.observation?.trim()).filter((o): o is string => !!o))];
+}
+
 // Recebimentos e contas a pagar são vinculados por endpoints diferentes.
 function splitByType(entries: EntryView[]) {
     return {
@@ -228,6 +232,7 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
                                     const isExpanded = expanded.has(key);
                                     const selectedInGroup = group.entries.filter(e => selectedIds.has(e.id)).length;
                                     const isEditing = editingGroup === key;
+                                    const observations = distinctObservations(group.entries);
 
                                     return (
                                         <Fragment key={key}>
@@ -265,6 +270,11 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
                                                         />
                                                     ) : (
                                                         <span className="font-medium">{group.description}</span>
+                                                    )}
+                                                    {observations.length > 0 && (
+                                                        <p className="mt-0.5 text-xs text-amber-200/70 truncate" title={observations.join('\n')}>
+                                                            📝 {observations.join(' · ')}
+                                                        </p>
                                                     )}
                                                 </td>
                                                 <td className="py-3 px-4 text-center text-gray-300 font-mono">{group.count}</td>
@@ -307,6 +317,9 @@ export default function CategoryEntriesPanel({ categoryId, onChanged, onLoaded }
                                                             </span>
                                                             <span className="text-right font-mono font-semibold">{formatCurrency(entry.total)}</span>
                                                         </div>
+                                                        {entry.observation?.trim() && (
+                                                            <p className="mt-1 text-amber-200/70 whitespace-pre-wrap">📝 {entry.observation.trim()}</p>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}

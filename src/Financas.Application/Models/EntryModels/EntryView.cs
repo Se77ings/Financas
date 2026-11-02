@@ -15,5 +15,8 @@ namespace Financeiro.Application.Models.EntryModels
         public string? CreditCardName { get; set; }
         public int? CurrentInstallment { get; set; }
         public int? QuantityInstallments { get; set; }
+
+        /// <summary>Nulo nos recebimentos, que não têm observação.</summary>
+        public string? Observation { get; set; }
     }
 }
