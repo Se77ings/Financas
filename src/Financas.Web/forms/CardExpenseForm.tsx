@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { CardExpenseRequest } from '@/services/cardExpenseServices';
 import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
-import { SaveButton, SaveMode } from '@/public/components/SaveButton';
+import { SaveButton } from '@/public/components/SaveButton';
+import { useSaveMode } from '@/public/components/useSaveMode';
 import { toInputDate } from '@/utils/dateFormat';
 
 interface CardExpenseFormProps {
@@ -39,7 +40,7 @@ export default function CardExpenseForm({
     const computedTotal = Math.max(0, formData.subTotal - formData.discounts);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [saveMode, setSaveMode] = useState<SaveMode>('close');
+    const [saveMode, setSaveMode] = useSaveMode('card-expense');
     const formRef = useRef<HTMLFormElement>(null);
 
     const isNew = !initialData;

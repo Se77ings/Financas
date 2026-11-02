@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { ReceivableRequest } from '@/services/receivableServices';
 import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
-import { SaveButton, SaveMode } from '@/public/components/SaveButton';
+import { SaveButton } from '@/public/components/SaveButton';
+import { useSaveMode } from '@/public/components/useSaveMode';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { toInputDate } from '@/utils/dateFormat';
 
@@ -36,7 +37,7 @@ export default function ReceivableForm({
     });
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [saveMode, setSaveMode] = useState<SaveMode>('close');
+    const [saveMode, setSaveMode] = useSaveMode('receivable');
     const formRef = useRef<HTMLFormElement>(null);
 
     const isNew = !initialData;
