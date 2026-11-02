@@ -46,6 +46,21 @@ const Icons = {
     )
 };
 
+const formatBRL = (value: number) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+function DiscountedValue({ subTotal, total, discounts, prefix = '' }: { subTotal: number; total: number; discounts: number; prefix?: string }) {
+    if (!(discounts > 0)) {
+        return <>{prefix}R$ {formatBRL(total)}</>;
+    }
+
+    return (
+        <span title={`Desconto: R$ ${formatBRL(discounts)}`} className="cursor-help">
+            <span className="text-gray-500 line-through text-[10px] font-normal mr-1">R$ {formatBRL(subTotal)}</span>
+            {prefix}R$ {formatBRL(total)}
+        </span>
+    );
+}
+
 export default function EffectiveDateDetails() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -434,7 +449,7 @@ export default function EffectiveDateDetails() {
                                         </td>
                                         <td className="px-4 py-4 text-gray-500 font-mono">{formatDateBR(item.dueDate)}</td>
                                         <td className="px-4 py-4 text-right font-bold text-white font-mono">
-                                            - R$ {item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            <DiscountedValue subTotal={item.subTotal} total={item.total} discounts={item.discounts} prefix="- " />
                                         </td>
                                         <td className="px-4 py-4 text-center">
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition justify-center">
@@ -649,7 +664,9 @@ export default function EffectiveDateDetails() {
                                                         {item.displayDescription}
                                                     </td>
                                                     <td className="px-4 py-4 text-gray-500">{formatDateBR(item.dueDate)}</td>
-                                                    <td className="px-4 py-4 text-right">R$ {item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                                    <td className="px-4 py-4 text-right">
+                                                        <DiscountedValue subTotal={item.subTotal} total={item.total} discounts={item.discounts} />
+                                                    </td>
                                                     <td className="px-4 py-4 text-center">
                                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition justify-center">
                                                             <button

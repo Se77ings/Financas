@@ -3,6 +3,7 @@ export default class CardExpenseItemSummary {
     description: string;
     total: number;
     dueDate: string;
+    subTotal: number;
     discounts: number;
     observation: string;
     currentInstallment: number;
@@ -11,11 +12,12 @@ export default class CardExpenseItemSummary {
     displayDescription: string;
     categoryId: string | null;
 
-    constructor(id: string, description: string, total: number, dueDate: string, discounts: number, observation: string, currentInstallment: number, quantityInstallments: number, isChecked: boolean, displayDescription: string, categoryId: string | null) {
+    constructor(id: string, description: string, total: number, dueDate: string, subTotal: number, discounts: number, observation: string, currentInstallment: number, quantityInstallments: number, isChecked: boolean, displayDescription: string, categoryId: string | null) {
         this.id = id;
         this.description = description;
         this.total = total;
         this.dueDate = dueDate;
+        this.subTotal = subTotal;
         this.discounts = discounts;
         this.observation = observation;
         this.currentInstallment = currentInstallment;
@@ -27,6 +29,6 @@ export default class CardExpenseItemSummary {
     }
 
     static fromJSON(data: any): CardExpenseItemSummary {
-        return new CardExpenseItemSummary(data.id, data.description, data.total, data.dueDate, data.discounts, data.observation, data.currentInstallment, data.quantityInstallments, data.isChecked, data.displayDescription, data.categoryId ?? null);
+        return new CardExpenseItemSummary(data.id, data.description, data.total, data.dueDate, data.subTotal, data.discounts, data.observation, data.currentInstallment, data.quantityInstallments, data.isChecked, data.displayDescription, data.categoryId ?? null);
     }
 }
