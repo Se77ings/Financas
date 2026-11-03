@@ -21,8 +21,19 @@ import CardExpenseItemForm from '@/forms/CardExpenseItemForm';
 import RecurrentPaymentListModal from '@/public/components/RecurrentPaymentListModal';
 import { formatDateBR } from '@/utils/dateFormat';
 import InfoHint from '@/public/components/dashboard/InfoHint';
+import SortableHeader, { SortState, sortRows } from '@/public/components/SortableHeader';
 
 const formatDayMonth = (value: string) => formatDateBR(value).slice(0, 5);
+
+type SortKey = 'description' | 'date' | 'value';
+const DEFAULT_SORT: SortState<SortKey> = { key: 'date', ascending: false };
+
+// Um grid só, misturando os três tipos: a ordenação vale para a lista inteira, não por tipo.
+type MonthRow = { description: string; date: string; value: number } & (
+    | { kind: 'receivable'; item: ReceivableSummaryView }
+    | { kind: 'expense'; item: ImmediateExpenseSummary }
+    | { kind: 'card'; item: CardExpenseSummary }
+);
 
 // Definição dos SVGs para evitar dependências externas
 const Icons = {
@@ -73,7 +84,9 @@ export default function EffectiveDateDetails() {
     const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
     const [selectedCardData, setSelectedCardData] = useState<CardExpenseSummary | null>(null);
     const [isLoadingCard, setIsLoadingCard] = useState(false);
-    
+    const [monthSort, setMonthSort] = useState(DEFAULT_SORT);
+    const [itemSort, setItemSort] = useState(DEFAULT_SORT);
+
     // Multi-selection & Transfer states
     const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -318,6 +331,18 @@ export default function EffectiveDateDetails() {
     if (!id) return <div className="p-8 text-white">ID não informado.</div>;
     if (!viewData) return <div className="p-8 text-white">Carregando...</div>;
 
+    // O valor ordena pelo montante, sem o sinal: recebimentos e gastos grandes ficam juntos no topo.
+    const monthRows = sortRows<SortKey, MonthRow>([
+        ...viewData.receivables.map(item => ({ kind: 'receivable' as const, item, description: item.description, date: item.date, value: item.total })),
+        ...viewData.immediateExpenses.map(item => ({ kind: 'expense' as const, item, description: item.description, date: item.dueDate, value: item.total })),
+        ...viewData.cardExpenses.map(item => ({ kind: 'card' as const, item, description: item.description, date: item.dueDate, value: item.total })),
+    ], monthSort);
+
+    const cardItems = sortRows(
+        (selectedCard?.items ?? []).map(item => ({ item, description: item.displayDescription, date: item.dueDate, value: item.total })),
+        itemSort,
+    ).map(row => row.item);
+
     return (
         <div className="flex flex-col flex-1 min-h-0 w-full min-w-0 h-full overflow-hidden bg-[#262521] text-gray-100">
 
@@ -412,15 +437,17 @@ export default function EffectiveDateDetails() {
                         <table className="w-full min-w-full text-left text-sm">
                             <thead className="text-[10px] text-gray-500 uppercase border-b border-white/5 bg-[#1a1917]">
                                 <tr>
-                                    <th className="px-4 py-3">Descrição</th>
-                                    <th className="px-4 py-3">Data</th>
-                                    <th className="px-4 py-3 text-right">Valor</th>
+                                    <SortableHeader label="Descrição" sortKey="description" sort={monthSort} onSort={setMonthSort} />
+                                    <SortableHeader label="Data" sortKey="date" sort={monthSort} onSort={setMonthSort} />
+                                    <SortableHeader label="Valor" sortKey="value" sort={monthSort} onSort={setMonthSort} className="text-right" />
                                     <th className="px-4 py-3 w-16"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5 ">
-                                {/* Recebimentos */}
-                                {viewData.receivables.map(item => (
+                                {monthRows.map(row => {
+                                    if (row.kind === 'receivable') {
+                                        const item = row.item;
+                                        return (
                                     <tr key={item.id} className="hover:bg-white/5 group">
                                         <td className="px-4 py-4 flex items-center gap-3">
                                             <Icons.ArrowUp /> <span className="font-medium">{item.description}</span>
@@ -458,9 +485,11 @@ export default function EffectiveDateDetails() {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
-                                {/* Gastos */}
-                                {viewData.immediateExpenses.map(item => (
+                                        );
+                                    }
+                                    if (row.kind === 'expense') {
+                                        const item = row.item;
+                                        return (
                                     <tr key={item.id} className="hover:bg-white/5 group" >
                                         <td className="px-4 py-4 flex items-center gap-3">
                                             <Icons.ArrowDown /> <span className="font-medium">{item.description}</span>
@@ -498,9 +527,10 @@ export default function EffectiveDateDetails() {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
-                                {/* Cartões */}
-                                {viewData.cardExpenses.map(item => (
+                                        );
+                                    }
+                                    const item = row.item;
+                                    return (
                                     <tr
                                         key={item.id}
                                         onClick={() => handleCardClick(item.id)}
@@ -558,7 +588,8 @@ export default function EffectiveDateDetails() {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -654,15 +685,15 @@ export default function EffectiveDateDetails() {
                                                     className="rounded border-white/10 bg-white/5 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                 />
                                             </th>
-                                            <th className="px-4 py-3">Item</th>
-                                            <th className="px-4 py-3">Data</th>
-                                            <th className="px-4 py-3 text-right">Valor</th>
+                                            <SortableHeader label="Item" sortKey="description" sort={itemSort} onSort={setItemSort} />
+                                            <SortableHeader label="Data" sortKey="date" sort={itemSort} onSort={setItemSort} />
+                                            <SortableHeader label="Valor" sortKey="value" sort={itemSort} onSort={setItemSort} className="text-right" />
                                             <th className="px-4 py-3 w-16"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5 font-mono">
-                                        {selectedCard.items && selectedCard.items.length > 0 ? (
-                                            selectedCard.items.map(item => (
+                                        {cardItems.length > 0 ? (
+                                            cardItems.map(item => (
                                                 <tr key={item.id} className="hover:bg-white/5 group">
                                                     <td className="px-4 py-4 w-8">
                                                         <input
