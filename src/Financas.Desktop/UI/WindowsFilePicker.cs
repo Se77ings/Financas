@@ -16,7 +16,9 @@ namespace Financas.Desktop.UI
                 using var dialog = new FolderBrowserDialog
                 {
                     Description = "Escolha a pasta dos backups",
-                    UseDescriptionForTitle = true
+                    UseDescriptionForTitle = true,
+                    // Começa no OneDrive, quando existir: numa pasta sincronizada, o backup também fica fora do computador.
+                    InitialDirectory = OneDriveFolder() ?? string.Empty
                 };
 
                 return dialog.ShowDialog(_owner) == DialogResult.OK ? dialog.SelectedPath : null;
@@ -35,6 +37,12 @@ namespace Financas.Desktop.UI
 
                 return dialog.ShowDialog(_owner) == DialogResult.OK ? dialog.FileName : null;
             });
+        }
+
+        private static string? OneDriveFolder()
+        {
+            var folder = Environment.GetEnvironmentVariable("OneDrive");
+            return Directory.Exists(folder) ? folder : null;
         }
 
         // As requisições chegam em threads do Kestrel, e os diálogos só abrem na thread da janela.
