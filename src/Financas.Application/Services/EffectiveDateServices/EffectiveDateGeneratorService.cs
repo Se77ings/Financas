@@ -173,7 +173,7 @@ namespace Financas.Application.Services.EffectiveDateServices
 
         private CardExpense CreateCardExpense(CreditCard card, Guid effectiveDateId, CalendarMonth month, int year)
         {
-            var invoiceDescription = $"Fatura {card.Name} - {month}/{year}";
+            var invoiceDescription = $"Fatura {card.Name} - {CalendarMonthHelper.ToPortugueseLabel(month, year)}";
             var daysInMonth = DateTime.DaysInMonth(year, (int)month);
             var dueDay = Math.Min(card.DueDay, daysInMonth);
             var dueDate = new DateOnly(year, (int)month, dueDay);

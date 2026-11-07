@@ -63,7 +63,7 @@ namespace Financas.Tests.Integration
 
             Assert.True(result.IsSuccess, result.Error?.Message);
             var october = await GetInvoiceAsync(CalendarMonth.Oct, 2026);
-            Assert.Equal($"Fatura Nubank - {CalendarMonth.Oct}/2026", october.Description);
+            Assert.Equal("Fatura Nubank - Out/2026", october.Description);
             Assert.Equal(80, october.Total);
             Assert.Empty((await GetInvoiceAsync(CalendarMonth.Nov, 2026)).Expenses);
         }

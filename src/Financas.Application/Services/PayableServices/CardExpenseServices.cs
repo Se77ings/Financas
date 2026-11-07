@@ -314,7 +314,7 @@ namespace Financas.Application.Services.PayableServices
         // Mesma descrição e vencimento das faturas criadas pelo gerador de competências.
         private static CardExpense CreateInvoice(CreditCard card, Guid effectiveDateId, CalendarMonth month, int year)
         {
-            var invoiceDescription = $"Fatura {card.Name} - {month}/{year}";
+            var invoiceDescription = $"Fatura {card.Name} - {CalendarMonthHelper.ToPortugueseLabel(month, year)}";
             var dueDay = Math.Min(card.DueDay, DateTime.DaysInMonth(year, (int)month));
             var dueDate = new DateOnly(year, (int)month, dueDay);
 
