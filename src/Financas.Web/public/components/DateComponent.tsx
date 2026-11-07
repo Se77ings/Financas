@@ -1,4 +1,4 @@
-import { toInputDate } from '@/utils/dateFormat';
+import { todayInputDate, toInputDate } from '@/utils/dateFormat';
 
 export function DateComponent({
     date,
@@ -14,7 +14,7 @@ export function DateComponent({
     minustabindex?: number
 }) {
     const valueToShow = toInputDate(date);
-    const activeDate = valueToShow || new Date().toISOString().split('T')[0];
+    const activeDate = valueToShow || todayInputDate();
 
     const incrementDate = () => {
         const [year, month, day] = activeDate.split('-').map(Number);

@@ -7,7 +7,7 @@ import { useSaveMode } from '@/public/components/useSaveMode';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { useCategorySuggestion } from '@/public/components/useCategorySuggestion';
 import { rememberCategorizedDescription } from '@/services/categorySuggestionServices';
-import { toInputDate } from '@/utils/dateFormat';
+import { todayInputDate, toInputDate } from '@/utils/dateFormat';
 import { FREQUENCY_LABELS } from '@/services/recurrentPaymentServices';
 
 interface ImmediateExpenseFormProps {
@@ -38,7 +38,7 @@ export default function ImmediateExpenseForm({
 }: ImmediateExpenseFormProps) {
     const [formData, setFormData] = useState({
         description: initialData?.description || '',
-        dueDate: toInputDate(initialData?.dueDate) || new Date().toISOString().split('T')[0],
+        dueDate: toInputDate(initialData?.dueDate) || todayInputDate(),
         subTotal: initialData?.subTotal ?? initialData?.total ?? 0,
         discounts: initialData?.discounts || 0,
         observation: initialData?.observation || '',

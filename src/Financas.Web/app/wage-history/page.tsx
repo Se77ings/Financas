@@ -13,6 +13,7 @@ import {
 import WageSummaryView from "@/models/Wage/WageSummary";
 import WageView, { DeductionModel } from "@/models/Wage/WageView";
 import { IS_DESKTOP } from "@/utils/appMode";
+import { todayInputDate } from "@/utils/dateFormat";
 
 export default function WageHistoryPage() {
 	const router = useRouter();
@@ -83,7 +84,7 @@ export default function WageHistoryPage() {
 	const handleOpenCreate = () => {
 		setEditingWageId(null);
 		setGrossValue("");
-		setPaymentDate(new Date().toISOString().split("T")[0]);
+		setPaymentDate(todayInputDate());
 		setDeductions([]);
 		setDeductionDesc("");
 		setDeductionValue("");

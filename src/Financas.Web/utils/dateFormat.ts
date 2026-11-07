@@ -50,3 +50,11 @@ export function toInputDate(value: string | null | undefined): string {
 
     return '';
 }
+
+/** Hoje em yyyy-mm-dd no fuso do computador: o toISOString usa UTC e, à noite no Brasil, já devolve o dia seguinte. */
+export function todayInputDate(): string {
+    const now = new Date();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${m}-${d}`;
+}

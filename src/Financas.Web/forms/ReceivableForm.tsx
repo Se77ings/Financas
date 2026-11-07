@@ -7,7 +7,7 @@ import { useSaveMode } from '@/public/components/useSaveMode';
 import { CategoryComboBox } from '@/public/components/CategoryComboBox';
 import { useCategorySuggestion } from '@/public/components/useCategorySuggestion';
 import { rememberCategorizedDescription } from '@/services/categorySuggestionServices';
-import { toInputDate } from '@/utils/dateFormat';
+import { todayInputDate, toInputDate } from '@/utils/dateFormat';
 
 interface ReceivableFormProps {
     effectiveDateId: string;
@@ -34,7 +34,7 @@ export default function ReceivableForm({
     const [formData, setFormData] = useState({
         description: initialData?.description || '',
         subtotal: initialData?.subtotal ?? initialData?.total ?? 0,
-        date: toInputDate(initialData?.date) || new Date().toISOString().split('T')[0],
+        date: toInputDate(initialData?.date) || todayInputDate(),
         categoryId: initialData?.categoryId ?? null,
     });
     const [error, setError] = useState<string | null>(null);

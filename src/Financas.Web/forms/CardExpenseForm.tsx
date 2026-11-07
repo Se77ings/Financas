@@ -4,7 +4,7 @@ import { DateComponent } from '@/public/components/DateComponent';
 import { ValueComponent } from '@/public/components/ValueComponent';
 import { SaveButton } from '@/public/components/SaveButton';
 import { useSaveMode } from '@/public/components/useSaveMode';
-import { toInputDate } from '@/utils/dateFormat';
+import { todayInputDate, toInputDate } from '@/utils/dateFormat';
 
 interface CardExpenseFormProps {
     effectiveDateId: string;
@@ -31,7 +31,7 @@ export default function CardExpenseForm({
 }: CardExpenseFormProps) {
     const [formData, setFormData] = useState({
         description: initialData?.description || '',
-        dueDate: toInputDate(initialData?.dueDate) || new Date().toISOString().split('T')[0],
+        dueDate: toInputDate(initialData?.dueDate) || todayInputDate(),
         subTotal: initialData?.subtotal ?? initialData?.total ?? 0,
         discounts: initialData?.discounts || 0,
         observation: initialData?.observation || '',
