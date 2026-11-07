@@ -12,6 +12,7 @@ import {
 } from "@/services/wageServices";
 import WageSummaryView from "@/models/Wage/WageSummary";
 import WageView, { DeductionModel } from "@/models/Wage/WageView";
+import { IS_DESKTOP } from "@/utils/appMode";
 
 export default function WageHistoryPage() {
 	const router = useRouter();
@@ -48,8 +49,13 @@ export default function WageHistoryPage() {
 	};
 
 	useEffect(() => {
+		// O programa fechado não tem esta tela: ela só existe lá porque o export gera todas as rotas.
+		if (IS_DESKTOP) {
+			router.replace("/");
+			return;
+		}
 		loadWages();
-	}, []);
+	}, [router]);
 
 	// Format currency
 	const formatCurrency = (val: number) => {

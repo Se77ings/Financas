@@ -8,6 +8,7 @@ import Content from "./Content";
 
 const SCROLL_THRESHOLD = 8;
 const HIDE_ON_SCROLL_PATH = '/';
+const SETUP_PATH = '/setup';
 
 /**
  * Só no dashboard. As páginas rolam dentro dos próprios containers, não na janela, e o evento de scroll
@@ -45,6 +46,7 @@ function useHideOnScroll(ignoreInside: React.RefObject<HTMLElement | null>) {
 
 export default function Footer() {
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const activeId = searchParams?.get("id");
 
@@ -110,6 +112,9 @@ export default function Footer() {
     function goToEffectiveDate(id: string) {
         router.push(`/effective-date?id=${encodeURIComponent(id)}`);
     }
+
+    // No passo a passo, os atalhos desta barra tirariam a pessoa do fluxo antes de terminar.
+    if (pathname.startsWith(SETUP_PATH)) return null;
 
     return (
         <footer

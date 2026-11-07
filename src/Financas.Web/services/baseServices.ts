@@ -1,4 +1,6 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+import { IS_DESKTOP } from "@/utils/appMode";
+
+const BASE_URL = IS_DESKTOP ? '' : process.env.NEXT_PUBLIC_API_URL
 
 
 export async function postAsync(url: string, data: any) {

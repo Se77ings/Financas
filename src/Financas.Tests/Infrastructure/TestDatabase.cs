@@ -23,12 +23,12 @@ namespace Financas.Tests.Infrastructure
 
             var services = new ServiceCollection();
             services.AddLogging();
-            services.AddDbContext<FinanceiroDBContext>(options => options.UseSqlite(_connection));
+            services.AddDbContext<FinanceiroDBContext>(options => options.UseFinanceiroSqlite(_connection));
             services.RegisterServices();
             _provider = services.BuildServiceProvider();
 
             using var scope = CreateScope();
-            scope.ServiceProvider.GetRequiredService<FinanceiroDBContext>().Database.EnsureCreated();
+            scope.ServiceProvider.GetRequiredService<FinanceiroDBContext>().Database.Migrate();
         }
 
         public IServiceScope CreateScope() => _provider.CreateScope();

@@ -8,8 +8,10 @@ Controle financeiro pessoal organizado por **competência** (mês/ano): recebime
 |---|---|---|
 | `Financeiro.Business` | `src/Financas.Business` | Domínio: agregados, validações (FluentValidation) e interfaces de repositório |
 | `Financas.Application` | `src/Financas.Application` | Services, models (requests/views), Result pattern e registro de DI |
-| `Financeiro.Infra` | `src/Financeiro.Infra` | EF Core 9 (SQL Server): DbContext, mappings, migrations e repositórios |
-| `Financas.API` | `src/Financas.API` | API ASP.NET Core (.NET 9), executada como serviço do Windows |
+| `Financeiro.Infra` | `src/Financeiro.Infra` | EF Core 9 (SQL Server e SQLite): DbContext, mappings, migrations e repositórios |
+| `Financeiro.Infra.Sqlite` | `src/Financeiro.Infra.Sqlite` | Migrations do SQLite, usadas pelo programa fechado |
+| `Financas.API.Core` | `src/Financas.API.Core` | Controllers e registro da API, compartilhados pelos hosts |
+| `Financas.API` | `src/Financas.API` | Host ASP.NET Core (.NET 9) do modo servidor, executado como serviço do Windows |
 | `Financas.Web` | `src/Financas.Web` | Front em Next.js 16 / React 19, executado com PM2 |
 | `Financas.Tests` | `src/Financas.Tests` | Testes xUnit: domínio e integração com SQLite em memória |
 | `WageHistory.*` | `src/WageHistory` | API e banco separados do histórico de salários |

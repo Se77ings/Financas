@@ -288,3 +288,12 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 /src/Financas.API/appsettings.json
+
+# Planilha com dados pessoais: o repositório é público
+Documentos/Planilha de Gastos.xlsx
+
+# Saída do Publish-Desktop.ps1
+/artifacts/
+
+# O padrão Backup*/ acima é do Visual Studio e pegaria este código-fonte
+!src/Financas.Desktop/Backups/

@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Financas.Application\Financas.Application.csproj" />
+	  <ProjectReference Include="..\Financas.API.Core\Financas.API.Core.csproj" />
 	</ItemGroup>
 
 </Project>

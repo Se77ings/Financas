@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Financas.Application\Financas.Application.csproj" />
+    <ProjectReference Include="..\Financeiro.Infra.Sqlite\Financeiro.Infra.Sqlite.csproj" />
+    <ProjectReference Include="..\Financas.Desktop\Financas.Desktop.csproj" />
   </ItemGroup>
 
 </Project>

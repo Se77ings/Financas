@@ -1,6 +1,4 @@
-using Financas.Application.Configuration;
-using Financeiro.Infra.Context;
-using Microsoft.EntityFrameworkCore;
+using Financas.API.Core;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -26,16 +24,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddFinanceiroApi(builder.Configuration);
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.RegisterServices();
-
-builder.Services.AddDbContext<FinanceiroDBContext>(opt =>
-{
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
 
 builder.Host.UseWindowsService();
 

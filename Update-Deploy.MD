@@ -25,6 +25,10 @@ Roda com a sua conta do Windows: o `usr_financas` da API só lê e grava dados, 
 
 dotnet ef database update --project .\src\Financeiro.Infra --startup-project .\src\Financas.API --configuration Release --connection "Server=Gabriel;Database=Financas;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true"
 
+Para criar uma migration nova, use o `Add-Migration.ps1`, que gera o mesmo nome no SQL Server e no SQLite (`src/Financeiro.Infra/README.md`).
+
+powershell -ExecutionPolicy Bypass -File .\Add-Migration.ps1 -Name NomeDaMigration
+
 ### 4. Gerar o Build de Produção
 dotnet publish .\src\Financas.API\Financas.API.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o C:\APIFinanceiro
 
@@ -48,3 +52,29 @@ pm2 start ecosystem.config.js
 
 ### 4. Salvar o estado no Windows
 pm2 save
+
+---
+
+## 📦 Programa fechado (Windows)
+
+Instalador para quem não tem SQL Server nem Node: API, front estático e SQLite num executável só. Não mexe na produção local (`Deploy.ps1`), que continua igual.
+
+### 1. Gerar o instalador
+Na raiz do repositório. O resultado fica em `artifacts\desktop\releases`, com `Financeiro-win-Setup.exe`, e nada é publicado.
+
+powershell -ExecutionPolicy Bypass -File .\Publish-Desktop.ps1 -Version 1.0.0
+
+O script faz o build do front numa cópia em `artifacts\desktop\web`, porque o `.next` de `src\Financas.Web` é o que o PM2 serve. Ele falha se encontrar `appsettings*.json`, `ConnectionStrings` ou código-fonte do front na saída.
+
+### 2. Publicar a versão
+Os programas instalados baixam a atualização do GitHub Releases na abertura seguinte. Use uma versão maior que a última publicada; o repositório é público, então o instalador também fica público.
+
+powershell -ExecutionPolicy Bypass -File .\Publish-Desktop.ps1 -Version 1.0.1 -Upload
+
+O `-Upload` usa o login do `gh` (`gh auth login`).
+
+### Onde ficam os dados
+Em `%LOCALAPPDATA%\Financeiro.Dados`, que a desinstalação não apaga: `financeiro.db`, `settings.json`, `logs\`, `webview\`, e as cópias automáticas `pre-migrate\` (antes de uma migration) e `pre-restore\` (antes de uma restauração).
+
+### Migrations
+Toda migration precisa existir nos dois bancos: use o `Add-Migration.ps1`. O programa aplica as do SQLite sozinho ao abrir e recusa restaurar um backup com migration que ele não conhece.

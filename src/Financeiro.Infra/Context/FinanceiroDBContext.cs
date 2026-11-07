@@ -34,31 +34,23 @@ namespace Financeiro.Infra.Context
             // construtor; para incluir filhos use Add neles (veja ICardExpenseRepository.AddItem).
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             ChangeTracker.AutoDetectChangesEnabled = false;
-
-            //SQLitePCL.Batteries_V2.Init();
-
-            //this.Database.EnsureCreated();
         }
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    string dbPath = Path.Combine(FileSystem.CurrentDirectory, "database.db");
-
-        //    optionsBuilder.UseSqlite($"Filename={dbPath}");
-        //    //optionsBuilder.UseSqlServer("Server=Gabriel;Database=Financas;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true");
-
-        //    base.OnConfiguring(optionsBuilder);
-        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetProperties().Where(p => p.ClrType == typeof(string))))
+            {
                 property.SetColumnType("varchar(100)");
+
+                // x.Name == name ignora maiúsculas no SQL Server, mas por padrão não no SQLite.
+                if (Database.IsSqlite()) property.SetCollation("NOCASE");
+            }
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinanceiroDBContext).Assembly);
 
             // Sem exclusão em cascata no modelo: excluir dados financeiros em efeito dominó é arriscado, então os
             // services bloqueiam a exclusão quando há dependentes. Exceção só no banco: Payable → EffectiveDate
-            // tem cascade, ajustado à mão na migration CascadeDeleteOnFKs.
+            // tem cascade, ajustado à mão nas migrations CascadeDeleteOnFKs (SQL Server) e InitialCreate (SQLite).
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys())) relationship.DeleteBehavior = DeleteBehavior.ClientSetNull;
 
             base.OnModelCreating(modelBuilder);

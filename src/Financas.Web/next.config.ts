@@ -1,6 +1,12 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
+const desktopConfig: NextConfig = {
+  output: 'export',
+  trailingSlash: true,
+  images: { unoptimized: true },
+};
+
+const serverConfig: NextConfig = {
   async rewrites() {
     return [
       {
@@ -11,4 +17,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default process.env.NEXT_PUBLIC_APP_MODE === 'desktop' ? desktopConfig : serverConfig;

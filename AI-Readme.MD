@@ -6,7 +6,7 @@ Referência rápida de convenções e decisões deste repositório, para sessõe
 
 - **Business** (domínio) não depende de nada. **Infra** depende do Business.
 - **Application** referencia **Business** e **Infra**: o registro de DI dos repositórios fica em `Financas.Application/Configuration/DependencyInjection.cs` (`RegisterServices`). É uma decisão do dono do projeto; não mover para um composition root separado.
-- **API** só referencia a Application. Controllers herdam de `ApiControllerBase`.
+- **API** só referencia a Application; os controllers ficam em `Financas.API.Core`. Controllers herdam de `ApiControllerBase`.
 
 ## Result pattern e HTTP
 

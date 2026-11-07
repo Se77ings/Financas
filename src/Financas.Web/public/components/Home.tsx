@@ -1,13 +1,18 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import CreditCardListModal from "@/public/components/CreditCardListModal";
 import RecurrentPaymentListModal from "@/public/components/RecurrentPaymentListModal";
+import BackupSettingsModal from "@/public/components/BackupSettingsModal";
+import DesktopStatusBanner from "@/public/components/DesktopStatusBanner";
 import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
 import DashboardView from "@/models/Dashboard/DashboardView";
+import DesktopStatusView from "@/models/Desktop/DesktopStatusView";
 import { getEffectiveDateListAsync } from "@/services/effectiveDateServices";
 import { getDashboardAsync } from "@/services/dashboardServices";
+import { getDesktopStatusAsync } from "@/services/desktopServices";
+import { IS_DESKTOP } from "@/utils/appMode";
 import { formatEffectiveDateLabel } from "@/utils/calendarMonth";
 import { formatBRL } from "@/public/components/dashboard/chartTheme";
 import InfoHint from "@/public/components/dashboard/InfoHint";
@@ -17,6 +22,9 @@ import CategorySpendingChart from "@/public/components/dashboard/CategorySpendin
 import CreditCardUsagePanel from "@/public/components/dashboard/CreditCardUsagePanel";
 import FutureCommitmentsChart from "@/public/components/dashboard/FutureCommitmentsChart";
 import MonthlyHistoryChart from "@/public/components/dashboard/MonthlyHistoryChart";
+
+// O download da atualização termina depois de a tela abrir: sem repetir a consulta, o aviso não apareceria.
+const DESKTOP_STATUS_REFRESH_MS = 5 * 60 * 1000;
 
 export default function Home() {
     const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[]>([]);
@@ -59,6 +67,31 @@ export default function Home() {
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
     const [showCardModal, setShowCardModal] = useState(false);
     const [showImmediateRecurrences, setShowImmediateRecurrences] = useState(false);
+    const [showBackupModal, setShowBackupModal] = useState(false);
+    const [desktopStatus, setDesktopStatus] = useState<DesktopStatusView | null>(null);
+    const [isCheckingFirstRun, setIsCheckingFirstRun] = useState(IS_DESKTOP);
+
+    const refreshDesktopStatus = useCallback(() => {
+        getDesktopStatusAsync()
+            .then(status => {
+                setDesktopStatus(status);
+                if (status.firstRunPending) router.replace("/setup");
+                else setIsCheckingFirstRun(false);
+            })
+            .catch(err => {
+                console.error('Erro ao ler a situação do programa:', err);
+                setIsCheckingFirstRun(false);
+            });
+    }, [router]);
+
+    useEffect(() => {
+        if (!IS_DESKTOP) return;
+        refreshDesktopStatus();
+        const timer = setInterval(refreshDesktopStatus, DESKTOP_STATUS_REFRESH_MS);
+        return () => clearInterval(timer);
+    }, [refreshDesktopStatus]);
+
+    if (isCheckingFirstRun) return <div className="flex-1 bg-blue-950" />;
 
     return (
         <div
@@ -123,19 +156,34 @@ export default function Home() {
                             >
                                 🏷️ Gerenciar Categorias
                             </button>
-                            <button
-                                onClick={() => {
-                                    setShowSettingsDropdown(false);
-                                    router.push("/wage-history");
-                                }}
-                                className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
-                            >
-                                💼 Histórico de Salários
-                            </button>
+                            {IS_DESKTOP ? (
+                                <button
+                                    onClick={() => {
+                                        setShowSettingsDropdown(false);
+                                        setShowBackupModal(true);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
+                                >
+                                    💾 Backup
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        setShowSettingsDropdown(false);
+                                        router.push("/wage-history");
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-200 hover:bg-blue-600 hover:text-white transition flex items-center gap-2 cursor-pointer"
+                                >
+                                    💼 Histórico de Salários
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
             </header>
+            {desktopStatus && (
+                <DesktopStatusBanner status={desktopStatus} onOpenBackup={() => setShowBackupModal(true)} />
+            )}
             <main className="flex-1 overflow-auto p-5">
                 <div className="flex flex-col gap-4">
                     {error && (
@@ -193,6 +241,15 @@ export default function Home() {
 
             {showImmediateRecurrences && (
                 <RecurrentPaymentListModal onClose={() => setShowImmediateRecurrences(false)} />
+            )}
+
+            {showBackupModal && (
+                <BackupSettingsModal
+                    onClose={() => {
+                        setShowBackupModal(false);
+                        refreshDesktopStatus();
+                    }}
+                />
             )}        </div>
 
     );
