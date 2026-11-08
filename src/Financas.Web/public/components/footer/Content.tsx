@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ReactNode } from "react";
 
 export default function Content({
@@ -19,7 +18,7 @@ export default function Content({
     return (
         <div
             title={isCurrent ? 'Competência atual' : undefined}
-            className={`relative flex h-full min-w-20 px-3 flex-row items-center border ${stateClasses} text-[10px] uppercase tracking-widest justify-center select-none font-mono transition-all`}
+            className={`relative flex h-full w-full px-1 flex-row items-center border ${stateClasses} text-[10px] uppercase tracking-widest justify-center select-none font-mono transition-all`}
         >
             {children}
             {isActive && isCurrent && (

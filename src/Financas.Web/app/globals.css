@@ -30,3 +30,43 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/*
+ * Barras de rolagem de todo o sistema. No Chromium (e no WebView2 do programa fechado), definir
+ * scrollbar-color desliga o ::-webkit-scrollbar e a barra perde o arredondado: por isso as
+ * propriedades padrão ficam só para quem não tem o pseudo-elemento (Firefox).
+ */
+:root {
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-hover: rgba(59, 130, 246, 0.6);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+}

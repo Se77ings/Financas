@@ -4,7 +4,9 @@ import { getEffectiveDateListAsync, addEffectiveDateAsync } from '@/services/eff
 import EffectiveDateSummary from "@/models/EffectiveDate/EffectiveDateSummary";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { defaultYear, formatCalendarMonthAbbrev, yearsOf } from "@/utils/calendarMonth";
 import Content from "./Content";
+import YearPicker from "./YearPicker";
 
 const SCROLL_THRESHOLD = 8;
 const HIDE_ON_SCROLL_PATH = '/';
@@ -59,6 +61,14 @@ export default function Footer() {
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
 
+    // A escolha vale para a competência aberta: ao abrir outra, a barra volta para o ano dela.
+    const [yearChoice, setYearChoice] = useState<{ year: number; activeId: string | null } | null>(null);
+    const years = yearsOf(effectiveDates);
+    const activeYear = effectiveDates.find(d => d.id === activeId)?.year;
+    const selectedYear = (yearChoice?.activeId === (activeId ?? null) ? yearChoice.year : null) ?? activeYear ?? defaultYear(years);
+    const chooseYear = (year: number) => setYearChoice({ year, activeId: activeId ?? null });
+    const monthsOfYear = effectiveDates.filter(d => d.year === selectedYear);
+
     useEffect(() => {
         getEffectiveDateListAsync()
             .then((dates) => {
@@ -100,6 +110,7 @@ export default function Footer() {
 
             const newCompetency = updatedDates.find(d => d.month === nextMonth && d.year === nextYear);
             if (newCompetency) {
+                setYearChoice(null);
                 goToEffectiveDate(newCompetency.id);
             }
         } catch (error) {
@@ -127,25 +138,29 @@ export default function Footer() {
                 </svg>
                 Home
             </button>
-            <div className="flex flex-grow overflow-x-auto">
-                <div className="flex flex-row items-stretch">
-                    {effectiveDates.map((effectiveDate) => {
-                        const isActive = effectiveDate.id === activeId;
-                        const isCurrent = effectiveDate.month === currentMonth && effectiveDate.year === currentYear;
-                        return (
-                            <button
-                                key={effectiveDate.id}
-                                onClick={() => goToEffectiveDate(effectiveDate.id)}
-                                className={`flex items-stretch transition-colors ${isActive ? 'bg-blue-900/10' : ''}`}
-                            >
-                                <Content isActive={isActive} isCurrent={isCurrent}>
-                                    {effectiveDate.display}
-                                </Content>
-                            </button>
-                        );
-                    })}
-                </div>
+            {/* Cada mês ocupa 1/12 da largura, mesmo num ano com poucas competências, para os meses não mudarem de lugar. */}
+            <div className="flex flex-1 min-w-0 items-stretch">
+                {monthsOfYear.map((effectiveDate) => {
+                    const isActive = effectiveDate.id === activeId;
+                    const isCurrent = effectiveDate.month === currentMonth && effectiveDate.year === currentYear;
+                    return (
+                        <button
+                            key={effectiveDate.id}
+                            onClick={() => goToEffectiveDate(effectiveDate.id)}
+                            title={effectiveDate.display}
+                            className={`flex items-stretch shrink-0 w-[calc(100%/12)] transition-colors cursor-pointer ${isActive ? 'bg-blue-900/10' : ''}`}
+                        >
+                            <Content isActive={isActive} isCurrent={isCurrent}>
+                                {formatCalendarMonthAbbrev(effectiveDate.month)}
+                            </Content>
+                        </button>
+                    );
+                })}
             </div>
+
+            {selectedYear !== null && (
+                <YearPicker years={years} value={selectedYear} onChange={chooseYear} />
+            )}
 
             <button
                 type="button"

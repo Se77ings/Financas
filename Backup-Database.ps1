@@ -16,8 +16,12 @@ $fileName = "${Database}_$(Get-Date -Format 'yyyy-MM-dd_HHmmss')$suffix.bak"
 
 # Sem caminho, o arquivo vai para a pasta padrão de backup do SQL Server: é a que a conta do serviço do SQL
 # com certeza consegue gravar.
-$backupDir = (sqlcmd -S $SqlServer -E -C -b -h -1 -W -Q "SET NOCOUNT ON; SELECT SERVERPROPERTY('InstanceDefaultBackupPath')" | Select-Object -First 1).Trim()
-if ($LASTEXITCODE -ne 0 -or -not $backupDir) { throw "Não foi possível conectar em $SqlServer." }
+# A saída é guardada antes de pegar a primeira linha: um Select-Object -First no pipe encerra o sqlcmd no meio e,
+# no Windows PowerShell, o código de saída deixa de ser 0 mesmo com a consulta certa.
+$output = sqlcmd -S $SqlServer -E -C -b -h -1 -W -Q "SET NOCOUNT ON; SELECT SERVERPROPERTY('InstanceDefaultBackupPath')"
+if ($LASTEXITCODE -ne 0) { throw "Não foi possível conectar em $SqlServer." }
+$backupDir = "$(@($output)[0])".Trim()
+if (-not $backupDir) { throw "O SQL Server em $SqlServer não informou a pasta padrão de backup." }
 $backupPath = Join-Path $backupDir $fileName
 
 Write-Host "Fazendo backup de $Database em $backupPath ..." -ForegroundColor Cyan

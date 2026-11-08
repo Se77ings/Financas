@@ -45,29 +45,16 @@ export interface CategorySpending {
     entries: SpendingEntry[];
 }
 
-export interface CreditCardUsage {
-    creditCardId: string;
-    name: string;
-    limit: number;
-    closingDay: number;
-    dueDay: number;
-    invoiceTotal: number;
-    invoiceDueDate: string | null;
-    futureInstallments: number;
-    committed: number;
-    usagePercentage: number;
-}
-
 export interface CreditCardInvoiceAmount {
     creditCardId: string;
     name: string;
     total: number;
 }
 
-/** `invoices` traz só os cartões com fatura na competência. */
-export interface CreditCardInvoiceMonth {
-    effectiveDateId: string;
-    month: number;
+/** Uma competência, ou um ano inteiro quando `month` e `effectiveDateId` vêm nulos; `invoices` traz só os cartões com fatura. */
+export interface CreditCardInvoicePeriod {
+    effectiveDateId: string | null;
+    month: number | null;
     year: number;
     isSelected: boolean;
     invoices: CreditCardInvoiceAmount[];
@@ -92,22 +79,23 @@ export interface FutureCommitments {
     months: FutureCommitmentMonth[];
 }
 
-export interface MonthlyHistory {
-    effectiveDateId: string;
-    month: number;
+/** Uma competência, ou um ano inteiro quando `month` e `effectiveDateId` vêm nulos. */
+export interface HistoryPeriod {
+    effectiveDateId: string | null;
+    month: number | null;
     year: number;
     income: number;
     expenses: number;
     balance: number;
 }
 
+/** Em todos os anos, os quadros de um único mês vêm nulos e os históricos trazem uma linha por ano. */
 export default interface DashboardView {
     totals: DashboardTotals;
-    dailySpending: DailySpending;
-    spendingPace: SpendingPace;
+    dailySpending: DailySpending | null;
+    spendingPace: SpendingPace | null;
     spendingByCategory: CategorySpending[];
-    creditCards: CreditCardUsage[];
-    creditCardHistory: CreditCardInvoiceMonth[];
-    futureCommitments: FutureCommitments;
-    monthlyHistory: MonthlyHistory[];
+    creditCardHistory: CreditCardInvoicePeriod[];
+    futureCommitments: FutureCommitments | null;
+    history: HistoryPeriod[];
 }

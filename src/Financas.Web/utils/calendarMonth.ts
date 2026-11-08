@@ -13,3 +13,14 @@ export function formatCalendarMonthAbbrev(month: number, locale = 'pt-BR'): stri
 export function formatEffectiveDateLabel(month: number, year: number, locale = 'pt-BR'): string {
     return `${formatCalendarMonthAbbrev(month, locale)}-${year}`;
 }
+
+/** Anos com pelo menos uma competência, em ordem crescente. */
+export function yearsOf(effectiveDates: { year: number }[]): number[] {
+    return [...new Set(effectiveDates.map(d => d.year))].sort((a, b) => a - b);
+}
+
+/** O ano atual quando tem competência; senão, o último com competência. Nulo sem nenhuma. */
+export function defaultYear(years: number[]): number | null {
+    const current = new Date().getFullYear();
+    return years.includes(current) ? current : years[years.length - 1] ?? null;
+}

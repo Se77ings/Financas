@@ -1,6 +1,6 @@
 namespace Financeiro.Application.Models.DashboardModels
 {
-    /// <summary>Somatório de todas as competências.</summary>
+    /// <summary>Somatório das competências do ano selecionado, ou de todas.</summary>
     public class DashboardTotalsView
     {
         public decimal Income { get; set; }

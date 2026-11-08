@@ -11,7 +11,6 @@ namespace Financas.Application.Services.DashboardServices
     {
         private const int DailySpendingDays = 30;
         private const int FutureCommitmentMonths = 6;
-        private const int MonthlyHistoryMonths = 12;
         private const int AverageIncomeMonths = 6;
         private const int CreditCardHistoryPreviousMonths = 4;
 
@@ -32,16 +31,23 @@ namespace Financas.Application.Services.DashboardServices
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<Result<DashboardView>> GetAsync(Guid effectiveDateId, DateOnly today)
+        public async Task<Result<DashboardView>> GetAsync(int? year, CalendarMonth? month, DateOnly today)
         {
+            if (year.HasValue && !month.HasValue)
+                return Result<DashboardView>.Failure(new Error("Informe o mês junto com o ano."));
+
             var effectiveDates = (await _effectiveDateRepository.GetListAsync())
                 .OrderBy(x => x.Year)
                 .ThenBy(x => x.Month)
                 .ToList();
 
-            var selected = effectiveDates.FirstOrDefault(x => x.Id == effectiveDateId);
-            if (selected is null)
-                return Result<DashboardView>.Failure(Error.NotFound("Competência não encontrada."));
+            EffectiveDate? selected = null;
+            if (year.HasValue)
+            {
+                selected = effectiveDates.FirstOrDefault(x => x.Year == year && x.Month == month);
+                if (selected is null)
+                    return Result<DashboardView>.Failure(Error.NotFound("Competência não encontrada."));
+            }
 
             var creditCards = await _creditCardRepository.GetListAsync();
             var recurrentPayments = await _recurrentPaymentRepository.GetActiveRecurrentPaymentsAsync();
@@ -49,25 +55,33 @@ namespace Financas.Application.Services.DashboardServices
 
             var context = new DashboardContext(effectiveDates, recurrentPayments, creditCards);
 
-            var view = new DashboardView
-            {
-                Totals = BuildTotals(context),
-                DailySpending = BuildDailySpending(context, selected, today),
-                SpendingPace = BuildSpendingPace(context, selected, today),
-                SpendingByCategory = BuildSpendingByCategory(context, selected, categories),
-                CreditCards = BuildCreditCards(selected, creditCards),
-                CreditCardHistory = BuildCreditCardHistory(context, selected),
-                FutureCommitments = BuildFutureCommitments(context, selected, creditCards),
-                MonthlyHistory = BuildMonthlyHistory(context, selected)
-            };
+            var view = selected is null
+                ? new DashboardView
+                {
+                    Totals = BuildTotals(effectiveDates),
+                    SpendingByCategory = BuildSpendingByCategory(context, effectiveDates, categories),
+                    CreditCardHistory = BuildYearlyCreditCardHistory(context),
+                    History = BuildYearlyHistory(context)
+                }
+                : new DashboardView
+                {
+                    Totals = BuildTotals(effectiveDates.Where(x => x.Year == selected.Year)),
+                    DailySpending = BuildDailySpending(context, selected, today),
+                    SpendingPace = BuildSpendingPace(context, selected, today),
+                    SpendingByCategory = BuildSpendingByCategory(context, [selected], categories),
+                    CreditCardHistory = BuildCreditCardHistory(context, selected),
+                    FutureCommitments = BuildFutureCommitments(context, selected, creditCards),
+                    History = BuildMonthlyHistory(context, selected.Year)
+                };
 
             return Result<DashboardView>.Success(view);
         }
 
-        private static DashboardTotalsView BuildTotals(DashboardContext context)
+        private static DashboardTotalsView BuildTotals(IEnumerable<EffectiveDate> effectiveDates)
         {
-            var income = context.EffectiveDates.Sum(Income);
-            var expenses = context.EffectiveDates.Sum(Expenses);
+            var scope = effectiveDates.ToList();
+            var income = scope.Sum(Income);
+            var expenses = scope.Sum(Expenses);
 
             return new DashboardTotalsView { Income = income, Expenses = expenses, Balance = income - expenses };
         }
@@ -143,9 +157,9 @@ namespace Financas.Application.Services.DashboardServices
             return totals;
         }
 
-        private static List<CategorySpendingView> BuildSpendingByCategory(DashboardContext context, EffectiveDate selected, List<Financeiro.Business.Aggregates.Category.Category> categories)
+        private static List<CategorySpendingView> BuildSpendingByCategory(DashboardContext context, IEnumerable<EffectiveDate> effectiveDates, List<Financeiro.Business.Aggregates.Category.Category> categories)
         {
-            var spendings = Spendings(selected).ToList();
+            var spendings = effectiveDates.SelectMany(Spendings).ToList();
             var total = spendings.Sum(x => x.Total);
             var names = categories.ToDictionary(x => x.Id, x => x.Name);
 
@@ -163,43 +177,7 @@ namespace Financas.Application.Services.DashboardServices
                 .ToList();
         }
 
-        private static List<CreditCardUsageView> BuildCreditCards(EffectiveDate selected, List<CreditCard> creditCards)
-        {
-            var invoices = selected.Payable.OfType<CardExpense>().ToList();
-            var items = selected.Payable.OfType<CardExpense.Expense>().ToList();
-
-            return creditCards
-                .Where(card => card.IsActive)
-                .OrderBy(card => card.Name)
-                .Select(card =>
-                {
-                    var invoice = invoices.FirstOrDefault(x => x.CreditCardId == card.Id);
-                    var invoiceItems = invoice is null ? new List<CardExpense.Expense>() : items.Where(x => x.CardExpenseId == invoice.Id).ToList();
-                    var invoiceTotal = invoiceItems.Sum(x => x.Total);
-                    var futureInstallments = invoiceItems
-                        .Where(x => x.CurrentInstallment < x.QuantityInstallments)
-                        .Sum(x => (x.QuantityInstallments - x.CurrentInstallment) * x.Total);
-                    var committed = invoiceTotal + futureInstallments;
-
-                    return new CreditCardUsageView
-                    {
-                        CreditCardId = card.Id,
-                        Name = card.Name,
-                        Limit = card.Limit,
-                        ClosingDay = card.ClosingDay,
-                        DueDay = card.DueDay,
-                        InvoiceTotal = invoiceTotal,
-                        InvoiceDueDate = invoice?.DueDate,
-                        FutureInstallments = futureInstallments,
-                        Committed = committed,
-                        UsagePercentage = card.Limit == 0 ? 0 : Math.Round(committed / card.Limit * 100, 1)
-                    };
-                })
-                .ToList();
-        }
-
-        // O total de cada fatura é a soma dos itens, como no restante do dashboard.
-        private static List<CreditCardInvoiceMonthView> BuildCreditCardHistory(DashboardContext context, EffectiveDate selected)
+        private static List<CreditCardInvoicePeriodView> BuildCreditCardHistory(DashboardContext context, EffectiveDate selected)
         {
             var selectedIndex = context.EffectiveDates.IndexOf(selected);
             var firstIndex = Math.Max(0, selectedIndex - CreditCardHistoryPreviousMonths);
@@ -208,28 +186,44 @@ namespace Financas.Application.Services.DashboardServices
             return context.EffectiveDates
                 .Skip(firstIndex)
                 .Take(lastIndex - firstIndex + 1)
-                .Select(effectiveDate =>
+                .Select(effectiveDate => new CreditCardInvoicePeriodView
                 {
-                    var items = effectiveDate.Payable.OfType<CardExpense.Expense>().ToList();
-
-                    return new CreditCardInvoiceMonthView
-                    {
-                        EffectiveDateId = effectiveDate.Id,
-                        Month = effectiveDate.Month,
-                        Year = effectiveDate.Year,
-                        IsSelected = effectiveDate.Id == selected.Id,
-                        Invoices = effectiveDate.Payable.OfType<CardExpense>()
-                            .Select(invoice => new CreditCardInvoiceAmountView
-                            {
-                                CreditCardId = invoice.CreditCardId,
-                                Name = context.CreditCardName(invoice.CreditCardId),
-                                Total = items.Where(x => x.CardExpenseId == invoice.Id).Sum(x => x.Total)
-                            })
-                            .Where(x => x.Total > 0)
-                            .OrderBy(x => x.Name)
-                            .ToList()
-                    };
+                    EffectiveDateId = effectiveDate.Id,
+                    Month = effectiveDate.Month,
+                    Year = effectiveDate.Year,
+                    IsSelected = effectiveDate.Id == selected.Id,
+                    Invoices = InvoiceAmounts(context, [effectiveDate])
                 })
+                .ToList();
+        }
+
+        private static List<CreditCardInvoicePeriodView> BuildYearlyCreditCardHistory(DashboardContext context)
+        {
+            return context.EffectiveDates
+                .GroupBy(x => x.Year)
+                .Select(year => new CreditCardInvoicePeriodView
+                {
+                    Year = year.Key,
+                    Invoices = InvoiceAmounts(context, year)
+                })
+                .ToList();
+        }
+
+        // O total de cada fatura é a soma dos itens, como no restante do dashboard.
+        private static List<CreditCardInvoiceAmountView> InvoiceAmounts(DashboardContext context, IEnumerable<EffectiveDate> effectiveDates)
+        {
+            return effectiveDates
+                .SelectMany(x => x.Payable.OfType<CardExpense.Expense>())
+                .GroupBy(context.CreditCardIdOf)
+                .Where(g => g.Key.HasValue)
+                .Select(g => new CreditCardInvoiceAmountView
+                {
+                    CreditCardId = g.Key!.Value,
+                    Name = context.CreditCardName(g.Key.Value),
+                    Total = g.Sum(x => x.Total)
+                })
+                .Where(x => x.Total > 0)
+                .OrderBy(x => x.Name)
                 .ToList();
         }
 
@@ -285,12 +279,11 @@ namespace Financas.Application.Services.DashboardServices
             };
         }
 
-        private static List<MonthlyHistoryView> BuildMonthlyHistory(DashboardContext context, EffectiveDate selected)
+        private static List<HistoryPeriodView> BuildMonthlyHistory(DashboardContext context, int year)
         {
             return context.EffectiveDates
-                .Where(x => IsSameOrBefore(x, selected))
-                .TakeLast(MonthlyHistoryMonths)
-                .Select(x => new MonthlyHistoryView
+                .Where(x => x.Year == year)
+                .Select(x => new HistoryPeriodView
                 {
                     EffectiveDateId = x.Id,
                     Month = x.Month,
@@ -298,6 +291,19 @@ namespace Financas.Application.Services.DashboardServices
                     Income = Income(x),
                     Expenses = Expenses(x),
                     Balance = Income(x) - Expenses(x)
+                })
+                .ToList();
+        }
+
+        private static List<HistoryPeriodView> BuildYearlyHistory(DashboardContext context)
+        {
+            return context.EffectiveDates
+                .GroupBy(x => x.Year)
+                .Select(year =>
+                {
+                    var income = year.Sum(Income);
+                    var expenses = year.Sum(Expenses);
+                    return new HistoryPeriodView { Year = year.Key, Income = income, Expenses = expenses, Balance = income - expenses };
                 })
                 .ToList();
         }
@@ -337,6 +343,9 @@ namespace Financas.Application.Services.DashboardServices
                 _creditCardNames = creditCards.ToDictionary(x => x.Id, x => x.Name);
                 _invoiceCreditCards = effectiveDates.SelectMany(x => x.Payable.OfType<CardExpense>()).ToDictionary(x => x.Id, x => x.CreditCardId);
             }
+
+            public Guid? CreditCardIdOf(CardExpense.Expense item) =>
+                _invoiceCreditCards.TryGetValue(item.CardExpenseId, out var cardId) ? cardId : null;
 
             public string CreditCardName(Guid creditCardId) =>
                 _creditCardNames.TryGetValue(creditCardId, out var name) ? name : "Cartão";

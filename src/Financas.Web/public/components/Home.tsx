@@ -13,22 +13,37 @@ import { getEffectiveDateListAsync } from "@/services/effectiveDateServices";
 import { getDashboardAsync } from "@/services/dashboardServices";
 import { getDesktopStatusAsync } from "@/services/desktopServices";
 import { IS_DESKTOP } from "@/utils/appMode";
-import { formatEffectiveDateLabel } from "@/utils/calendarMonth";
+import { formatEffectiveDateLabel, yearsOf } from "@/utils/calendarMonth";
 import { formatBRL } from "@/public/components/dashboard/chartTheme";
 import InfoHint from "@/public/components/dashboard/InfoHint";
 import DailySpendingChart from "@/public/components/dashboard/DailySpendingChart";
 import SpendingPaceChart from "@/public/components/dashboard/SpendingPaceChart";
 import CategorySpendingChart from "@/public/components/dashboard/CategorySpendingChart";
-import CreditCardUsagePanel from "@/public/components/dashboard/CreditCardUsagePanel";
+import CreditCardHistoryPanel from "@/public/components/dashboard/CreditCardHistoryPanel";
 import FutureCommitmentsChart from "@/public/components/dashboard/FutureCommitmentsChart";
-import MonthlyHistoryChart from "@/public/components/dashboard/MonthlyHistoryChart";
+import HistoryChart from "@/public/components/dashboard/HistoryChart";
+import PeriodTabs from "@/public/components/dashboard/PeriodTabs";
 
 // O download da atualização termina depois de a tela abrir: sem repetir a consulta, o aviso não apareceria.
 const DESKTOP_STATUS_REFRESH_MS = 5 * 60 * 1000;
 
+/** `year` nulo é "Todos", e então `month` também é nulo. */
+interface DashboardPeriod {
+    year: number | null;
+    month: number | null;
+}
+
+/** Ao trocar de ano, abre o mês atual quando ele existe no ano; senão, o último mês do ano. */
+function periodOfYear(effectiveDates: EffectiveDateSummary[], year: number): DashboardPeriod {
+    const months = effectiveDates.filter(d => d.year === year);
+    const currentMonth = new Date().getMonth() + 1;
+    const month = months.find(d => d.month === currentMonth) ?? months[months.length - 1];
+    return { year, month: month?.month ?? null };
+}
+
 export default function Home() {
     const [effectiveDates, setEffectiveDates] = useState<EffectiveDateSummary[]>([]);
-    const [selectedEffectiveDateId, setSelectedEffectiveDateId] = useState<string | null>(null);
+    const [period, setPeriod] = useState<DashboardPeriod | null>(null);
     const [dashboard, setDashboard] = useState<DashboardView | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -40,7 +55,7 @@ export default function Home() {
                 const now = new Date();
                 const current = dates.find(d => d.month === now.getMonth() + 1 && d.year === now.getFullYear());
                 const initial = current ?? dates[dates.length - 1];
-                if (initial) setSelectedEffectiveDateId(initial.id);
+                if (initial) setPeriod({ year: initial.year, month: initial.month });
                 else setIsLoading(false);
             })
             .catch(err => {
@@ -49,19 +64,23 @@ export default function Home() {
             });
     }, []);
 
+    const selectedYear = period?.year ?? null;
+    const selectedMonth = period?.month ?? null;
+
     useEffect(() => {
-        if (!selectedEffectiveDateId) return;
+        if (!period) return;
         setIsLoading(true);
         setError(null);
-        getDashboardAsync(selectedEffectiveDateId)
+        getDashboardAsync(period.year === null || period.month === null ? null : { year: period.year, month: period.month })
             .then(setDashboard)
             .catch(err => setError(err instanceof Error ? err.message : 'Erro ao carregar o dashboard'))
             .finally(() => setIsLoading(false));
-    }, [selectedEffectiveDateId]);
+    }, [period]);
 
-    const selectedEffectiveDate = effectiveDates.find(d => d.id === selectedEffectiveDateId);
-    const monthLabel = selectedEffectiveDate ? formatEffectiveDateLabel(selectedEffectiveDate.month, selectedEffectiveDate.year) : '';
+    const selectedEffectiveDate = effectiveDates.find(d => d.year === selectedYear && d.month === selectedMonth);
+    const monthLabel = selectedEffectiveDate ? formatEffectiveDateLabel(selectedEffectiveDate.month, selectedEffectiveDate.year) : null;
     const totals = dashboard?.totals;
+    const scope = selectedYear === null ? 'todas as competências' : `as competências de ${selectedYear}`;
 
     const router = useRouter();
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -100,19 +119,16 @@ export default function Home() {
                 className="px-5 py-3 border-b shrink-0 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h1 className="text-sm font-bold tracking-tight">Finanças Pessoais</h1>
-                    <label className="flex items-center gap-2 text-xs text-gray-400">
-                        Competência
-                        <select
-                            value={selectedEffectiveDateId ?? ''}
-                            onChange={(e) => setSelectedEffectiveDateId(e.target.value)}
-                            disabled={effectiveDates.length === 0}
-                            className="px-2 py-1 bg-[#0f0e0c] border border-white/10 rounded text-white text-xs uppercase font-mono focus:outline-none focus:border-blue-500"
-                        >
-                            {effectiveDates.map(d => (
-                                <option key={d.id} value={d.id}>{formatEffectiveDateLabel(d.month, d.year)}</option>
-                            ))}
-                        </select>
-                    </label>
+                    {period && (
+                        <PeriodTabs
+                            years={yearsOf(effectiveDates)}
+                            year={selectedYear}
+                            onYearChange={year => setPeriod(year === null ? { year: null, month: null } : periodOfYear(effectiveDates, year))}
+                            months={effectiveDates.filter(d => d.year === selectedYear)}
+                            month={selectedMonth}
+                            onMonthChange={month => setPeriod({ year: selectedYear, month })}
+                        />
+                    )}
                     {isLoading && <span className="text-xs text-gray-500">Carregando...</span>}
                 </div>
 
@@ -194,22 +210,22 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <SummaryCard
-                            label="Saldo Total (todas)"
+                            label={selectedYear === null ? 'Saldo total' : `Saldo de ${selectedYear}`}
                             value={totals ? formatBRL(totals.balance) : '—'}
                             valueClass={(totals?.balance ?? 0) >= 0 ? 'text-green-400' : 'text-orange-400'}
-                            info={<p>Tudo o que <span className="text-blue-400 font-semibold">entrou</span> menos tudo o que <span className="text-red-400 font-semibold">saiu</span>, somando todas as competências.</p>}
+                            info={<p>Tudo o que <span className="text-blue-400 font-semibold">entrou</span> menos tudo o que <span className="text-red-400 font-semibold">saiu</span>, somando {scope}.</p>}
                         />
                         <SummaryCard
-                            label="Total Recebíveis"
+                            label={selectedYear === null ? 'Total recebíveis' : `Recebíveis de ${selectedYear}`}
                             value={totals ? formatBRL(totals.income) : '—'}
                             valueClass="text-blue-400"
-                            info={<p>Soma de todos os <span className="text-blue-400 font-semibold">recebimentos</span> lançados, em todas as competências.</p>}
+                            info={<p>Soma de todos os <span className="text-blue-400 font-semibold">recebimentos</span> lançados em {scope}.</p>}
                         />
                         <SummaryCard
-                            label="Total Obrigações"
+                            label={selectedYear === null ? 'Total obrigações' : `Obrigações de ${selectedYear}`}
                             value={totals ? formatBRL(totals.expenses) : '—'}
                             valueClass="text-red-400"
-                            info={<p>Soma de todos os <span className="text-red-400 font-semibold">gastos à vista</span> e <span className="text-red-400 font-semibold">itens de cartão</span> lançados, em todas as competências.</p>}
+                            info={<p>Soma de todos os <span className="text-red-400 font-semibold">gastos à vista</span> e <span className="text-red-400 font-semibold">itens de cartão</span> lançados em {scope}.</p>}
                         />
                     </div>
 
@@ -221,14 +237,20 @@ export default function Home() {
 
                     {dashboard && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="lg:col-span-3 min-w-0">
-                                <DailySpendingChart data={dashboard.dailySpending} monthLabel={monthLabel} />
-                            </div>
-                            <SpendingPaceChart data={dashboard.spendingPace} monthLabel={monthLabel} />
-                            <CategorySpendingChart data={dashboard.spendingByCategory} monthLabel={monthLabel} effectiveDateId={selectedEffectiveDateId} />
-                            <CreditCardUsagePanel data={dashboard.creditCards} history={dashboard.creditCardHistory} monthLabel={monthLabel} />
-                            <FutureCommitmentsChart data={dashboard.futureCommitments} />
-                            <MonthlyHistoryChart data={dashboard.monthlyHistory} />
+                            {dashboard.dailySpending && monthLabel && (
+                                <div className="lg:col-span-3 min-w-0">
+                                    <DailySpendingChart data={dashboard.dailySpending} monthLabel={monthLabel} />
+                                </div>
+                            )}
+                            {dashboard.spendingPace && monthLabel && (
+                                <SpendingPaceChart data={dashboard.spendingPace} monthLabel={monthLabel} />
+                            )}
+                            <CategorySpendingChart data={dashboard.spendingByCategory} monthLabel={monthLabel ?? 'todos os anos'} effectiveDateId={selectedEffectiveDate?.id ?? null} />
+                            <CreditCardHistoryPanel history={dashboard.creditCardHistory} monthLabel={monthLabel} />
+                            {dashboard.futureCommitments && (
+                                <FutureCommitmentsChart data={dashboard.futureCommitments} />
+                            )}
+                            <HistoryChart data={dashboard.history} year={selectedYear} />
                         </div>
                     )}
                 </div>

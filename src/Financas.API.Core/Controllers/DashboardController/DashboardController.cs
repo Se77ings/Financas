@@ -1,4 +1,5 @@
 using Financas.Application.Services.DashboardServices;
+using Financeiro.Business.Shared;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Financas.API.Controllers
@@ -14,10 +15,10 @@ namespace Financas.API.Controllers
             _services = services;
         }
 
-        [HttpGet("{effectiveDateId:guid}")]
-        public async Task<IActionResult> GetAsync([FromRoute] Guid effectiveDateId)
+        [HttpGet]
+        public async Task<IActionResult> GetAsync([FromQuery] int? year, [FromQuery] CalendarMonth? month)
         {
-            var result = await _services.GetAsync(effectiveDateId, DateOnly.FromDateTime(DateTime.Now));
+            var result = await _services.GetAsync(year, month, DateOnly.FromDateTime(DateTime.Now));
             return QueryResult(result);
         }
     }
